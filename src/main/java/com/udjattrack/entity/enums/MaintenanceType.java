@@ -1,0 +1,14 @@
+package com.udjattrack.entity.enums;
+
+public enum MaintenanceType {
+    ENGINE_FAILURE,
+    BRAKE_PROBLEM,
+    TIRE_DAMAGE,
+    BATTERY_FAILURE,
+    ELECTRICAL_SYSTEM_FAILURE,
+    CAMERA_SYSTEM_FAILURE,
+    BLIND_SPOT_SENSOR_FAILURE,
+    AIR_CONDITIONING_FAILURE,
+    OIL_LEAK,
+    OTHER_MAINTENANCE
+}

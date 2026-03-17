@@ -1,0 +1,136 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: udjattrack-api
+
+  # ===== Dual MySQL DataSources =====
+  # NOTE: Fill in YOUR_DB_HOST, YOUR_DB_NAME, YOUR_DB_USERNAME, YOUR_DB_PASSWORD
+  # after installing MySQL. The two schemas (udjattrack_db, udjattrack_ts) must
+  # be created manually before the first run:
+  #   CREATE DATABASE udjattrack_db;
+  #   CREATE DATABASE udjattrack_ts;
+
+  datasource:
+    # --- Primary: Relational database (users, trips, alerts, vehicles, etc.) ---
+    relational:
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:udjattrack_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      username: ${MYSQL_USERNAME:YOUR_DB_USERNAME}
+      password: ${MYSQL_PASSWORD:YOUR_DB_PASSWORD}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: RelationalHikariPool
+        connection-timeout: 20000
+        maximum-pool-size: 15
+        minimum-idle: 5
+
+    # --- Secondary: Time-Series database (telemetry_records — partitioned by month) ---
+    timeseries:
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_TS_DB:udjattrack_ts}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      username: ${MYSQL_USERNAME:YOUR_DB_USERNAME}
+      password: ${MYSQL_PASSWORD:YOUR_DB_PASSWORD}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: TimeSeriesHikariPool
+        connection-timeout: 20000
+        maximum-pool-size: 10
+        minimum-idle: 3
+
+  # ===== JPA shared defaults (each datasource config overrides dialect) =====
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  # ===== Mail =====
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:YOUR_EMAIL@gmail.com}
+    password: ${MAIL_PASSWORD:YOUR_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        debug: false
+
+  # ===== Cache =====
+  cache:
+    type: simple
+
+  # ===== Thread Pool (for @Async) =====
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 100
+      thread-name-prefix: UdjatAsync-
+
+# ===== Application Security & Config =====
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      expiration: 86400000       # 24 hours in milliseconds
+      refresh-token:
+        expiration: 604800000    # 7 days in milliseconds
+  otp:
+    expiration-minutes: 10
+    length: 6
+  mail:
+    from: ${MAIL_FROM:noreply@udjattrack.com}
+    from-name: ${MAIL_FROM_NAME:UdjatTrack}
+
+  # ===== WebSocket =====
+  websocket:
+    # STOMP endpoint — clients connect to ws://host:8080/api/v1/ws
+    endpoint: /ws
+    # Application destination prefix (client → server messages)
+    app-prefix: /app
+    # Broker destination prefix (server → client broadcasts)
+    topic-prefix: /topic
+    # Allowed origins for WebSocket (set to your frontend URL in production)
+    allowed-origins: ${WS_ALLOWED_ORIGINS:*}
+
+# ===== Logging =====
+logging:
+  level:
+    com.udjattrack: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web.socket: DEBUG
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ===== OpenAPI / Swagger =====
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+  show-actuator: false
+
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized
