@@ -11,17 +11,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.udjattrack.dto.request.RejectFleetManagerRequest;
+import com.udjattrack.dto.response.FleetManagerSignupResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.UUID;
 
-/**
- * AuthController — handles all authentication endpoints.
- * All routes are publicly accessible (no JWT required).
- */
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Login, logout, forgot password, OTP, and token refresh")
 public class AuthController {
 
+    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
     private final AuthService authService;
 
     @PostMapping("/login")
@@ -71,11 +72,46 @@ public class AuthController {
                 .build());
     }
 
-    @PostMapping("/refresh-token")
+    @PostMapping("/refresh")
     @Operation(summary = "Refresh Token", description = "Issues new access + refresh token pair (token rotation)")
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request) {
         AuthResponse response = authService.refreshToken(request);
         return ResponseEntity.ok(ApiResponse.ok("Token refreshed", response));
+    }
+
+    @PostMapping("/signup/fleet-manager")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Register Fleet Manager")
+    public ResponseEntity<ApiResponse<FleetManagerSignupResponse>> signupFleetManager(
+            @Valid @RequestBody CreateFleetManagerRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Fleet manager registered. Pending approval.",
+                        authService.signupFleetManager(request)));
+    }
+
+    @PatchMapping("/fleet-managers/{id}/approve")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Approve Fleet Manager")
+    public ResponseEntity<ApiResponse<FleetManagerSignupResponse>> approveFleetManager(
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok("Fleet manager approved.",
+                authService.approveFleetManager(id)));
+    }
+
+    @PatchMapping("/fleet-managers/{id}/reject")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Reject Fleet Manager")
+    public ResponseEntity<ApiResponse<FleetManagerSignupResponse>> rejectFleetManager(
+            @PathVariable UUID id,
+            @Valid @RequestBody RejectFleetManagerRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok("Fleet manager rejected.",
+                authService.rejectFleetManager(id, request.reason())));
+    }
+
+
+    @GetMapping("/dev/hash")
+    public ResponseEntity<String> generateHash(@RequestParam String raw) {
+        return ResponseEntity.ok(passwordEncoder.encode(raw));
     }
 }
