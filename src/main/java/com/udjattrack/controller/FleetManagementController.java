@@ -14,14 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-
-/**
- * FleetManagementController — manages fleet managers, drivers, vehicles and dependents.
- *
- * Role mapping:
- *  - SuperManager: verify/delete/list fleet managers
- *  - FleetManager: CRUD drivers, vehicles, dependents
- */
 @RestController
 @RequestMapping("/fleet")
 @RequiredArgsConstructor
