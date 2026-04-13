@@ -1,12 +1,9 @@
 package com.udjattrack.service;
-
+import com.udjattrack.dto.response.FleetManagerSignupResponse;
+import java.util.UUID;
 import com.udjattrack.dto.request.*;
 import com.udjattrack.dto.response.AuthResponse;
 
-/**
- * Auth service contract. Handles the full authentication lifecycle:
- * login, logout, forgot-password (OTP), verify-OTP, reset-password, token refresh.
- */
 public interface AuthService {
 
     AuthResponse login(LoginRequest request);
@@ -20,4 +17,8 @@ public interface AuthService {
     void resetPassword(ResetPasswordRequest request);
 
     AuthResponse refreshToken(RefreshTokenRequest request);
+
+    FleetManagerSignupResponse signupFleetManager(CreateFleetManagerRequest request);
+    FleetManagerSignupResponse approveFleetManager(UUID managerId);
+    FleetManagerSignupResponse rejectFleetManager(UUID managerId, String reason);
 }
