@@ -2,12 +2,16 @@ package com.udjattrack.service.impl;
 
 import com.udjattrack.dto.request.*;
 import com.udjattrack.dto.response.AuthResponse;
+import com.udjattrack.dto.response.FleetManagerSignupResponse;
+import com.udjattrack.entity.FleetManager;
 import com.udjattrack.entity.OtpToken;
 import com.udjattrack.entity.RefreshToken;
 import com.udjattrack.entity.User;
+import com.udjattrack.entity.enums.VerificationStatus;
 import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.InvalidOtpException;
 import com.udjattrack.exception.ResourceNotFoundException;
+import com.udjattrack.repository.FleetManagerRepository;
 import com.udjattrack.repository.OtpTokenRepository;
 import com.udjattrack.repository.RefreshTokenRepository;
 import com.udjattrack.repository.UserRepository;
@@ -23,22 +27,17 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.udjattrack.entity.enums.UserRole;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import com.udjattrack.entity.FleetManager;
 
-/**
- * AuthServiceImpl — handles entire authentication lifecycle:
- * - Login with JWT + refresh token issuance
- * - True logout via refresh token revocation
- * - Forgot password: OTP generation → email send → verify → reset
- * - Refresh token rotation for multi-device session management
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
+    private final FleetManagerRepository fleetManagerRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final OtpTokenRepository otpTokenRepository;
@@ -56,10 +55,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${application.otp.expiration-minutes}")
     private int otpExpirationMinutes;
-
-    // =====================================================================
-    // Login
-    // =====================================================================
 
     @Override
     @Transactional
@@ -233,6 +228,59 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .name(user.getName())
                 .role(user.getRole())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FleetManagerSignupResponse signupFleetManager(CreateFleetManagerRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Email already registered: " + request.email());
+        }
+        FleetManager manager = FleetManager.builder()
+                .name(request.name())
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(UserRole.ROLE_FLEET_MANAGER)
+                .companyName(request.companyName())
+                .subscriptionPlan(request.subscriptionPlan())
+                .verificationStatus(VerificationStatus.PENDING)
+                .isDeleted(false)
+                .build();
+        FleetManager saved = fleetManagerRepository.save(manager);
+        log.info("Fleet manager registered: {} — awaiting approval", saved.getEmail());
+        return FleetManagerSignupResponse.builder()
+                .fleetManagerId(saved.getUserId())
+                .status("PENDING_APPROVAL")
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FleetManagerSignupResponse approveFleetManager(UUID managerId) {
+        FleetManager manager = fleetManagerRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("FleetManager", "id", managerId.toString()));
+        manager.setVerificationStatus(VerificationStatus.VERIFIED);
+        fleetManagerRepository.save(manager);
+        emailService.sendWelcomeEmail(manager.getEmail(), manager.getName());
+        log.info("Fleet manager approved: {}", manager.getEmail());
+        return FleetManagerSignupResponse.builder()
+                .fleetManagerId(manager.getUserId())
+                .status("ACTIVE")
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public FleetManagerSignupResponse rejectFleetManager(UUID managerId, String reason) {
+        FleetManager manager = fleetManagerRepository.findById(managerId)
+                .orElseThrow(() -> new ResourceNotFoundException("FleetManager", "id", managerId.toString()));
+        manager.setVerificationStatus(VerificationStatus.REJECTED);
+        fleetManagerRepository.save(manager);
+        log.info("Fleet manager rejected: {} — reason: {}", manager.getEmail(), reason);
+        return FleetManagerSignupResponse.builder()
+                .fleetManagerId(manager.getUserId())
+                .status("REJECTED")
                 .build();
     }
 }
