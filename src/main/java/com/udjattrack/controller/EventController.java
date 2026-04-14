@@ -21,8 +21,7 @@ import java.util.UUID;
 @Tag(name = "Events & Sync", description = "Safety events and offline data synchronization")
 public class EventController {
 
-    // Placeholder for EventService which will be implemented next
-    // private final EventService eventService;
+    private final com.udjattrack.service.EventService eventService;
 
     @PostMapping("/trips/{tripId}/events")
     @PreAuthorize("hasRole('ROLE_DRIVER')")
@@ -30,11 +29,7 @@ public class EventController {
     public ResponseEntity<ApiResponse<EventResponse>> reportEvent(
             @PathVariable UUID tripId,
             @Valid @RequestBody EventRequest request) {
-        // Implementation placeholder
-        EventResponse response = EventResponse.builder()
-                .eventId(UUID.randomUUID())
-                .alertCreated(true)
-                .build();
+        EventResponse response = eventService.reportEvent(tripId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Event recorded", response));
     }
@@ -60,6 +55,7 @@ public class EventController {
     @Operation(summary = "Triggered only when the mobile app reconnects after a network drop")
     public ResponseEntity<ApiResponse<Void>> syncOfflineData(
             @Valid @RequestBody OfflineSyncRequest request) {
+        eventService.syncOfflineData(request);
         return ResponseEntity.accepted()
                 .body(ApiResponse.<Void>builder()
                         .success(true)

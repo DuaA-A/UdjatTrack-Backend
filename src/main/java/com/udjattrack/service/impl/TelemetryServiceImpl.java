@@ -69,7 +69,7 @@ public class TelemetryServiceImpl implements TelemetryService {
             
             // Push update to fleet manager over WebSocket
             UUID managerId = trip.getDriver().getFleetManager().getUserId();
-            webSocketPublisher.publishTelemetry(managerId, TripStateUpdateMessage.builder()
+            webSocketPublisher.publishLiveTracking(managerId, TripStateUpdateMessage.builder()
                     .tripId(trip.getTripId())
                     .driverState(state.getDriverState())
                     .tripProgressState(state.getTripProgressState())
@@ -115,6 +115,9 @@ public class TelemetryServiceImpl implements TelemetryService {
         driverRepository.findById(driverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", driverId));
         log.info("Driver {} status updated to: {}", driverId, newState);
+        
+        // Push update to specific driver's private channel
+        webSocketPublisher.publishDriverStatus(driverId, java.util.Map.of("status", newState, "timestamp", LocalDateTime.now()));
     }
 
     @Override
