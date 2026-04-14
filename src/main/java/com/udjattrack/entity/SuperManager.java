@@ -3,6 +3,7 @@ package com.udjattrack.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 /**
  * SuperManager — top-level administrator who manages the entire platform.
