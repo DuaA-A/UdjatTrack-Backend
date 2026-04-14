@@ -22,6 +22,8 @@ public class ApiResponse<T> {
 
     private T data;
 
+    private java.util.List<String> errors;
+
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
 

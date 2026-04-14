@@ -33,10 +33,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("Account is disabled");
         }
 
-        return new org.springframework.security.core.userdetails.User(
+        return new SecurityUser(
                 user.getEmail(),
                 user.getPassword(),
-                getAuthorities(user)
+                getAuthorities(user),
+                user.getUserId()
         );
     }
 

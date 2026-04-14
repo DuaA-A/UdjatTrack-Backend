@@ -1,0 +1,1854 @@
+﻿UdjatTrack
+API Design
+v2.0:  Final Implementation Reference
+________________
+
+
+1. Base Configuration
+Field
+	Value
+	Base URL
+	http://localhost:8080/api/v1
+	Authentication
+	Bearer JWT — include in every protected request
+	Content-Type
+	application/json
+	Token Expiry
+	Access Token: 15 min   |   Refresh Token: 7 days
+	Pagination
+	?page=0&size=20&sort=createdAt,desc
+	
+
+1.1 Roles
+Role
+	Description
+	SUPER_MANAGER
+	Platform owner. Manages fleet manager accounts and subscriptions.
+	FLEET_MANAGER
+	Manages drivers, vehicles, and trips for their fleet.
+	DRIVER
+	Operates trips via the mobile app.
+	
+
+1.2 Standard Response Envelope
+All responses follow this envelope:
+{
+  "success": true | false,
+  "data": { ... } | [ ... ] | null,
+  "message": "Optional info or error description",
+  "errors": [ "Validation error detail" ]  // present on 400
+}
+
+
+1.3 Standard Error Codes
+Code
+	Meaning
+	TRIP_NOT_FOUND
+	No trip matches the given ID.
+	DRIVER_NOT_ASSIGNED
+	The driver has no active vehicle assignment.
+	INVALID_STATE_TRANSITION
+	Trip state change is not allowed (e.g. END before START).
+	UNAUTHORIZED_ROLE
+	The caller's role does not permit this action.
+	TELEMETRY_INVALID
+	Telemetry payload is missing required fields or out of range.
+	VEHICLE_ALREADY_ON_TRIP
+	The vehicle is already assigned to an active trip.
+	DRIVER_ALREADY_ON_TRIP
+	Driver is already assigned to an active trip.
+	ACCOUNT_PENDING_APPROVAL
+	Fleet manager account awaits Super Manager approval.
+	SOS_ALREADY_ACTIVE
+	An SOS is already open for this trip.
+	RESOURCE_NOT_FOUND
+	Generic — entity not found.
+	
+
+________________
+
+
+2. Authentication (REST)
+Handles login, token refresh, logout, and fleet manager signup/approval flow managed by the Super Manager.
+Role: SUPER_MANAGER only
+
+
+POST
+	/auth/signup/fleet-manager
+	Super Manager registers a new fleet manager account
+	Request Body:
+{
+  "name":            "Mohamed Ali",
+  "email":           "fleet@company.com",
+  "password":        "SecurePass1!",
+  "phone":           "01000000000",
+  "businessLicense": "BL-9821",
+  "fleetSize":        40,
+        companyName
+        companyAddress
+        businessLicense
+        
+}
+Response:
+201 Created
+{
+  "success": true,
+  "data": {
+    "fleetManagerId": "uuid",
+    "status": "PENDING_APPROVAL"
+  }
+}
+Notes: Only callable by SUPER_MANAGER. The account is inactive until approved.
+
+
+PATCH
+	/auth/fleet-managers/{id}/approve
+	Super Manager approves a pending fleet manager account
+	
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": { "fleetManagerId": "uuid", "status": "ACTIVE" }
+}
+
+
+Notes: Role: SUPER_MANAGER only. Triggers welcome email.
+
+
+PATCH
+	/auth/fleet-managers/{id}/reject
+	Super Manager rejects a pending fleet manager account
+	
+
+Request Body:
+{ "reason": "Incomplete documentation" }
+
+
+Response:
+200 OK
+{ "success": true, "data": { "status": "REJECTED" } }
+
+
+
+
+Role: SUPER_MANAGER, FLEET_MANAGER, DRIVER
+
+
+POST
+	/auth/login
+	Authenticate and evaluate any user (SUPER_MANAGER, FLEET_MANAGER, DRIVER) and receive JWT tokens
+	
+
+Request Body:
+{
+  "email":     "user@mail.com",
+  "password":  "123456"
+}
+
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": {
+    "accessToken":  "eyJhbGciOi...",
+    "refreshToken": "eyJhbGciOi...",
+    "role":         "FLEET_MANAGER",
+    "userId":       "uuid"
+  }
+}
+
+
+POST
+	/auth/refresh
+	Issue a new access token using a valid refresh token
+	
+
+Request Body:
+{ "refreshToken": "eyJhbGciOi..." }
+
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": { "accessToken": "new_jwt_token" }
+}
+
+
+Refresh tokens are rotated on each use.
+POST
+	/auth/logout
+	Invalidate the current refresh token (server-side blacklist)
+	
+
+Request Body:
+{ "refreshToken": "eyJhbGciOi..." }
+Response:
+200 OK
+{ "success": true, "message": "Logged out successfully" }
+
+
+Header: Authorization: Bearer <accessToken>
+
+
+
+
+
+
+Role: SUPER_MANAGER, FLEET_MANAGER, DRIVER
+
+
+POST
+	/auth/forgot-password
+	Request password-reset otp by email→ update to real email 
+	
+
+Request Body:
+{  "email": "user@mail.com" }
+Response:
+200 OK
+{ "success": true,
+  "message": "If this email is registered, a reset code has been sent.",
+  "errors":  [] }
+
+
+A time-limited OTP (6-digit numeric, 10-minute TTL) is sent to the registered email address. The OTP is single-use and invalidated after use or expiry
+
+
+
+
+Role: SUPER_MANAGER, FLEET_MANAGER, DRIVER
+
+
+POST
+	/auth/reset-password
+	Verify OTP and set a new password
+	
+
+Request Body:
+{  "email":       "user@mail.com",
+       "otp":         "847291",
+   "newPassword": "NewSecurePass1!" }
+Response:
+200 OK
+{ "success": true,
+  "message": "Password reset successfully. Please log in with your new password.",
+  "errors":  [] }
+
+
+Error Cases
+HTTP
+	Error Code
+	Meaning
+	400
+	INVALID_OTP
+	OTP is incorrect or has expired
+	400
+	OTP_EXPIRED
+	OTP TTL of 10 minutes exceeded
+	400
+	(validation)
+	Password does not meet complexity rules
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+3. Driver & Vehicle Management (REST)
+
+
+Managed by FLEET_MANAGER. Drivers log in with credentials created here.
+3.1 Driver Endpoints
+
+
+POST
+	/drivers
+	Create a new driver account and assign to fleet
+	
+
+Request Body:
+{
+  "name":          "Ahmed Hassan",
+  "email":         "ahmed@mail.com",
+  "password":      "InitialPass1!",
+  "phone":         "0100000000",
+  "licenseNumber": "LIC-EG-4521",
+}
+
+
+Response:
+201 Created
+{
+  "success": true,
+  "data": { "driverId": "uuid", "email": "ahmed@mail.com" }
+}
+
+
+Role:Driver uses these credentials in the mobile app.
+
+
+GET
+	/drivers/me
+	Get the authenticated driver's own profile (used by mobile app home screen)
+	
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": {
+    "driverId":         "uuid",
+    "name":             "Ahmed Hassan",
+    "phone":            "0100000000",
+    "plateNumber":      "ABC-123",
+    "currentStatus":    "DRIVING",
+    "fatigueAlerts":    3,
+    "blindSpotAlerts":  7,
+    "totalTrips":       42,
+    "lastTripDuration": 480,
+    "lastUpdated":      "2026-02-21T09:00:00Z"
+  }
+
+
+
+
+Role:  FLEET_MANAGER
+
+
+GET
+	/drivers/{id}
+	Get driver profile by ID
+	
+
+Response:
+200 OK — same schema as /drivers/me
+
+
+GET
+	/drivers
+	List all drivers in the fleet (with optional filters)
+	
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": [ 
+{ 
+ "driverId":"uuid",
+ "name":"...", 
+ "status":"IDLE", 
+}
+     ],
+  "page": 0, "size": 20, "totalElements": 85
+}
+
+
+Query params: status, page, size
+
+
+DELETE
+	/drivers/{id}
+	Remove a driver from the fleet
+	
+
+Response:
+200 OK — { "success": true }
+
+
+Notes: Role: FLEET_MANAGER. Cannot delete driver with an active trip.
+
+
+3.2 Vehicle Endpoints
+Role: FLEET_MANAGER.
+POST
+	/vehicles
+	Register a vehicle in the fleet
+	
+
+Request Body:
+{
+  "plateNumber":           "ABC-123",
+  "model":                 "MAN TGX",
+  "ManufactureYear":        2021,
+   “License number”
+}
+
+
+Response:
+201 Created
+{ "success": true, 
+  "data": { 
+          "vehicleId": "uuid" 
+   }
+}
+Role: FLEET_MANAGER.
+GET
+	/vehicles/{id}
+	Get vehicle details
+	
+
+Response:
+200 OK — vehicleId, plateNumber, model, year, assignmentStatus
+
+
+Role: FLEET_MANAGER.
+GET
+	/vehicles
+	List all vehicles
+	
+
+Response:
+200 OK — paginated list
+
+
+Query params: assignmentStatus, page, size
+DELETE
+	/vehicles/{id}
+	Remove a vehicle
+	
+
+Response:
+200 OK — { "success": true }
+
+
+Keep in mind a restriction that we Cannot delete vehicles with an active trip.
+
+
+
+
+هذاعبث
+GET
+	/vehicles/{vehicleId}/maintenance-logs
+	Populates the Vehicle Maintenance CheckList widget.
+	
+
+Response:
+[ { "date": "2026-04-10", "mileage": "19,210", "details": "Engine Check", "status": "PASS" } ]
+________________
+
+
+4. Trip Management & History (REST)
+Fleet Managers create trips. Drivers control the lifecycle (start, break, end). Fleet Managers can remotely terminate.
+
+
+4.1 Trip State Machine
+Transition
+	Who triggers it
+	PLANNED → ONGOING
+	Driver: POST /trips/{id}/start
+	ONGOING → Paused
+	Driver: POST /trips/{id}/Paused
+	Paused  → ONGOING
+	Driver: POST /trips/{id}/Resumed
+	ONGOING → FINISHED
+	Driver: POST /trips/{id}/end
+	ONGOING → CANCELLED
+	Fleet Manager (remote): POST /trips/{id}/cancel
+	
+
+
+
+POST
+	/trips
+	Create a new planned trip (FLEET_MANAGER)
+	
+
+Request Body:
+{
+  "driverId":          "uuid",
+  "vehicleId":         "uuid",
+  "source":            "Cairo",
+  "destination":       "Suez",
+  "scheduledStartTime":"2026-02-22T06:00:00Z",
+  "scheduledEndTime":  "2026-02-22T14:00:00Z"
+}
+
+
+Response:
+201 Created
+{
+  "success": true,
+  "data": { "tripId": "uuid", "status": "PLANNED" }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Role: DRIVER.
+Notes: Validates that driver and vehicle have no concurrent active trips.
+GET
+	/trips
+	Get the authenticated driver's current active trip (mobile Trip Control screen)
+	
+
+Response:
+200 OK
+{
+{
+  "success": true,
+  "data": {
+    "tripId":            "uuid",
+    "title":             "Cairo → Suez",
+    "status":            "ONGOING",
+    "scheduledstartTime":"2026-02-22T06:05:00Z",
+    "scheduledEndTime":  "2026-02-22T14:00:00Z",
+    "source":            "Cairo",
+    "destination":       "Suez",
+    "drivingSeconds":    3600,
+    "breakSeconds":      600,
+    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" }
+  }
+},
+{
+  "success": true,
+  "data": {
+    "tripId":            "uuid",
+    "title":             "Cairo → Suez",
+    "status":            "ONGOING",
+    "scheduledstartTime":"2026-02-22T06:05:00Z",
+    "scheduledEndTime":  "2026-02-22T14:00:00Z",
+    "source":            "Cairo",
+    "destination":       "Suez",
+    "drivingSeconds":    3600,
+    "breakSeconds":      600,
+    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" }
+  }
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Role: FLEET_MANAGER / DRIVER
+GET
+	/trips/{tripId}
+	 Retrieves full trip details, including related entities and expected duration calculations.
+	
+
+Response:
+{
+    "tripId": "TR-105",
+    "title": "Aswan Trip",
+    "status": "ACTIVE",
+    "source": "Cairo",
+    "destination": "Aswan",
+    "scheduledStartTime": "2026-03-12T05:20:00Z",
+    "actualStartTime": "2026-03-12T05:25:00Z",
+    "estimatedArrivalTime": "2026-03-12T13:20:00Z",
+    "expectedDurationHours": 8.0,
+    "totalDistanceKm": 834,
+    "progressPct": 64,
+    "driver": {
+      "driverId": "DR-1023",
+      "name": "Ahmed Ali",
+      "phone": "0100000000"
+    },
+    "vehicle": {
+      "vehicleId": "Ve-305",
+      "plateNumber": "ABC-123",
+      "type": "Toyota Hiace"
+    },
+    "route": {
+      "startCoords": { "lat": 30.0444, "lng": 31.2357 },
+      "endCoords": { "lat": 24.0889, "lng": 32.8998 }
+    }
+}
+
+
+
+
+
+
+
+
+Roles: FLEET_MANAGER, DRIVER (own trips only). // filter based on needs of the web dashboard
+
+
+GET
+	/trips?status:active
+	List trips with filters
+	
+
+Response:
+200 OK — paginated list
+
+
+
+
+
+
+
+
+Role: FLEET_MANAGER
+Query params: status (PLANNED|ONGOING|ON_BREAK|FINISHED|CANCELLED), driverId, vehicleId, dateFrom, dateTo, page, size
+
+
+GET
+	/trips/{tripId}/timeline
+	Get the trip event timeline for the Trip Log screen
+	
+
+Response:
+200 OK
+{
+  "success": true,
+  "message": "Trip timeline retrieved successfully",
+  "errors": [],
+  "data": {
+    "tripLogId": "log-550e8400-e29b-41d4-a716-446655440000",
+    "tripId": "trip-123e4567-e89b-12d3-a456-426614174000",
+    "actualStartTime": "2026-03-03T06:05:00Z",
+    "actualEndTime": "2026-03-03T13:55:00Z",
+    "totalDurationHours": 7.83,
+    "timeline": [
+      {
+        "timestamp": "2026-03-03T06:05:00Z",
+        "itemType": "TRIP_STATE",
+        "isAlert": false,
+        "alertDetails": null,
+        "details": {
+          "progressState": "STARTED",
+          "description": "Trip started at source warehouse",
+          "location": { "lat": 30.0444, "lng": 31.2357 },
+          "driverState": "NORMAL",
+          "speedKmh": 0.0
+        }
+      },
+      {
+        "timestamp": "2026-03-03T06:45:00Z",
+        "itemType": "TRIP_STATE",
+        "isAlert": false,
+        "alertDetails": null,
+        "details": {
+          "progressState": "ONGOING",
+          "description": "Standard telemetry heartbeat",
+          "location": { "lat": 30.0890, "lng": 31.3021 },
+          "driverState": "NORMAL",
+          "speedKmh": 65.5
+        }
+      },
+      {
+        "timestamp": "2026-03-03T07:15:30Z",
+        "itemType": "EVENT",
+        "isAlert": true,
+        "alertDetails": {
+          "alertId": "alert-999a111b-222c-333d-444e-555566667777",
+          "severity": "MEDIUM",
+          "acknowledged": true
+        },
+        "details": {
+          "eventId": "evt-11112222-3333-4444-5555-666677778888",
+          "eventType": "DROWSINESS",
+          "description": "Elevated blink rate and yawning detected",
+          "payload": {
+            "blinkRatePerMinute": 18,
+            "yawnCount": 4,
+            "cameraConfidenceScore": 0.92
+          }
+        }
+      },
+      {
+        "timestamp": "2026-03-03T08:00:00Z",
+        "itemType": "TRIP_STATE",
+        "isAlert": false,
+        "alertDetails": null,
+        "details": {
+          "progressState": "ON_BREAK",
+          "description": "Driver initiated scheduled break",
+          "location": { "lat": 30.1500, "lng": 31.3500 },
+          "driverState": "NORMAL",
+          "speedKmh": 0.0
+        }
+      },
+      {
+        "timestamp": "2026-03-03T08:30:00Z",
+        "itemType": "TRIP_STATE",
+        "isAlert": false,
+        "alertDetails": null,
+        "details": {
+          "progressState": "RESUMED",
+          "description": "Break ended, trip resumed",
+          "location": { "lat": 30.1500, "lng": 31.3500 },
+          "driverState": "NORMAL",
+          "speedKmh": 0.0
+        }
+      },
+      {
+        "timestamp": "2026-03-03T09:45:12Z",
+        "itemType": "INCIDENT",
+        "isAlert": true,
+        "alertDetails": {
+          "alertId": "alert-888b222c-333d-444e-555f-666677778888",
+          "severity": "HIGH",
+          "acknowledged": true
+        },
+        "details": {
+          "incidentId": "inc-22223333-4444-5555-6666-777788889999",
+          "nearMiss": true,
+          "description": "Harsh braking event resulting in a near miss with a passenger vehicle.",
+          "reportedAt": "2026-03-03T09:45:15Z",
+          "location": "Cairo-Suez Highway, KM 45"
+        }
+      }
+      {
+        "timestamp": "2026-03-03T13:55:00Z",
+        "itemType": "TRIP_STATE",
+        "isAlert": false,
+        "alertDetails": null,
+        "details": {
+          "progressState": "FINISHED",
+          "description": "Arrived at destination warehouse",
+          "location": { "lat": 29.9668, "lng": 32.5498 },
+          "driverState": "NORMAL",
+          "speedKmh": 0.0
+        }
+      }
+    ]
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+These are Used for Trip Details / Trip Log screen on mobile.
+
+
+POST
+	/trips/{tripId}/start
+	Driver starts a PLANNED trip
+	
+
+Request Body:
+{
+  "startLocation": { "lat": 30.0444, "lng": 31.2357 }
+}
+
+
+Response:
+{ "success": true, "data": { "status": "ONGOING", "startedAt": "2026-03-03T06:05:00Z" }, "message": "Trip started successfully", "errors": [] }
+
+
+Role: DRIVER.
+POST
+	/trips/{tripId}/Paused
+	Driver begins a rest break (ONGOING → ON_BREAK)
+	
+
+Request Body:
+{ "location": { "lat": 30.100, "lng": 31.400 } }
+
+
+Response:
+{ "success": true, "data": { "status": "ON_BREAK", "breakStartedAt": "2026-03-03T08:00:00Z" }, "message": "Trip paused for break", "errors": [] }
+
+
+Logged in timeline. Counts toward compliance break reporting.
+
+
+POST
+	/trips/{tripId}/Resumed
+	Driver ends break and resumes trip (ON_BREAK → ONGOING)
+	Request Body:
+{ "location": { "lat": 30.100, "lng": 31.400 } }
+
+
+Response:
+{ "success": true, "data": { "status": "ONGOING", "breakDurationSeconds": 1800 }, "message": "Trip resumed", "errors": [] }
+
+
+POST
+	/trips/{tripId}/end
+	Driver ends the trip (ONGOING → FINISHED)
+	
+
+Request Body:
+{
+  "endLocation": { "lat": 29.9742, "lng": 32.5498 }
+}
+
+
+Response:
+{ "success": true, "data": { "status": "FINISHED", "endedAt": "2026-03-03T13:55:00Z" }, "message": "Trip ended successfully. Summary generation triggered.", "errors": [] 
+
+
+Role: FLEET_MANAGER
+Triggers trip summary generation.
+
+
+POST
+	/trips/{tripId}/cancel
+	Fleet Manager remotely cancels/terminates an active trip 
+	
+
+Request Body:
+{ "reason": "Emergency remote termination" }
+
+
+Response:
+{ "success": true, "data": { "status": "CANCELLED" }, "message": "Trip cancelled by management", "errors": [] }
+
+
+
+
+
+
+Role: DRIVER
+POST
+	/trips/{tripId}/issues/maintenance
+	Submit Maintenance (Mobile App)
+	
+
+Request Body:
+ { "maintenanceType": "TIRE_DAMAGE", 
+   "payload": 
+                 { "description": "Rear right tire blew out on the highway." } 
+}  
+
+
+
+
+Role: DRIVER
+POST
+	/trips/{tripId}/issues/sos
+	Submit Maintenance (Mobile App)
+	
+
+Request Body:
+{ "payload": 
+                 { "description": "Medical emergency, feeling dizzy." } 
+}  
+
+
+Role: DRIVER
+GET
+	/issues?status=OPEN
+	Fetch All Issues (Web Dashboard)
+	
+
+ResponseBody:
+ {
+  "success": true,
+  "data": [
+    {
+      "id": "req-uuid-1",
+      "tripId": "TR-105",
+      "category": "MAINTENANCE",
+      "status": "OPEN",
+      "maintenanceType": "TIRE_DAMAGE",
+      "payload": { "description": "Rear right tire blew out on the highway." },
+      "reportedAt": "2026-03-12T10:00:00Z"
+    },
+    {
+      "id": "req-uuid-2",
+      "tripId": "TR-108",
+      "category": "SOS",
+      "status": "OPEN",
+      "triggerType": "MANUAL",
+      "payload": { "description": "Medical emergency, feeling dizzy." },
+      "reportedAt": "2026-03-12T10:15:00Z"
+    }
+  ]
+}
+ 
+
+
+
+
+
+
+
+
+Role: DRIVER
+POST
+	/trips/{tripId}/incidents
+	 POST Incident (Driver manually reports)
+	
+
+Request Body:
+{
+  "type": "TRAFFIC_COLLISION", 
+  "severity": "HIGH",
+  "location": { "lat": 30.222, "lng": 31.333 },
+  "payload": {
+    "description": "Rear-ended a sedan at the stoplight.",
+    "vehiclesInvolved": 2
+  }
+}
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5. Trip filtering - Driver mobile
+Role: DRIVER
+timeframe convenience mapping
+timeframe
+	Equivalent status filter
+	UPCOMING
+	status=PLANNED  (scheduledStartTime in the future)
+	ACTIVE
+	status=ONGOING or status=ON_BREAK
+	PAST
+	status=FINISHED or status=CANCELLED
+	
+
+
+
+GET
+	/trips?status=timeFrame
+	list own trips filtered by status and/or time window
+	
+
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "tripId":             "uuid-1",
+      "title":              "Cairo → Suez",
+      "status":             "ONGOING",
+      "scheduledStartTime": "2026-03-09T06:00:00Z",
+      "scheduledEndTime":   "2026-03-09T14:00:00Z",
+      "actualStartTime":    "2026-03-09T06:05:00Z",
+      "actualEndTime":      null,
+      "source":             "Cairo",
+      "destination":        "Suez",
+      "vehicle": { "plateNumber": "ABC-123", "model": "MAN TGX" }
+    },
+    {
+      "tripId":             "uuid-2",
+      "title":              "Suez → Alexandria",
+      "status":             "PLANNED",
+      "scheduledStartTime": "2026-03-12T08:00:00Z",
+      "scheduledEndTime":   "2026-03-12T18:00:00Z",
+      "actualStartTime":    null,
+      "actualEndTime":      null,
+      "source":             "Suez",
+      "destination":        "Alexandria",
+      "vehicle": { "plateNumber": "XYZ-789", "model": "Volvo FH" }
+    },
+    {
+      "tripId":             "uuid-3",
+      "title":              "Cairo → Aswan",
+      "status":             "FINISHED",
+      "scheduledStartTime": "2026-03-05T06:00:00Z",
+      "scheduledEndTime":   "2026-03-05T20:00:00Z",
+      "actualStartTime":    "2026-03-05T06:10:00Z",
+      "actualEndTime":      "2026-03-05T19:45:00Z",
+      "source":             "Cairo",
+      "destination":        "Aswan",
+      "vehicle": { "plateNumber": "ABC-123", "model": "MAN TGX" }
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 42
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+4. Dependent (Emergency Contact) Endpoints:
+
+
+Role: DRIVER
+POST 
+	/drivers/{driverId}/emergency-contacts
+	Adds a new dependent to the driver's profile.
+	
+
+Request Body:
+{
+  "name": "Mahmoud Hassan",
+  "phoneNumber": "01012345678",
+  "relation": "Brother"
+}
+
+
+Response Body:
+{
+    "id": "dep-uuid-1", 
+    "name": "Mahmoud Hassan",
+    "phoneNumber": "01012345678",
+    "relation": "Brother"
+ }
+
+
+Role: DRIVER
+GET
+	/drivers/{driverId}/emergency-contacts
+	Retrieves a list of the driver's emergency contacts to display on the "Emergency Contact Screen.
+	
+
+Response Body:
+[ 
+      "id": "dep-uuid-1", 
+      "name": "Mahmoud Hassan", 
+      "phoneNumber": "01012345678", 
+      "relation": "Brother" 
+    },
+    { 
+      "id": "dep-uuid-2", 
+      "name": "Khaled Hassan", 
+      "phoneNumber": "01098765432", 
+      "relation": "Father" 
+    }
+  ]
+________________
+5. Telemetry
+Sent every 5–10 seconds from the mobile app + Raspberry Pi during an active trip. Stored as time-series data. High frequency — must be lightweight and respond fast.
+It splits ingestion into Live (single objects pushed instantly) and Offline Sync (batch arrays pushed upon network recovery).
+
+
+POST
+	/trips/{tripId}/telemetry
+	Send periodic heartbeat snapshot 
+	Validate this body with the appropriate needed data
+Request Body:
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": "2026-03-03T09:00:01Z",
+  "location": { "lat": 30.0444, "lng": 31.2357 },
+  "speedKmh": 68.4,
+  "driverState": "NORMAL",
+  "payload": 
+}
+
+
+Response:
+202 Accepted
+{
+  "success":   true,
+  "message":   "Telemetry recorded",
+  "timestamp": "2026-02-21T09:00:01Z"
+}
+
+
+driverState enum: ALERT | DROWSY | HIGH_RISK | UNCONSCIOUS. fatigueLevel: LOW | MEDIUM | HIGH.
+
+
+GET
+	/trips/{tripId}/telemetry
+	Retrieve telemetry history for a trip with time filters
+	
+
+Response:
+200 OK — paginated list of telemetry snapshots
+________________
+
+
+6. Events
+Safety events sent immediately (not on the heartbeat schedule) when a critical condition is detected. Each event may auto-create an Alert and/or Incident.
+
+
+6.1 Event Types
+eventType
+	Trigger source
+	DROWSINESS
+	AI fatigue model — eye closure / yawning / head nod
+	HIGH_RISK_FATIGUE
+	AI model — combined high-risk threshold breached
+	UNCONSCIOUS
+	AI model — driver unresponsive classification
+	CRASH
+	IMU — acceleration magnitude exceeds crash threshold
+	ROLLOVER
+	IMU — gyroscope detects rollover angle
+	OBSTACLE_NEAR
+	Ultrasonic — blind-spot or forward proximity warning
+	DISTRACTION_PHONE
+	AI vision — phone usage detected
+	BREAK_EXCEEDED
+	System — continuous driving beyond safe limit
+	
+
+Role: DRIVER
+POST
+	/trips/{tripId}/events
+	Sent instantly upon critical condition detection for a specific trip.
+	
+
+Request Body:
+{
+  "id": "evt-uuid-1",
+  "timestamp": "2026-03-03T09:05:00Z",
+  "eventType": "CRASH",
+  "severity": "CRITICAL",
+  "payload": {
+                trigger": "MANUAL", 
+"notes": "Engine failure"
+  }
+}
+
+
+Response:
+201 Created
+{
+  "success": true,
+  "data": {
+    "eventId":         "uuid",
+    "alertCreated":    true,
+  }
+}
+
+
+
+
+
+
+
+
+GET
+	/events
+	List events with filters
+	
+
+Response:
+200 OK — paginated list
+
+
+Query params: tripId, eventType, severity, from, to, page, size
+
+
+GET
+	/events/{id}
+	Get event details
+	
+
+Response:
+200 OK — full event object
+
+
+Role: DRIVER
+POST
+	/sync/offline-data
+	Triggered only when the mobile app reconnects after a network drop..
+	
+
+Request Body:
+{ "telemetryRecords": [...], "events": [...] }
+
+
+Response:
+202 Accepted
+________________
+
+
+7. Alerts
+Alerts are auto-created from Events. They appear in the driver's mobile app and the fleet manager dashboard.
+
+
+GET
+	/alerts/?status=UNACKNOWLEDGED 
+	List alerts with filters
+	
+
+Response:
+[ { "alertId": "uuid", "eventType": "FATIGUE", "severity": "HIGH", "driverName": "Ahmed Ali" } ]
+
+
+Query params: tripId, driverId, severity, acknowledged, eventType, page, size
+ROLE: FLEET MANAGER
+GET
+	/alerts/{id}
+	Get alert details
+	
+
+Response:
+
+
+{
+  "success": true,
+  "data": {
+    "alertId":       "uuid",
+    "severity":      "HIGH",             
+    "eventType":     "DROWSINESS",
+    "acknowledged":  false,
+    "readByManager": false,
+    "createdAt":     "2026-03-03T07:15:30Z",
+    "ackedAt":       null,
+
+
+    "trip": {
+      "tripId":          "uuid",
+      "title":           "Cairo → Suez",
+      "status":          "ONGOING",
+      "scheduledStartTime": "2026-03-03T06:00:00Z",
+      "scheduledEndTime":   "2026-03-03T14:00:00Z",
+      "source":          "Cairo",
+      "destination":     "Suez"
+    },
+
+
+    "driver": {
+      "driverId":    "uuid",
+      "name":        "Ahmed Hassan",
+      "phone":       "0100000000",
+      "currentState": "DROWSY"
+    },
+
+
+    "vehicle": {
+      "vehicleId":   "uuid",
+      "plateNumber": "ABC-123",
+      "model":       "MAN TGX"
+    },
+
+
+    "event": {
+      "eventId":   "uuid",
+      "eventType": "DROWSINESS",
+      "timestamp": "2026-03-03T07:15:30Z",
+      "payload": {
+        "blinkRatePerMinute":    18,
+        "yawnCount":             4,
+        "cameraConfidenceScore": 0.92
+      }
+    }
+  }
+}
+
+
+
+
+POST
+	/alerts/{alertId}/ack
+	Driver or fleet manager acknowledges an alert (FR-14)
+	Role: FLEET_MANAGER
+Response:
+{ "success": true, "data": { "acknowledged": true, "ackedAt": "2026-03-03T09:20:00Z" }, 
+"message": "Alert acknowledged", "errors": [] }
+
+
+
+
+POST
+	/alerts/{alertId}/read
+	Fleet manager marks alert notification as seen/read
+	Role: FLEET_MANAGER
+
+
+No request needed, as it will be Called automatically when the manager opens or views the alert detail screen
+Response:
+{ "success": true,
+  "data": {
+    "alertId":       "uuid",
+    "readByManager": true,
+    "readAt":        "2026-03-03T07:20:00Z"
+  },
+  "message": "Alert marked as read",
+  "errors":  []
+ }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GET
+	/issues?resolved=false&type=SOS
+	Lists SOS and Maintenance tickets that require human intervention.
+	
+
+Response:
+[ { "issueId": "uuid", "tripId": "uuid", "type": "SOS", "resolved": "false", "createdAt": "..." } ]
+
+
+
+
+POST
+	/issues/{issueId}/resolve
+	Marks an SOS or maintenance ticket as completed.
+	Request Body:
+{ "resolutionNote": "Dispatched maintenance team to location." }
+
+
+
+
+
+
+GET
+	GET /incidents
+	Lists historical accidents/near-misses for the Alerts & Incidents page
+	
+
+Response:
+[ { "incidentId": "uuid", "type": "COLLISION", "severity": "HIGH", "description": "..." } ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+12. Dashboard & Fleet Monitoring (WebSockets)
+This page gives a high-level overview of the live operations, driver states, and active alerts.
+
+
+Live Map Data (WebSockets)
+SUBSCRIBE
+	/topic/fleet/{fleetId}/telemetry
+	Stream live GPS coordinates, speed, and status to smoothly move the truck icons on the map.
+	
+
+Live Alerts (WebSockets)
+SUBSCRIBE
+	/topic/fleet/{fleetId}/alerts
+	Pushes an Alert JSON object the exact millisecond the backend creates an incident or issue request..
+	
+
+
+
+
+
+GET
+	/dashboard/{fleetId}/alerts-summary
+	Aggregated alert statistics for the fleet manager
+	
+
+Response:
+200 OK
+{
+  "success": true,
+  "data": {
+    "totalToday":     24,
+    "critical":       3,
+    "unacknowledged": 11,
+    "byType": {
+      "DROWSINESS":   12,
+      "OBSTACLE_NEAR":8,
+      "CRASH":        1
+    }
+  }
+}
+
+
+
+
+Get Fleet Status KPIs
+GET
+	/dashboard/{fleetId}/fleet-status
+	Online/offline/idle/driving status of all drivers
+	
+
+Response:
+{ 
+    "activeVehicles": 10, 
+    "activeVehiclesChangePct": 5, 
+    "activeTrips": 4, 
+    "activeTripsChangePct": 8 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Get Active Alerts Widget
+GET
+	/alerts?status=UNACKNOWLEDGED&limit=5
+	Get active alert filtered
+	
+
+Response:
+Array of recent alerts (e.g., Fatigue, Blind Spot, SOS) to show in the bottom right corner.
+
+
+Get Drivers Status KPIs
+GET
+	/dashboard/drivers-status
+	Get active Driver status
+	
+
+Response:
+{
+  "alert": 22,
+  "drowsy": 7,
+  "highRisk": 3 
+}
+
+
+
+
+GET
+	/dashboard/active-trips
+	Populates the "Trips Summary Table" and initializes the Live Map
+	
+
+Response:
+[ { "tripId": "TR-105", "title": "Aswan Trip", "driverName": "Ahmed Ali", "vehiclePlate": "Ve-305", "status": "ACTIVE", "progressPct": 64, "location": { "lat": 24.0889, "lng": 32.8998 } 
+
+
+GET /locations/nearest-help
+* Description: Populates the "Nearest Help" widget on the map view.
+* Query Params: ?lat=24.0889&lng=32.8998&radius=20
+* Response Data: [ { "name": "Aswan Hospital", "type": "HOSPITAL", "distanceKm": 20 } ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+13. Report Generation 
+Auto-generated PDF reports for compliance, insurance, and post-incident review.
+
+
+GET
+	/reports/trip/{tripId}
+	Generate and download a full trip safety PDF report
+	
+
+Response:
+200 OK — Content-Type: application/pdf (binary download)
+
+
+Notes: Includes: route, timeline, events, driver state log, break periods, alerts, incidents.
+
+
+GET
+	/reports/driver/{driverId}
+	Generate driver safety performance report over a date range
+	
+
+Response:
+200 OK — Content-Type: application/pdf
+
+
+
+
+
+
+GET
+	/reports/kpis?dateRange=LAST_YEAR
+	Populates the top row of the Reports & Analytics page.
+	
+
+Response:
+{ "tripsCompleted": 294, "fatigueAlerts": 27, "sosAlerts": 8 }
+
+
+
+
+
+
+GET
+	/reports/trips/{reportId}/download
+	Downloads the actual file when the manager clicks the "Download" link
+	
+
+Response:
+Binary application/pdf
+________________
+
+
+14. Notification Settings
+
+
+
+
+GET
+	/drivers/{driverId}/notifications
+	Downloads the actual file when the manager clicks the "Download" link
+	
+
+JSON
+{
+  "success": true,
+  "data": [
+    {
+      "id": "notif-uuid-101",
+      "type": "TRIP_ASSIGNED",
+      "title": "New Trip Assigned",
+      "message": "You have been assigned to the Cairo-Aswan route.",
+      "isRead": false,
+      "createdAt": "2026-03-12T10:00:00Z",
+      "details": {
+        "tripId": "TR-122",
+        "vehiclePlate": "ABC-123",
+        "scheduledStartTime": "2026-03-13T06:00:00Z"
+      }
+    },
+    {
+      "id": "notif-uuid-102",
+      "type": "SAFETY_ALERT",
+      "title": "Rest Break Required",
+      "message": "You are approaching your maximum continuous driving limit.",
+      "isRead": true,
+      "createdAt": "2026-03-11T14:30:00Z",
+      "details": {
+        "alertId": "alert-uuid-444",
+        "severity": "HIGH",
+        "recommendedAction": "PULL_OVER"
+      }
+    },
+    {
+      "id": "notif-uuid-103",
+      "type": "SYSTEM_BROADCAST",
+      "title": "App Update Available",
+      "message": "Please update your Udjat app to version 2.1 for the latest GPS improvements.",
+      "isRead": true,
+      "createdAt": "2026-03-10T09:00:00Z",
+      "details": {
+        "actionUrl": "https://play.google.com/store/apps/details?id=com.udjat.driver"
+      }
+    }
+  ],
+  "message": "Notifications retrieved successfully",
+  "errors": []
+}
+
+
+________________
+
+
+
+
+
+
+7. Web Dashboard & Real-Time Monitoring (WebSockets)
+Replaces continuous REST polling. The Web Dashboard connects to these channels to receive instant updates pushed by the backend EventBus.
+Connection Protocol
+* Type: STOMP over WebSockets.
+* Handshake: Authenticated via JWT token in the connection header.
+Channels (Topics)
+* SUBSCRIBE /topic/fleet/{fleetManagerId}/telemetry
+   * Payload: Streams the updated TripState JSON object every time a truck syncs a new telemetry heartbeat. Used to smoothly move truck icons on the live map.
+* SUBSCRIBE /topic/fleet/{fleetManagerId}/alerts
+   * Payload: Pushes an Alert JSON object the exact millisecond the backend AlertProcessor generates it (e.g., when a CRASH or UNCONSCIOUS event is processed). Triggers UI pop-ups and red map indicators.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Appendix: Enum Reference
+
+
+Enum
+	Values
+	Role
+	SUPER_MANAGER | FLEET_MANAGER | DRIVER
+	Trip Status
+	PLANNED | ONGOING | ON_BREAK | FINISHED | CANCELLED
+	Driver State
+	ALERT | DROWSY | HIGH_RISK | UNCONSCIOUS
+	Fatigue Level
+	LOW | MEDIUM | HIGH
+	Event Type
+	DROWSINESS | HIGH_RISK_FATIGUE | UNCONSCIOUS | CRASH | ROLLOVER | OBSTACLE_NEAR | DISTRACTION_PHONE | BREAK_EXCEEDED
+	Severity
+	LOW | MEDIUM | HIGH | CRITICAL
+	SOS Trigger
+	MANUAL | AUTOMATIC | CRASH_DETECTED
+	SOS Status
+	ACTIVE | RESOLVED
+	Driver Status
+	ONLINE | OFFLINE | DRIVING | ON_BREAK | IDLE
+	Issue Category
+	ENGINE | BRAKE | TIRE | ELECTRICAL | VIBRATION | OTHER
+	License Type
+	HEAVY_TRUCK | LIGHT_TRUCK | GENERAL
+	Fleet Manager Status
+	PENDING_APPROVAL | ACTIVE | REJECTED | SUSPENDED

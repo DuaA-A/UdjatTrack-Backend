@@ -31,6 +31,7 @@ public interface FleetManagementService {
     VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request);
     void deleteVehicle(UUID vehicleId);
     List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId);
+    VehicleResponse getVehicleById(UUID vehicleId);
 
     // Dependent operations
     DependentResponse addDependent(CreateDependentRequest request);

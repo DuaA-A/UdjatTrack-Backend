@@ -36,7 +36,10 @@ public class AuthController {
     @Operation(summary = "Logout", description = "Revokes the provided refresh token (server-side logout)")
     public ResponseEntity<ApiResponse<Void>> logout(@Valid @RequestBody RefreshTokenRequest request) {
         authService.logout(request.refreshToken());
-        return ResponseEntity.ok(ApiResponse.ok(null));
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("Logged out successfully")
+                .build());
     }
 
     @PostMapping("/forgot-password")
@@ -47,7 +50,7 @@ public class AuthController {
         return ResponseEntity.ok(
                 ApiResponse.<Void>builder()
                         .success(true)
-                        .message("OTP sent to " + request.email() + ". Valid for 10 minutes.")
+                        .message("If this email is registered, a reset code has been sent.")
                         .build());
     }
 

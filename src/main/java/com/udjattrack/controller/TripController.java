@@ -17,10 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * TripController — manages the full lifecycle of a trip.
- * FleetManagers create/assign trips; Drivers track/update progress.
- */
 @RestController
 @RequestMapping("/trips")
 @RequiredArgsConstructor
@@ -31,101 +27,88 @@ public class TripController {
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Create a new trip")
+    @Operation(summary = "Create a new planned trip")
     public ResponseEntity<ApiResponse<TripResponse>> createTrip(
             @Valid @RequestBody CreateTripRequest request) {
         TripResponse trip = tripService.createTrip(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.created("Trip created", trip));
+                .body(ApiResponse.created("Trip created in PLANNED state", trip));
     }
 
-    @PatchMapping("/{tripId}/assign-driver/{driverId}")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Assign a driver to a trip")
-    public ResponseEntity<ApiResponse<TripResponse>> assignDriver(
-            @PathVariable UUID tripId, @PathVariable UUID driverId) {
-        return ResponseEntity.ok(ApiResponse.ok("Driver assigned",
-                tripService.assignDriver(tripId, driverId)));
-    }
-
-    @PatchMapping("/{tripId}/assign-vehicle/{vehicleId}")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Assign a vehicle to a trip")
-    public ResponseEntity<ApiResponse<TripResponse>> assignVehicle(
-            @PathVariable UUID tripId, @PathVariable UUID vehicleId) {
-        return ResponseEntity.ok(ApiResponse.ok("Vehicle assigned",
-                tripService.assignVehicle(tripId, vehicleId)));
-    }
-
-    @PatchMapping("/{tripId}/start")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Start a trip")
+    @PostMapping("/{tripId}/start")
+    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @Operation(summary = "Driver starts a PLANNED trip")
     public ResponseEntity<ApiResponse<TripResponse>> startTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip started", tripService.startTrip(tripId)));
+        return ResponseEntity.ok(ApiResponse.ok("Trip started successfully", tripService.startTrip(tripId)));
     }
 
-    @PatchMapping("/{tripId}/stop")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Pause / stop a trip")
-    public ResponseEntity<ApiResponse<TripResponse>> stopTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip paused", tripService.stopTrip(tripId)));
+    @PostMapping("/{tripId}/Paused")
+    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @Operation(summary = "Driver begins a rest break (ONGOING → ON_BREAK)")
+    public ResponseEntity<ApiResponse<TripResponse>> pauseTrip(@PathVariable UUID tripId) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip paused for break", tripService.stopTrip(tripId)));
     }
 
-    @PatchMapping("/{tripId}/resume")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Resume a paused trip")
+    @PostMapping("/{tripId}/Resumed")
+    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @Operation(summary = "Driver ends break and resumes trip (ON_BREAK → ONGOING)")
     public ResponseEntity<ApiResponse<TripResponse>> resumeTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip resumed", tripService.resumeTrip(tripId)));
+        return ResponseEntity.ok(ApiResponse.ok("Trip resumed successfully", tripService.resumeTrip(tripId)));
     }
 
-    @PatchMapping("/{tripId}/complete")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Complete a trip")
-    public ResponseEntity<ApiResponse<TripResponse>> completeTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip completed", tripService.completeTrip(tripId)));
+    @PostMapping("/{tripId}/end")
+    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @Operation(summary = "Driver ends the trip (ONGOING → FINISHED)")
+    public ResponseEntity<ApiResponse<TripResponse>> endTrip(@PathVariable UUID tripId) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip ended successfully. Summary generation triggered.", tripService.completeTrip(tripId)));
     }
 
-    @PatchMapping("/{tripId}/cancel")
+    @PostMapping("/{tripId}/cancel")
     @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Cancel a trip")
+    @Operation(summary = "Fleet Manager remotely cancels/terminates an active trip")
     public ResponseEntity<ApiResponse<TripResponse>> cancelTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip cancelled", tripService.cancelTrip(tripId)));
+        return ResponseEntity.ok(ApiResponse.ok("Trip cancelled by management", tripService.cancelTrip(tripId)));
     }
 
-    @GetMapping("/{tripId}/progress")
+    @GetMapping("/{tripId}/timeline")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Get live trip progress state")
-    public ResponseEntity<ApiResponse<TripStateResponse>> trackProgress(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok(tripService.trackTripProgress(tripId)));
+    @Operation(summary = "Get the trip event timeline for the Trip Log screen")
+    public ResponseEntity<ApiResponse<Object>> getTimeline(@PathVariable UUID tripId) {
+        // Placeholder for now
+        return ResponseEntity.ok(ApiResponse.ok("Timeline retrieved", null));
+    }
+
+    @PostMapping("/{tripId}/issues/maintenance")
+    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @Operation(summary = "Submit Maintenance issue from mobile app")
+    public ResponseEntity<ApiResponse<Void>> reportMaintenance(@PathVariable UUID tripId, @RequestBody Object payload) {
+        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Maintenance issue reported").build());
+    }
+
+    @PostMapping("/{tripId}/issues/sos")
+    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @Operation(summary = "Submit SOS emergency from mobile app")
+    public ResponseEntity<ApiResponse<Void>> reportSOS(@PathVariable UUID tripId, @RequestBody Object payload) {
+        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("SOS alert triggered").build());
     }
 
     @GetMapping("/{tripId}")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Get trip by ID")
+    @Operation(summary = "Retrieves full trip details")
     public ResponseEntity<ApiResponse<TripResponse>> getTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok(tripService.getTripById(tripId)));
     }
 
-    @GetMapping("/{tripId}/report")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Get full trip report (with log, alerts, incidents)")
-    public ResponseEntity<ApiResponse<TripResponse>> getTripReport(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok(tripService.getTripReport(tripId)));
-    }
-
-    @GetMapping("/driver/{driverId}")
+    @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "List all trips for a driver")
-    public ResponseEntity<ApiResponse<List<TripResponse>>> getTripsByDriver(
-            @PathVariable UUID driverId) {
-        return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId)));
-    }
-
-    @GetMapping("/fleet-manager/{managerId}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "List all trips for a fleet manager")
-    public ResponseEntity<ApiResponse<List<TripResponse>>> getTripsByManager(
-            @PathVariable UUID managerId) {
-        return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByFleetManager(managerId)));
+    @Operation(summary = "List trips with filters (status, driverId, vehicleId, etc.)")
+    public ResponseEntity<ApiResponse<List<TripResponse>>> listTrips(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID driverId) {
+        // Basic filtering for now
+        if (driverId != null) {
+            return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId)));
+        }
+        return null; // Placeholder
     }
 }

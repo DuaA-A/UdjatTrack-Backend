@@ -129,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public void verifyOtp(VerifyOtpRequest request) {
         OtpToken otp = otpTokenRepository
-                .findByEmailAndOtpCodeAndUsedFalse(request.email(), request.otpCode())
+                .findByEmailAndOtpCodeAndUsedFalse(request.email(), request.otp())
                 .orElseThrow(() -> new InvalidOtpException("Invalid OTP code"));
 
         if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -146,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
         OtpToken otp = otpTokenRepository
-                .findByEmailAndOtpCodeAndUsedFalse(request.email(), request.otpCode())
+                .findByEmailAndOtpCodeAndUsedFalse(request.email(), request.otp())
                 .orElseThrow(() -> new InvalidOtpException("Invalid or already used OTP"));
 
         if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {

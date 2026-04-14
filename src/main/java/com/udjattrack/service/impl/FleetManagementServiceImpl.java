@@ -193,7 +193,14 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .stream().map(this::toVehicleResponse).collect(Collectors.toList());
     }
 
-    // ===== Dependents =====
+    @Override
+    @Transactional(readOnly = true)
+    public VehicleResponse getVehicleById(UUID vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .filter(v -> !Boolean.TRUE.equals(v.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+        return toVehicleResponse(vehicle);
+    }
 
     @Override
     public DependentResponse addDependent(CreateDependentRequest request) {
