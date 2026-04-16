@@ -1,4 +1,4 @@
-package com.udjattrack.repository;
+package com.udjattrack.repository.timeseries;
 
 import com.udjattrack.entity.timeseries.TelemetryRecord;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -10,6 +10,7 @@ import com.udjattrack.entity.timeseries.TelemetryRecord;
 import com.udjattrack.entity.enums.DriverState;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
+import com.udjattrack.repository.timeseries.TelemetryRecordRepository;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.service.TelemetryService;
 import com.udjattrack.websocket.WebSocketPublisher;

@@ -54,6 +54,14 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public AlertResponse getAlertById(UUID alertId) {
+        return alertRepository.findById(alertId)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", alertId));
+    }
+
+    @Override
     public AlertResponse acknowledgeAlert(UUID alertId) {
         Alert alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", alertId));

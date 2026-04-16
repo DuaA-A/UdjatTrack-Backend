@@ -58,9 +58,11 @@ public class Trip {
     @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private TripLog tripLog;
 
+    @Builder.Default
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Incident> incidents = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventRecord> eventRecords = new ArrayList<>();
 

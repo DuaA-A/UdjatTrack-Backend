@@ -4,7 +4,10 @@ import com.udjattrack.dto.request.CreateTripRequest;
 import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.dto.response.TripResponse;
 import com.udjattrack.dto.response.TripStateResponse;
+import com.udjattrack.service.EmergencyService;
+import com.udjattrack.service.EventService;
 import com.udjattrack.service.TripService;
+import com.udjattrack.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -24,6 +27,8 @@ import java.util.UUID;
 public class TripController {
 
     private final TripService tripService;
+    private final EmergencyService emergencyService;
+    private final EventService eventService;
 
     @PostMapping
     @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
@@ -42,14 +47,14 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok("Trip started successfully", tripService.startTrip(tripId)));
     }
 
-    @PostMapping("/{tripId}/Paused")
+    @PostMapping("/{tripId}/pause")
     @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
     @Operation(summary = "Driver begins a rest break (ONGOING → ON_BREAK)")
     public ResponseEntity<ApiResponse<TripResponse>> pauseTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok("Trip paused for break", tripService.stopTrip(tripId)));
     }
 
-    @PostMapping("/{tripId}/Resumed")
+    @PostMapping("/{tripId}/resume")
     @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
     @Operation(summary = "Driver ends break and resumes trip (ON_BREAK → ONGOING)")
     public ResponseEntity<ApiResponse<TripResponse>> resumeTrip(@PathVariable UUID tripId) {
@@ -73,23 +78,28 @@ public class TripController {
     @GetMapping("/{tripId}/timeline")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get the trip event timeline for the Trip Log screen")
-    public ResponseEntity<ApiResponse<Object>> getTimeline(@PathVariable UUID tripId) {
-        // Placeholder for now
-        return ResponseEntity.ok(ApiResponse.ok("Timeline retrieved", null));
+    public ResponseEntity<ApiResponse<List<com.udjattrack.entity.EventRecord>>> getTimeline(@PathVariable UUID tripId) {
+        return ResponseEntity.ok(ApiResponse.ok("Timeline retrieved", eventService.getEventsByTrip(tripId)));
     }
 
     @PostMapping("/{tripId}/issues/maintenance")
     @PreAuthorize("hasRole('ROLE_DRIVER')")
     @Operation(summary = "Submit Maintenance issue from mobile app")
-    public ResponseEntity<ApiResponse<Void>> reportMaintenance(@PathVariable UUID tripId, @RequestBody Object payload) {
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("Maintenance issue reported").build());
+    public ResponseEntity<ApiResponse<com.udjattrack.dto.response.MaintenanceRequestResponse>> reportMaintenance(
+            @PathVariable UUID tripId, 
+            @RequestBody @Valid com.udjattrack.dto.request.CreateMaintenanceRequest payload) {
+        return ResponseEntity.ok(ApiResponse.ok("Maintenance issue reported", 
+                emergencyService.reportMaintenanceRequest(payload)));
     }
 
     @PostMapping("/{tripId}/issues/sos")
     @PreAuthorize("hasRole('ROLE_DRIVER')")
     @Operation(summary = "Submit SOS emergency from mobile app")
-    public ResponseEntity<ApiResponse<Void>> reportSOS(@PathVariable UUID tripId, @RequestBody Object payload) {
-        return ResponseEntity.ok(ApiResponse.<Void>builder().success(true).message("SOS alert triggered").build());
+    public ResponseEntity<ApiResponse<com.udjattrack.dto.response.SOSRequestResponse>> reportSOS(
+            @PathVariable UUID tripId, 
+            @RequestBody @Valid com.udjattrack.dto.request.CreateSOSRequest payload) {
+        return ResponseEntity.ok(ApiResponse.ok("SOS alert triggered", 
+                emergencyService.sendManualSOS(payload)));
     }
 
     @GetMapping("/{tripId}")
@@ -105,10 +115,14 @@ public class TripController {
     public ResponseEntity<ApiResponse<List<TripResponse>>> listTrips(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) UUID driverId) {
-        // Basic filtering for now
+        
         if (driverId != null) {
             return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId)));
         }
-        return null; // Placeholder
+        
+        // If no driverId, return all trips the current manager is allowed to see
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", 
+                tripService.getTripsByFleetManager(currentUserId)));
     }
 }

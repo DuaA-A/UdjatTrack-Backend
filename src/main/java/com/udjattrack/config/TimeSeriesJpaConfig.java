@@ -18,14 +18,7 @@ import java.util.Map;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        basePackages = {"com.udjattrack.repository", "com.udjattrack.repository.timeseries"},
-        includeFilters = @org.springframework.context.annotation.ComponentScan.Filter(
-                type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE,
-                classes = {
-                        com.udjattrack.repository.TelemetryRecordRepository.class,
-                        com.udjattrack.repository.timeseries.EventRecordTimeSeriesRepository.class
-                }
-        ),
+        basePackages = "com.udjattrack.repository.timeseries",
         entityManagerFactoryRef = "timeseriesEntityManagerFactory",
         transactionManagerRef = "timeseriesTransactionManager"
 )

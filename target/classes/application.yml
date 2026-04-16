@@ -18,8 +18,8 @@ spring:
     # --- Primary: Relational database (users, trips, alerts, vehicles, etc.) ---
     relational:
       jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:udjattrack_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      username: ${MYSQL_USERNAME:YOUR_DB_USERNAME}
-      password: ${MYSQL_PASSWORD:YOUR_DB_PASSWORD}
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:password}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: RelationalHikariPool
@@ -30,8 +30,8 @@ spring:
     # --- Secondary: Time-Series database (telemetry_records — partitioned by month) ---
     timeseries:
       jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_TS_DB:udjattrack_ts}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      username: ${MYSQL_USERNAME:YOUR_DB_USERNAME}
-      password: ${MYSQL_PASSWORD:YOUR_DB_PASSWORD}
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:password}
       driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
         pool-name: TimeSeriesHikariPool
@@ -54,8 +54,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:YOUR_EMAIL@gmail.com}
-    password: ${MAIL_PASSWORD:YOUR_APP_PASSWORD}
+    username: ${MAIL_USERNAME:dev@udjattrack.com}
+    password: ${MAIL_PASSWORD:devpassword}
     properties:
       mail:
         smtp:

@@ -1,10 +1,9 @@
 package com.udjattrack.util;
 
-import com.udjattrack.security.JwtUtil;
+import com.udjattrack.security.SecurityUser;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.util.UUID;
 

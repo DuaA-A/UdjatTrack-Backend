@@ -14,6 +14,7 @@ import java.util.UUID;
 public interface AlertService {
 
     AlertResponse createAlert(CreateAlertRequest request);
+    AlertResponse getAlertById(UUID alertId);
     AlertResponse acknowledgeAlert(UUID alertId);
     List<AlertResponse> getUnacknowledgedAlerts(UUID fleetManagerId);
     List<AlertResponse> getAlertsByTripLog(UUID tripLogId);

@@ -4,6 +4,7 @@ import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.response.AlertResponse;
 import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.service.AlertService;
+import com.udjattrack.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -31,17 +32,20 @@ public class AlertController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) UUID tripId,
             @RequestParam(required = false) String severity) {
-        // Alignment logic for status=UNACKNOWLEDGED
-        // For now, returning empty or calling service if applicable
-        return ResponseEntity.ok(ApiResponse.ok(List.of()));
+        
+        if ("UNACKNOWLEDGED".equalsIgnoreCase(status)) {
+            UUID managerId = SecurityUtils.getCurrentUserId();
+            return ResponseEntity.ok(ApiResponse.ok(alertService.getUnacknowledgedAlerts(managerId)));
+        }
+        
+        return ResponseEntity.ok(ApiResponse.ok("Query results", List.of()));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get alert details")
     public ResponseEntity<ApiResponse<AlertResponse>> getAlert(@PathVariable UUID id) {
-        // Service doesn't have getById yet in the interface I saw earlier, might need to add
-        return null;
+        return ResponseEntity.ok(ApiResponse.ok(alertService.getAlertById(id)));
     }
 
     @PostMapping("/{alertId}/ack")

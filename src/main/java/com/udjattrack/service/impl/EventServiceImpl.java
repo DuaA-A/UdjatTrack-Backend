@@ -5,11 +5,9 @@ import com.udjattrack.dto.request.OfflineSyncRequest;
 import com.udjattrack.dto.response.EventResponse;
 import com.udjattrack.dto.websocket.AlertEventMessage;
 import com.udjattrack.entity.Trip;
-import com.udjattrack.entity.timeseries.EventRecord;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.EventRecordRepository;
 import com.udjattrack.repository.TripRepository;
-import com.udjattrack.repository.timeseries.EventRecordTimeSeriesRepository;
 import com.udjattrack.service.EventService;
 import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +24,6 @@ import java.util.UUID;
 public class EventServiceImpl implements EventService {
 
     private final EventRecordRepository relationalRepository;
-    private final EventRecordTimeSeriesRepository timeSeriesRepository;
     private final TripRepository tripRepository;
     private final WebSocketPublisher webSocketPublisher;
 
@@ -36,7 +33,7 @@ public class EventServiceImpl implements EventService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
 
-        // 1. Save to Relational DB (Long-term management)
+        // 1. Save to Relational DB (long-term management & history)
         com.udjattrack.entity.EventRecord relationalRecord = com.udjattrack.entity.EventRecord.builder()
                 .trip(trip)
                 .eventType(request.eventType())
@@ -44,15 +41,6 @@ public class EventServiceImpl implements EventService {
                 .payload(request.payload())
                 .build();
         relationalRepository.save(relationalRecord);
-
-        // 2. Save to Time-Series DB (Audit log / high-frequency)
-        EventRecord tsRecord = EventRecord.builder()
-                .tripId(tripId)
-                .eventType(request.eventType())
-                .severity(request.severity())
-                .payload(request.payload())
-                .build();
-        timeSeriesRepository.save(tsRecord);
 
         // 3. Broadcast over WebSocket to Fleet Manager
         UUID managerId = trip.getDriver().getFleetManager().getUserId();
@@ -69,6 +57,12 @@ public class EventServiceImpl implements EventService {
                 .eventId(relationalRecord.getId())
                 .alertCreated(true)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<com.udjattrack.entity.EventRecord> getEventsByTrip(UUID tripId) {
+        return relationalRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
     }
 
     @Override
