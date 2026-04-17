@@ -117,7 +117,7 @@ public class TripController {
             @RequestParam(required = false) UUID driverId) {
         
         if (driverId != null) {
-            return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId)));
+            return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId, status)));
         }
         
         // If no driverId, return all trips the current manager is allowed to see

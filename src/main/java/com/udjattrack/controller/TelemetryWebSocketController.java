@@ -32,7 +32,7 @@ public class TelemetryWebSocketController {
         try {
             // Process the telemetry (this will save to TSDB and push update to fleet manager dashboard)
             TelemetryRecordResponse response = telemetryService.ingestTelemetry(request);
-            log.debug("Successfully processed WebSocket telemetry: {}", response.id());
+            log.debug("Successfully processed WebSocket telemetry: {}", response.getId());
         } catch (Exception e) {
             log.error("Failed to ingest telemetry via WebSocket: {}", e.getMessage(), e);
             // Optionally, handle error sending back to a user-specific error queue if needed

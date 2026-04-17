@@ -39,6 +39,20 @@ public class TelemetryController {
                         .build());
     }
 
+    @PostMapping("/batch")
+    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @Operation(summary = "Upload batched telemetry records (used when recovering from offline status)")
+    public ResponseEntity<ApiResponse<String>> ingestTelemetryBatch(
+            @PathVariable UUID tripId,
+            @Valid @RequestBody com.udjattrack.dto.request.TelemetryBatchRequest request) {
+        telemetryService.processTelemetryBatch(request);
+        return ResponseEntity.accepted()
+                .body(ApiResponse.<String>builder()
+                        .success(true)
+                        .message("Batch telemetry queued for processing")
+                        .build());
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Retrieve telemetry history for a trip with time filters")

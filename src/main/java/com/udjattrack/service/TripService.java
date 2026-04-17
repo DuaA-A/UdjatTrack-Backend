@@ -22,7 +22,7 @@ public interface TripService {
     TripResponse cancelTrip(UUID tripId);
     TripStateResponse trackTripProgress(UUID tripId);
     TripResponse getTripById(UUID tripId);
-    List<TripResponse> getTripsByDriver(UUID driverId);
+    List<TripResponse> getTripsByDriver(UUID driverId, String status);
     List<TripResponse> getTripsByFleetManager(UUID managerId);
     TripResponse getTripReport(UUID tripId);
 }

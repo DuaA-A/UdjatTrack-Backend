@@ -16,6 +16,8 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     List<Trip> findAllByDriverUserIdOrderByCreatedAtDesc(UUID driverId);
 
+    List<Trip> findAllByDriverUserIdAndTripStateInOrderByCreatedAtDesc(UUID driverId, List<TripProgressState> states);
+
     List<Trip> findAllByVehicleVehicleIdOrderByCreatedAtDesc(UUID vehicleId);
 
     List<Trip> findAllByTripState(TripProgressState state);

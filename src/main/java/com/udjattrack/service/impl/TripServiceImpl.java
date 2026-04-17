@@ -183,8 +183,20 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TripResponse> getTripsByDriver(UUID driverId) {
-        return tripRepository.findAllByDriverUserIdOrderByCreatedAtDesc(driverId)
+    public List<TripResponse> getTripsByDriver(UUID driverId, String status) {
+        if (status == null || status.isBlank()) {
+            return tripRepository.findAllByDriverUserIdOrderByCreatedAtDesc(driverId)
+                    .stream().map(this::toResponse).collect(Collectors.toList());
+        }
+
+        List<TripProgressState> targetStates = switch (status.toLowerCase()) {
+            case "active" -> List.of(TripProgressState.STARTED, TripProgressState.PAUSED, TripProgressState.RESUMED);
+            case "past" -> List.of(TripProgressState.COMPLETED, TripProgressState.CANCELLED);
+            case "upcoming" -> List.of(TripProgressState.CREATED);
+            default -> throw new BusinessException("Invalid trip status filter. Use: active, past, upcoming");
+        };
+
+        return tripRepository.findAllByDriverUserIdAndTripStateInOrderByCreatedAtDesc(driverId, targetStates)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 

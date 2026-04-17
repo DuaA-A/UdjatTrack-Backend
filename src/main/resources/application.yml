@@ -1,4 +1,4 @@
-server:
+ccserver:
   port: 8080
   servlet:
     context-path: /api/v1
@@ -7,37 +7,18 @@ spring:
   application:
     name: udjattrack-api
 
-  # ===== Dual MySQL DataSources =====
-  # NOTE: Fill in YOUR_DB_HOST, YOUR_DB_NAME, YOUR_DB_USERNAME, YOUR_DB_PASSWORD
-  # after installing MySQL. The two schemas (udjattrack_db, udjattrack_ts) must
-  # be created manually before the first run:
-  #   CREATE DATABASE udjattrack_db;
-  #   CREATE DATABASE udjattrack_ts;
-
+  # ===== Unified PostgreSQL DataSources =====
+  # Relational tables & TimescaleDB hypertables run together natively
   datasource:
-    # --- Primary: Relational database (users, trips, alerts, vehicles, etc.) ---
-    relational:
-      jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:udjattrack_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      username: ${MYSQL_USERNAME:root}
-      password: ${MYSQL_PASSWORD:password}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      hikari:
-        pool-name: RelationalHikariPool
-        connection-timeout: 20000
-        maximum-pool-size: 15
-        minimum-idle: 5
-
-    # --- Secondary: Time-Series database (telemetry_records — partitioned by month) ---
-    timeseries:
-      jdbc-url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_TS_DB:udjattrack_ts}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      username: ${MYSQL_USERNAME:root}
-      password: ${MYSQL_PASSWORD:password}
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      hikari:
-        pool-name: TimeSeriesHikariPool
-        connection-timeout: 20000
-        maximum-pool-size: 10
-        minimum-idle: 3
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:udjattrack}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: UnifiedHikariPool
+      connection-timeout: 20000
+      maximum-pool-size: 25
+      minimum-idle: 5
 
   # ===== JPA shared defaults (each datasource config overrides dialect) =====
   jpa:
