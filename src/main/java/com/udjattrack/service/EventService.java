@@ -7,7 +7,8 @@ import java.util.UUID;
 
 public interface EventService {
     EventResponse reportEvent(UUID tripId, EventRequest request);
-    java.util.List<com.udjattrack.entity.EventRecord> getEventsByTrip(UUID tripId);
+    java.util.List<EventResponse> getEventsByTrip(UUID tripId);
+    EventResponse getEventById(UUID eventId);
+    java.util.List<EventResponse> getAllEvents(UUID tripId, String eventType);
     void syncOfflineData(OfflineSyncRequest request);
-    // Add other methods if needed for retrieving events
 }

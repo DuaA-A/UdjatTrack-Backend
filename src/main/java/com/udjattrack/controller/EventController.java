@@ -37,17 +37,17 @@ public class EventController {
     @GetMapping("/events")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List events with filters")
-    public ResponseEntity<ApiResponse<List<Object>>> listEvents(
+    public ResponseEntity<ApiResponse<List<EventResponse>>> listEvents(
             @RequestParam(required = false) UUID tripId,
             @RequestParam(required = false) String eventType) {
-        return ResponseEntity.ok(ApiResponse.ok(List.of()));
+        return ResponseEntity.ok(ApiResponse.ok(eventService.getAllEvents(tripId, eventType)));
     }
 
     @GetMapping("/events/{id}")
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get event details")
-    public ResponseEntity<ApiResponse<Object>> getEvent(@PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.ok(null));
+    public ResponseEntity<ApiResponse<EventResponse>> getEvent(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(eventService.getEventById(id)));
     }
 
     @PostMapping("/sync/offline-data")

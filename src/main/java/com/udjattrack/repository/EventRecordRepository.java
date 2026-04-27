@@ -14,4 +14,6 @@ public interface EventRecordRepository extends JpaRepository<EventRecord, UUID> 
     List<EventRecord> findAllByTripTripIdOrderByTimestampDesc(UUID tripId);
 
     List<EventRecord> findAllByTripTripIdAndSeverity(UUID tripId, SeverityLevel severity);
+
+    List<EventRecord> findAllByTripTripIdAndEventTypeOrderByTimestampDesc(UUID tripId, String eventType);
 }

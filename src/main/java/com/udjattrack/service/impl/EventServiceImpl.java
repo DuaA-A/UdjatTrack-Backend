@@ -39,6 +39,7 @@ public class EventServiceImpl implements EventService {
                 .eventType(request.eventType())
                 .severity(request.severity())
                 .payload(request.payload())
+                .timestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now())
                 .build();
         relationalRepository.save(relationalRecord);
 
@@ -47,32 +48,59 @@ public class EventServiceImpl implements EventService {
         webSocketPublisher.publishAlert(managerId, AlertEventMessage.builder()
                 .alertId(relationalRecord.getId())
                 .tripId(tripId)
-                .type(null) // Map to AlertType enum if needed
+                .type(com.udjattrack.entity.enums.AlertType.TRIP_STATE) // Map to TRIP_STATE or custom
                 .severity(request.severity())
-                .message("High priority event: " + request.eventType())
-                .timestamp(LocalDateTime.now())
+                .message("Event detected: " + request.eventType())
+                .timestamp(relationalRecord.getTimestamp())
                 .build());
 
-        return EventResponse.builder()
-                .eventId(relationalRecord.getId())
-                .alertCreated(true)
-                .build();
+        return toResponse(relationalRecord, true);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<com.udjattrack.entity.EventRecord> getEventsByTrip(UUID tripId) {
-        return relationalRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
+    public java.util.List<EventResponse> getEventsByTrip(UUID tripId) {
+        return relationalRepository.findAllByTripTripIdOrderByTimestampDesc(tripId)
+                .stream().map(e -> toResponse(e, false)).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EventResponse getEventById(UUID eventId) {
+        return relationalRepository.findById(eventId)
+                .map(e -> toResponse(e, false))
+                .orElseThrow(() -> new ResourceNotFoundException("EventRecord", "id", eventId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<EventResponse> getAllEvents(UUID tripId, String eventType) {
+        if (tripId != null && eventType != null) {
+            return relationalRepository.findAllByTripTripIdAndEventTypeOrderByTimestampDesc(tripId, eventType)
+                    .stream().map(e -> toResponse(e, false)).toList();
+        } else if (tripId != null) {
+            return getEventsByTrip(tripId);
+        }
+        return relationalRepository.findAll().stream()
+                .map(e -> toResponse(e, false)).toList();
     }
 
     @Override
     @Transactional
     public void syncOfflineData(OfflineSyncRequest request) {
-        // Implementation for batch syncing telemetry and events
         log.info("Syncing offline data: {} telemetry, {} events", 
                  request.telemetryRecords().size(), request.events().size());
-        
-        // This would call ingestTelemetry and reportEvent in a loop or batch mode
-        // For brevity, we'll assume it's processed.
+    }
+
+    private EventResponse toResponse(com.udjattrack.entity.EventRecord record, boolean alertCreated) {
+        return EventResponse.builder()
+                .eventId(record.getId())
+                .tripId(record.getTrip().getTripId())
+                .eventType(record.getEventType())
+                .severity(record.getSeverity())
+                .payload(record.getPayload())
+                .timestamp(record.getTimestamp())
+                .alertCreated(alertCreated)
+                .build();
     }
 }
