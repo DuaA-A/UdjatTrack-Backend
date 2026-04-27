@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:udjattrack}
     username: ${POSTGRES_USERNAME:postgres}
-    password: ${POSTGRES_PASSWORD:password}
+    password: ${POSTGRES_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: UnifiedHikariPool

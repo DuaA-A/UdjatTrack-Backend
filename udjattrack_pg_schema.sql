@@ -1,12 +1,10 @@
 -- ================================================
 -- UdjatTrack Database Schema Creation Script
--- Target Database: MySQL 8.0+
+-- Target Database: PostgreSQL 14+ (with TimescaleDB)
 -- ================================================
 
-
-
-
--- SET FOREIGN_KEY_CHECKS = 0;
+-- Enable TimescaleDB extension if not already present
+CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 -- 1. Users & Inheritance
 DROP TABLE IF EXISTS super_managers;
