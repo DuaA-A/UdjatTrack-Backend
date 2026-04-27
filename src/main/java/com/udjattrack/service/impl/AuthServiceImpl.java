@@ -74,6 +74,9 @@ public class AuthServiceImpl implements AuthService {
         saveRefreshToken(user, refreshTokenValue, request.deviceInfo());
 
         log.info("User logged in: {} [{}]", user.getEmail(), user.getRole());
+        
+        // Send login notification email
+        emailService.sendLoginNotification(user.getEmail(), user.getName(), request.deviceInfo());
 
         return buildAuthResponse(user, accessToken, refreshTokenValue);
     }

@@ -1,4 +1,4 @@
-﻿UdjatTrack
+UdjatTrack
 API Design
 v2.0:  Final Implementation Reference
 ________________
@@ -1152,15 +1152,13 @@ Response Body:
     }
   ]
 ________________
-5. Telemetry
-Sent every 5–10 seconds from the mobile app + Raspberry Pi during an active trip. Stored as time-series data. High frequency — must be lightweight and respond fast.
-It splits ingestion into Live (single objects pushed instantly) and Offline Sync (batch arrays pushed upon network recovery).
-
+5. Telemetry Ingestion (Mobile App)
+All telemetry data from mobile devices MUST be sent via HTTP POST to ensure reliable delivery and server acknowledgement. WebSockets are NOT used for ingestion to prevent data loss during network drops.
 
 POST
 	/trips/{tripId}/telemetry
-	Send periodic heartbeat snapshot 
-	Validate this body with the appropriate needed data
+	Send periodic heartbeat snapshot (Location, Speed, State)
+	Rate: Recommended every 5–10 seconds.
 Request Body:
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -1510,19 +1508,21 @@ Response:
 
 
 12. Dashboard & Fleet Monitoring (WebSockets)
-This page gives a high-level overview of the live operations, driver states, and active alerts.
+This section is for Server-to-Client broadcasting only. Fleet Managers subscribe to these topics to receive live updates without polling.
 
+Protocol: STOMP over WebSocket
+Endpoint: /ws (prefixed by context path if applicable)
 
-Live Map Data (WebSockets)
+Live Map Tracking (WebSockets)
 SUBSCRIBE
-	/topic/fleet/{fleetId}/telemetry
-	Stream live GPS coordinates, speed, and status to smoothly move the truck icons on the map.
-	
+	/topic/fleet/{managerId}/live-tracking
+	Stream: Live GPS coordinates, speed, and trip status updates.
+	Frequency: Triggered instantly when any trip telemetry is received via HTTP.
 
 Live Alerts (WebSockets)
 SUBSCRIBE
-	/topic/fleet/{fleetId}/alerts
-	Pushes an Alert JSON object the exact millisecond the backend creates an incident or issue request..
+	/topic/fleet/{managerId}/alerts
+	Stream: Pushes an Alert JSON object the exact millisecond an event (Crash, Drowsiness, etc.) is reported via HTTP.
 	
 
 

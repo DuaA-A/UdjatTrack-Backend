@@ -35,8 +35,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:dev@udjattrack.com}
-    password: ${MAIL_PASSWORD:devpassword}
+    username: ${MAIL_USERNAME:udjattrack@gmail.com}
+    password: ${MAIL_PASSWORD:zwyy dbzm lkzo fsza}
     properties:
       mail:
         smtp:
@@ -71,7 +71,7 @@ application:
     expiration-minutes: 10
     length: 6
   mail:
-    from: ${MAIL_FROM:noreply@udjattrack.com}
+    from: ${MAIL_FROM:udjattrack@gmail.com}
     from-name: ${MAIL_FROM_NAME:UdjatTrack}
 
   # ===== WebSocket =====

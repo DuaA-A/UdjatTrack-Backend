@@ -12,4 +12,6 @@ public interface EmailService {
     void sendPasswordChangedEmail(String to, String name);
 
     void sendEmergencyAlert(String to, String driverName, String location);
+    
+    void sendLoginNotification(String to, String name, String deviceInfo);
 }
