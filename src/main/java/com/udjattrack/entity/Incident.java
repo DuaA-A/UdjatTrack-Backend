@@ -15,26 +15,17 @@ import java.util.UUID;
 
 /**
  * Incident — reported during or after a trip by the driver or auto-detected.
- * Supports a flexible JSON payload for incident-specific metadata.
+ * Inherits common fields (trip, payload, reportedAt) from IssueRequest.
  */
 @Entity
 @Table(name = "incidents")
-@EntityListeners(AuditingEntityListener.class)
+@DiscriminatorValue("INCIDENT")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Incident {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "incident_id", updatable = false, nullable = false)
-    private UUID incidentId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_id", nullable = false)
-    private Trip trip;
+@SuperBuilder
+public class Incident extends IssueRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false, length = 15)
@@ -46,12 +37,4 @@ public class Incident {
 
     @Column(name = "location", length = 255)
     private String location;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload", columnDefinition = "json")
-    private Map<String, Object> payload;
-
-    @CreatedDate
-    @Column(name = "reported_at", nullable = false, updatable = false)
-    private LocalDateTime reportedAt;
 }

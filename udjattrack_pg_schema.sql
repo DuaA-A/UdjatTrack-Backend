@@ -169,15 +169,12 @@ CREATE TABLE alerts (
 ) ;
 
 CREATE TABLE incidents (
-    incident_id UUID NOT NULL,
-    trip_id UUID NOT NULL,
+    issue_id UUID NOT NULL,
     severity VARCHAR(15) NOT NULL,
     incident_type VARCHAR(40) NOT NULL,
     location VARCHAR(255),
-    payload JSONB,
-    reported_at TIMESTAMP NOT NULL,
-    PRIMARY KEY (incident_id),
-    CONSTRAINT fk_incidents_trip FOREIGN KEY (trip_id) REFERENCES trips (trip_id)
+    PRIMARY KEY (issue_id),
+    CONSTRAINT fk_incidents_issue FOREIGN KEY (issue_id) REFERENCES issue_requests (issue_id) ON DELETE CASCADE
 ) ;
 
 CREATE TABLE event_records (

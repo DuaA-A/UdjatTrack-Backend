@@ -92,6 +92,7 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .type(request.type())
                 .severity(request.severity())
                 .location(request.location())
+                .status(IssueStatus.OPEN)
                 .payload(request.payload())
                 .build();
         return toIncidentResponse(incidentRepository.save(incident));
@@ -154,7 +155,7 @@ public class EmergencyServiceImpl implements EmergencyService {
 
     private IncidentResponse toIncidentResponse(Incident i) {
         return IncidentResponse.builder()
-                .incidentId(i.getIncidentId()).tripId(i.getTrip().getTripId())
+                .incidentId(i.getIssueId()).tripId(i.getTrip().getTripId())
                 .severity(i.getSeverity()).type(i.getType())
                 .location(i.getLocation()).payload(i.getPayload())
                 .reportedAt(i.getReportedAt())
