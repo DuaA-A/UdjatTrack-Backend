@@ -26,7 +26,7 @@ public class AlertController {
     private final AlertService alertService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER', 'ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "List alerts with filters")
     public ResponseEntity<ApiResponse<List<AlertResponse>>> getAlerts(
             @RequestParam(required = false) String status,
@@ -42,14 +42,14 @@ public class AlertController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get alert details")
     public ResponseEntity<ApiResponse<AlertResponse>> getAlert(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(alertService.getAlertById(id)));
     }
 
     @PostMapping("/{alertId}/ack")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "Acknowledge an alert")
     public ResponseEntity<ApiResponse<AlertResponse>> acknowledgeAlert(@PathVariable UUID alertId) {
         return ResponseEntity.ok(ApiResponse.ok("Alert acknowledged",
@@ -57,7 +57,7 @@ public class AlertController {
     }
 
     @PostMapping("/{alertId}/read")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Fleet manager marks alert notification as seen/read")
     public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable UUID alertId) {
         // Stub for now
@@ -68,7 +68,7 @@ public class AlertController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Create an alert manually (Administrator only)")
     public ResponseEntity<ApiResponse<AlertResponse>> createAlert(
             @Valid @RequestBody CreateAlertRequest request) {

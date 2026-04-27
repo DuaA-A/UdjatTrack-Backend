@@ -76,9 +76,9 @@ public class TripController {
     }
 
     @GetMapping("/{tripId}/timeline")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get the trip event timeline for the Trip Log screen")
-    public ResponseEntity<ApiResponse<List<com.udjattrack.entity.EventRecord>>> getTimeline(@PathVariable UUID tripId) {
+    public ResponseEntity<ApiResponse<List<com.udjattrack.dto.response.EventResponse>>> getTimeline(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok("Timeline retrieved", eventService.getEventsByTrip(tripId)));
     }
 

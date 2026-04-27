@@ -30,7 +30,7 @@ public class DashboardController {
     private final FleetManagementService fleetManagementService;
 
     @GetMapping("/{fleetId}/alerts-summary")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Aggregated alert statistics for the fleet manager")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAlertsSummary(@PathVariable UUID fleetId) {
         List<AlertResponse> unacknowledged = alertService.getUnacknowledgedAlerts(fleetId);
@@ -49,7 +49,7 @@ public class DashboardController {
     }
 
     @GetMapping("/{fleetId}/fleet-status")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Active vehicles and trips KPIs")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFleetStatus(@PathVariable UUID fleetId) {
         List<TripResponse> activeTrips = tripService.getTripsByFleetManager(fleetId).stream()
@@ -65,7 +65,7 @@ public class DashboardController {
     }
 
     @GetMapping("/drivers-status")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Online/offline/idle/driving status of all drivers")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDriversStatus() {
         UUID managerId = SecurityUtils.getCurrentUserId();

@@ -18,13 +18,13 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/fleet-managers")
 @RequiredArgsConstructor
-@Tag(name = "Fleet Manager Admin", description = "Administrative operations for fleet manager accounts (Super Manager only)")
-public class FleetManagementController {
+@Tag(name = "Super Manager Admin", description = "Administrative operations for fleet manager accounts (Super Manager only)")
+public class SuperManagementController {
 
     private final FleetManagementService fleetManagementService;
 
     @PutMapping("/{managerId}")
-    @PreAuthorize("hasRole('ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
     @Operation(summary = "Update a fleet manager")
     public ResponseEntity<ApiResponse<FleetManagerResponse>> updateFleetManager(
             @PathVariable UUID managerId,
@@ -34,7 +34,7 @@ public class FleetManagementController {
     }
 
     @DeleteMapping("/{managerId}")
-    @PreAuthorize("hasRole('ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
     @Operation(summary = "Soft-delete a fleet manager")
     public ResponseEntity<ApiResponse<Void>> deleteFleetManager(@PathVariable UUID managerId) {
         fleetManagementService.deleteFleetManager(managerId);
@@ -43,14 +43,14 @@ public class FleetManagementController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
     @Operation(summary = "List all fleet managers")
     public ResponseEntity<ApiResponse<List<FleetManagerResponse>>> getAllManagers() {
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getAllFleetManagers()));
     }
 
     @GetMapping("/{managerId}")
-    @PreAuthorize("hasAnyRole('ROLE_SUPER_MANAGER', 'ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_MANAGER', 'ROLE_FLEET_MANAGER')")
     @Operation(summary = "Get fleet manager by ID")
     public ResponseEntity<ApiResponse<FleetManagerResponse>> getManager(
             @PathVariable UUID managerId) {

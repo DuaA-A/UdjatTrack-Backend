@@ -277,7 +277,7 @@ INSERT INTO users (
     role, is_deleted, created_at
 ) VALUES (
     'SUPER_MANAGER',
-    gen_random_uuid(),
+    '3e6f987d-8f92-48a5-b1a6-f28148358261',
     'Super Admin',
     'admin@udjattrack.com',
     '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
@@ -285,6 +285,9 @@ INSERT INTO users (
     FALSE,
     CURRENT_TIMESTAMP
 );
+
+INSERT INTO super_managers (user_id) 
+VALUES ('3e6f987d-8f92-48a5-b1a6-f28148358261');
 
 -- ================================================
 -- 2. Fleet Manager (pre-approved for testing)
