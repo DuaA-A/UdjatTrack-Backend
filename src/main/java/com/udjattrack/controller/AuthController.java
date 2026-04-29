@@ -93,24 +93,7 @@ public class AuthController {
                         authService.signupFleetManager(request)));
     }
 
-    @PatchMapping("/fleet-managers/{id}/approve")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Approve Fleet Manager")
-    public ResponseEntity<ApiResponse<FleetManagerSignupResponse>> approveFleetManager(
-            @PathVariable UUID id) {
-        return ResponseEntity.ok(ApiResponse.ok("Fleet manager approved.",
-                authService.approveFleetManager(id)));
-    }
 
-    @PatchMapping("/fleet-managers/{id}/reject")
-    @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Reject Fleet Manager")
-    public ResponseEntity<ApiResponse<FleetManagerSignupResponse>> rejectFleetManager(
-            @PathVariable UUID id,
-            @Valid @RequestBody RejectFleetManagerRequest request) {
-        return ResponseEntity.ok(ApiResponse.ok("Fleet manager rejected.",
-                authService.rejectFleetManager(id, request.reason())));
-    }
 
 
     @GetMapping("/dev/hash")
