@@ -9,6 +9,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\webs
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\repository\NotificationRepository.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\config\SecurityConfig.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\response\ApiResponse.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\config\WebMvcConfig.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\controller\DashboardController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\controller\EventController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\security\JwtAuthFilter.java
@@ -114,9 +115,11 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\security\UserDetailsServiceImpl.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\request\CreateMaintenanceRequest.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\request\CreateTripRequest.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\impl\LocalFileStorageServiceImpl.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\entity\enums\IssueCategory.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\request\RejectFleetManagerRequest.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\request\ForgotPasswordRequest.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\entity\enums\TripStatus.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\entity\Trip.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\EmergencyService.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\security\SecurityUser.java
@@ -134,5 +137,6 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\response\TripLogResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\entity\EventRecord.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\repository\DependentRepository.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\FileStorageService.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\impl\NotificationServiceImpl.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\exception\GlobalExceptionHandler.java

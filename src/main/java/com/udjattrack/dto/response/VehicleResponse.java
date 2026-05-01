@@ -13,6 +13,7 @@ public class VehicleResponse {
     private String plateNumber;
     private String model;
     private Integer manufactureYear;
+    private String licenseNumber;
     private Boolean idle;
     private Boolean working;
     private UUID fleetManagerId;

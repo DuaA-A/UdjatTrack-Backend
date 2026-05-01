@@ -1,0 +1,42 @@
+services:
+  # 1. TimescaleDB Container
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: udjattrack-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=udjattrack
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # This will auto-run the schema on the FIRST time the database is created
+      - ./udjattrack_pg_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d udjattrack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. UdjatTrack API Container
+  api:
+    build: .
+    container_name: udjattrack-api
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=udjattrack
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=1234
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  pgdata:

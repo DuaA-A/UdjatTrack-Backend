@@ -59,7 +59,13 @@ spring:
         queue-capacity: 100
       thread-name-prefix: UdjatAsync-
 
-# ===== Application Security & Config =====
+  # ===== File Storage =====
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 6MB
+
 application:
   security:
     jwt:
@@ -73,6 +79,13 @@ application:
   mail:
     from: ${MAIL_FROM:udjattrack@gmail.com}
     from-name: ${MAIL_FROM_NAME:UdjatTrack}
+
+  # ===== File Storage =====
+  storage:
+    # Local directory where uploaded files are saved (relative to working dir)
+    upload-dir: ${UPLOAD_DIR:uploads}
+    # Base URL prepended to the stored filename to build the public URL
+    base-url: ${BASE_URL:http://localhost:8080/api/v1}
 
   # ===== WebSocket =====
   websocket:
@@ -115,25 +128,3 @@ management:
   endpoint:
     health:
       show-details: when-authorized
----
-spring:
-  config:
-    activate:
-      on-profile: h2
-
-  datasource:
-    url: jdbc:h2:mem:udjattrack;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true

@@ -12,10 +12,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -86,5 +88,33 @@ public class DriverController {
             @PathVariable UUID driverId) {
         return ResponseEntity.ok(ApiResponse.ok(
                 fleetManagementService.getDependentsByDriver(driverId)));
+    }
+
+    /**
+     * POST /drivers/{id}/photo
+     *
+     * <p>Uploads a profile photo for the given driver.
+     * Consumes multipart/form-data; the file must be sent as a form field named "file".
+     *
+     * <p>Allowed types: JPEG, PNG, WebP — max 5 MB.
+     *
+     * <p>Example curl:
+     * <pre>
+     *   curl -X POST http://localhost:8080/api/v1/drivers/{id}/photo \
+     *        -H "Authorization: Bearer <token>" \
+     *        -F "file=@/path/to/photo.jpg"
+     * </pre>
+     */
+    @PostMapping(
+            value = "/{id}/photo",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
+    @Operation(summary = "Upload or replace a driver's profile photo (multipart/form-data)")
+    public ResponseEntity<ApiResponse<DriverResponse>> uploadDriverPhoto(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file) {
+        DriverResponse response = fleetManagementService.uploadDriverPhoto(id, file);
+        return ResponseEntity.ok(ApiResponse.ok("Photo uploaded successfully", response));
     }
 }

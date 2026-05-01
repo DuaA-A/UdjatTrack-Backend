@@ -15,6 +15,7 @@ public class DriverResponse {
     private String licenseNumber;
     private String phoneNumber;
     private Boolean idle;
+    private String photoUrl;
     private UUID fleetManagerId;
     private LocalDateTime createdAt;
 }

@@ -38,6 +38,9 @@ public class Vehicle {
     @Column(name = "manufacture_year")
     private Integer manufactureYear;
 
+    @Column(name = "license_number", length = 100)
+    private String licenseNumber;
+
     @Column(name = "is_idle")
     private Boolean idle = true;
 

@@ -12,10 +12,12 @@ import java.util.UUID;
 @Builder
 public class AlertResponse {
     private UUID alertId;
-    private UUID tripLogId;
+    private UUID tripId;
     private AlertType alertType;
     private SeverityLevel severity;
     private Boolean acknowledged;
     private String message;
+    private String alertableType;
+    private UUID alertableId;
     private LocalDateTime timestamp;
 }

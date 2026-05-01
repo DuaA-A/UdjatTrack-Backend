@@ -1,6 +1,6 @@
 package com.udjattrack.entity;
 
-import com.udjattrack.entity.enums.TripProgressState;
+import com.udjattrack.entity.enums.TripStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -13,8 +13,7 @@ import java.util.UUID;
 
 /**
  * Trip — the core domain object representing a driver's route/mission.
- * A trip is assigned a driver and a vehicle, tracks its lifecycle via TripState,
- * and accumulates logs and events.
+ * A trip is assigned a driver and a vehicle, tracks its lifecycle via TripStatus.
  */
 @Entity
 @Table(name = "trips")
@@ -53,7 +52,7 @@ public class Trip {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "trip_state", nullable = false, length = 20)
-    private TripProgressState tripState = TripProgressState.CREATED;
+    private TripStatus status = TripStatus.PLANNED;
 
     @OneToOne(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private TripLog tripLog;
@@ -65,7 +64,6 @@ public class Trip {
     @Builder.Default
     @OneToMany(mappedBy = "trip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventRecord> eventRecords = new ArrayList<>();
-
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

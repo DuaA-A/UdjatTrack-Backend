@@ -53,7 +53,7 @@ public class DashboardController {
     @Operation(summary = "Active vehicles and trips KPIs")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getFleetStatus(@PathVariable UUID fleetId) {
         List<TripResponse> activeTrips = tripService.getTripsByFleetManager(fleetId).stream()
-                .filter(t -> !"COMPLETED".equalsIgnoreCase(t.getTripState().name()) && !"CANCELLED".equalsIgnoreCase(t.getTripState().name()))
+                .filter(t -> !"FINISHED".equalsIgnoreCase(t.getStatus().name()) && !"CANCELLED".equalsIgnoreCase(t.getStatus().name()))
                 .toList();
                 
         Map<String, Object> data = new java.util.HashMap<>();

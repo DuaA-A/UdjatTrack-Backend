@@ -1,17 +1,13 @@
--- ================================================
--- UdjatTrack Database Schema Creation Script
--- Target Database: PostgreSQL 14+ (with TimescaleDB)
--- ================================================
+-- ====================================================================================
+-- UDJAT TRACK: FINAL DATABASE SCHEMA (v2.0)
+-- Fully aligned with API Design, Class Diagram, and WebSocket Payloads
+-- ====================================================================================
 
--- Enable TimescaleDB extension if not already present
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
--- 1. Users & Inheritance
-DROP TABLE IF EXISTS super_managers;
-DROP TABLE IF EXISTS fleet_managers;
-DROP TABLE IF EXISTS drivers;
-DROP TABLE IF EXISTS users;
-
+-- ================================================
+-- 1. USERS & ROLES
+-- ================================================
 CREATE TABLE users (
     user_id UUID NOT NULL,
     user_type VARCHAR(31) NOT NULL,
@@ -24,13 +20,14 @@ CREATE TABLE users (
     deleted_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (user_id)
-) ;
+);
 
 CREATE TABLE super_managers (
     user_id UUID NOT NULL,
     PRIMARY KEY (user_id),
-    CONSTRAINT fk_super_managers_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
-) ;
+    CONSTRAINT fk_super_managers_user FOREIGN KEY (user_id)
+        REFERENCES users (user_id) ON DELETE CASCADE
+);
 
 CREATE TABLE fleet_managers (
     user_id UUID NOT NULL,
@@ -38,8 +35,9 @@ CREATE TABLE fleet_managers (
     subscription_plan VARCHAR(100),
     verification_status VARCHAR(20) NOT NULL,
     PRIMARY KEY (user_id),
-    CONSTRAINT fk_fleet_managers_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
-) ;
+    CONSTRAINT fk_fleet_managers_user FOREIGN KEY (user_id)
+        REFERENCES users (user_id) ON DELETE CASCADE
+);
 
 CREATE TABLE drivers (
     user_id UUID NOT NULL,
@@ -47,15 +45,17 @@ CREATE TABLE drivers (
     phone_number VARCHAR(20),
     is_idle BOOLEAN DEFAULT TRUE,
     fleet_manager_id UUID NOT NULL,
+    photo_url VARCHAR(500), -- Natively included for dashboard UI profile pictures
     PRIMARY KEY (user_id),
-    CONSTRAINT fk_drivers_user FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    CONSTRAINT fk_drivers_fleet FOREIGN KEY (fleet_manager_id) REFERENCES fleet_managers (user_id)
-) ;
+    CONSTRAINT fk_drivers_user FOREIGN KEY (user_id)
+        REFERENCES users (user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_drivers_fleet FOREIGN KEY (fleet_manager_id)
+        REFERENCES fleet_managers (user_id)
+);
 
--- 2. Auth Tokens
-DROP TABLE IF EXISTS refresh_tokens;
-DROP TABLE IF EXISTS otp_tokens;
-
+-- ================================================
+-- 2. AUTHENTICATION
+-- ================================================
 CREATE TABLE refresh_tokens (
     token_id UUID NOT NULL,
     user_id UUID NOT NULL,
@@ -65,8 +65,9 @@ CREATE TABLE refresh_tokens (
     device_info VARCHAR(255),
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (token_id),
-    CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users (user_id)
-) ;
+    CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+);
 
 CREATE TABLE otp_tokens (
     otp_id UUID NOT NULL,
@@ -76,17 +77,16 @@ CREATE TABLE otp_tokens (
     used BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (otp_id)
-) ;
-
--- 3. Assets
-DROP TABLE IF EXISTS vehicles;
-DROP TABLE IF EXISTS dependents;
-
+);
+-- ================================================
+-- 3. ASSETS (Vehicles & Dependents)
+-- ================================================
 CREATE TABLE vehicles (
     vehicle_id UUID NOT NULL,
     plate_number VARCHAR(20) NOT NULL UNIQUE,
     model VARCHAR(100) NOT NULL,
     manufacture_year INT,
+    license_number VARCHAR(100), --Natively included for API parity
     is_idle BOOLEAN DEFAULT TRUE,
     is_working BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
@@ -94,8 +94,9 @@ CREATE TABLE vehicles (
     fleet_manager_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (vehicle_id),
-    CONSTRAINT fk_vehicles_fleet FOREIGN KEY (fleet_manager_id) REFERENCES fleet_managers (user_id)
-) ;
+    CONSTRAINT fk_vehicles_fleet FOREIGN KEY (fleet_manager_id)
+        REFERENCES fleet_managers (user_id)
+);
 
 CREATE TABLE dependents (
     dependent_id UUID NOT NULL,
@@ -104,14 +105,13 @@ CREATE TABLE dependents (
     phone_number VARCHAR(20) NOT NULL,
     relation VARCHAR(50),
     PRIMARY KEY (dependent_id),
-    CONSTRAINT fk_dependents_driver FOREIGN KEY (driver_id) REFERENCES drivers (user_id)
-) ;
+    CONSTRAINT fk_dependents_driver FOREIGN KEY (driver_id)
+        REFERENCES drivers (user_id)
+);
 
--- 4. Trips & Logs
-DROP TABLE IF EXISTS trip_logs;
-DROP TABLE IF EXISTS trip_states;
-DROP TABLE IF EXISTS trips;
-
+-- ================================================
+-- 4. TRIPS
+-- ================================================
 CREATE TABLE trips (
     trip_id UUID NOT NULL,
     driver_id UUID NOT NULL,
@@ -123,9 +123,11 @@ CREATE TABLE trips (
     trip_state VARCHAR(20) NOT NULL,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (trip_id),
-    CONSTRAINT fk_trips_driver FOREIGN KEY (driver_id) REFERENCES drivers (user_id),
-    CONSTRAINT fk_trips_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles (vehicle_id)
-) ;
+    CONSTRAINT fk_trips_driver FOREIGN KEY (driver_id)
+        REFERENCES drivers (user_id),
+    CONSTRAINT fk_trips_vehicle FOREIGN KEY (vehicle_id)
+        REFERENCES vehicles (vehicle_id)
+);
 
 CREATE TABLE trip_states (
     state_id UUID NOT NULL,
@@ -136,8 +138,9 @@ CREATE TABLE trip_states (
     longitude VARCHAR(50),
     last_updated_at TIMESTAMP,
     PRIMARY KEY (state_id),
-    CONSTRAINT fk_trip_states_trip FOREIGN KEY (trip_id) REFERENCES trips (trip_id)
-) ;
+    CONSTRAINT fk_trip_states_trip FOREIGN KEY (trip_id)
+        REFERENCES trips (trip_id)
+);
 
 CREATE TABLE trip_logs (
     log_id UUID NOT NULL,
@@ -147,54 +150,13 @@ CREATE TABLE trip_logs (
     total_duration DOUBLE PRECISION,
     total_break_time DOUBLE PRECISION,
     PRIMARY KEY (log_id),
-    CONSTRAINT fk_trip_logs_trip FOREIGN KEY (trip_id) REFERENCES trips (trip_id)
-) ;
+    CONSTRAINT fk_trip_logs_trip FOREIGN KEY (trip_id)
+        REFERENCES trips (trip_id)
+);
 
--- 5. Tracking / Telemetry
-DROP TABLE IF EXISTS alerts;
-DROP TABLE IF EXISTS incidents;
-DROP TABLE IF EXISTS event_records;
-DROP TABLE IF EXISTS telemetry_records;
-
-CREATE TABLE alerts (
-    alert_id UUID NOT NULL,
-    trip_log_id UUID NOT NULL,
-    alert_type VARCHAR(30) NOT NULL,
-    severity VARCHAR(15) NOT NULL,
-    acknowledged BOOLEAN DEFAULT FALSE,
-    message TEXT,
-    timestamp TIMESTAMP NOT NULL,
-    PRIMARY KEY (alert_id),
-    CONSTRAINT fk_alerts_log FOREIGN KEY (trip_log_id) REFERENCES trip_logs (log_id)
-) ;
-
-CREATE TABLE incidents (
-    issue_id UUID NOT NULL,
-    severity VARCHAR(15) NOT NULL,
-    incident_type VARCHAR(40) NOT NULL,
-    location VARCHAR(255),
-    PRIMARY KEY (issue_id),
-    CONSTRAINT fk_incidents_issue FOREIGN KEY (issue_id) REFERENCES issue_requests (issue_id) ON DELETE CASCADE
-) ;
-
-CREATE TABLE event_records (
-    event_id UUID NOT NULL,
-    trip_id UUID NOT NULL,
-    event_type VARCHAR(80) NOT NULL,
-    severity VARCHAR(15),
-    payload JSONB,
-    timestamp TIMESTAMP NOT NULL,
-    PRIMARY KEY (event_id),
-    CONSTRAINT fk_event_records_trip FOREIGN KEY (trip_id) REFERENCES trips (trip_id)
-) ;
-
-
-
--- 6. Issues (SOS / Maintenance)
-DROP TABLE IF EXISTS maintenance_requests;
-DROP TABLE IF EXISTS sos_requests;
-DROP TABLE IF EXISTS issue_requests;
-
+-- ================================================
+-- 5. ISSUE SYSTEM (Incidents, SOS, Maintenance)
+-- ================================================
 CREATE TABLE issue_requests (
     issue_id UUID NOT NULL,
     trip_id UUID NOT NULL,
@@ -204,30 +166,71 @@ CREATE TABLE issue_requests (
     triggered_at TIMESTAMP NOT NULL,
     reported_at TIMESTAMP,
     PRIMARY KEY (issue_id),
-    CONSTRAINT fk_issue_requests_trip FOREIGN KEY (trip_id) REFERENCES trips (trip_id)
-) ;
+    CONSTRAINT fk_issue_requests_trip FOREIGN KEY (trip_id)
+        REFERENCES trips (trip_id)
+);
+
+CREATE TABLE incidents (
+    issue_id UUID NOT NULL,
+    severity VARCHAR(15) NOT NULL,
+    incident_type VARCHAR(40) NOT NULL,
+    location VARCHAR(255),
+    PRIMARY KEY (issue_id),
+    CONSTRAINT fk_incidents_issue FOREIGN KEY (issue_id)
+        REFERENCES issue_requests (issue_id) ON DELETE CASCADE
+);
 
 CREATE TABLE sos_requests (
     issue_id UUID NOT NULL,
     location VARCHAR(255),
     is_auto_triggered BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (issue_id),
-    CONSTRAINT fk_sos_requests_issue FOREIGN KEY (issue_id) REFERENCES issue_requests (issue_id) ON DELETE CASCADE
-) ;
+    CONSTRAINT fk_sos_requests_issue FOREIGN KEY (issue_id)
+        REFERENCES issue_requests (issue_id) ON DELETE CASCADE
+);
 
 CREATE TABLE maintenance_requests (
     issue_id UUID NOT NULL,
     maintenance_type VARCHAR(40) NOT NULL,
     description TEXT,
     PRIMARY KEY (issue_id),
-    CONSTRAINT fk_maintenance_requests_issue FOREIGN KEY (issue_id) REFERENCES issue_requests (issue_id) ON DELETE CASCADE
-) ;
+    CONSTRAINT fk_maintenance_requests_issue FOREIGN KEY (issue_id)
+        REFERENCES issue_requests (issue_id) ON DELETE CASCADE
+);
 
--- 7. Notifications
-DROP TABLE IF EXISTS alert_triggered_notifications;
-DROP TABLE IF EXISTS trip_assigned_notifications;
-DROP TABLE IF EXISTS notifications;
+-- ================================================
+-- 6. TRACKING & ALERTS
+-- ================================================
+CREATE TABLE alerts (
+    alert_id UUID NOT NULL,
+    trip_id UUID NOT NULL, --  FIXED: Links directly to the active trip
+    alert_type VARCHAR(30) NOT NULL,
+    severity VARCHAR(15) NOT NULL,
+    acknowledged BOOLEAN DEFAULT FALSE,
+    message TEXT,
+    timestamp TIMESTAMP NOT NULL,
+    alertable_type VARCHAR(50) NOT NULL, --  ADDED: Polymorphic wrapper type (e.g., 'Incident', 'SOSRequest')
+    alertable_id UUID NOT NULL,          --  ADDED: Polymorphic wrapper ID
+    PRIMARY KEY (alert_id),
+    CONSTRAINT fk_alerts_trip FOREIGN KEY (trip_id)
+        REFERENCES trips (trip_id) ON DELETE CASCADE
+);
 
+CREATE TABLE event_records (
+    event_id UUID NOT NULL,
+    trip_id UUID NOT NULL,
+    event_type VARCHAR(80) NOT NULL,
+    severity VARCHAR(15),
+    payload JSONB,
+    timestamp TIMESTAMP NOT NULL,
+    PRIMARY KEY (event_id),
+    CONSTRAINT fk_event_records_trip FOREIGN KEY (trip_id)
+        REFERENCES trips (trip_id)
+);
+
+-- ================================================
+-- 7. NOTIFICATIONS
+-- ================================================
 CREATE TABLE notifications (
     notification_id UUID NOT NULL,
     user_id UUID NOT NULL,
@@ -236,109 +239,32 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     notification_type VARCHAR(30) NOT NULL,
     created_at TIMESTAMP NOT NULL,
+    details JSONB, --  ADDED: Natively supports dynamic API payload data
     PRIMARY KEY (notification_id),
-    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users (user_id)
-) ;
+    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id)
+        REFERENCES users (user_id)
+);
 
 CREATE TABLE alert_triggered_notifications (
     notification_id UUID NOT NULL,
     alert_id UUID NOT NULL,
     PRIMARY KEY (notification_id),
-    CONSTRAINT fk_alert_notif FOREIGN KEY (notification_id) REFERENCES notifications (notification_id) ON DELETE CASCADE
-) ;
+    CONSTRAINT fk_alert_notif FOREIGN KEY (notification_id)
+        REFERENCES notifications (notification_id) ON DELETE CASCADE
+);
 
 CREATE TABLE trip_assigned_notifications (
     notification_id UUID NOT NULL,
     trip_id UUID NOT NULL,
     scheduled_start_time TIMESTAMP NOT NULL,
     PRIMARY KEY (notification_id),
-    CONSTRAINT fk_trip_notif FOREIGN KEY (notification_id) REFERENCES notifications (notification_id) ON DELETE CASCADE
-) ;
-
--- SET FOREIGN_KEY_CHECKS = 1;
-
--- ================================================
--- UdjatTrack Seed Data
--- Run once after first app startup
--- ================================================
-
--- Clear existing test data
-DELETE FROM refresh_tokens;
-DELETE FROM otp_tokens;
-DELETE FROM fleet_managers;
-DELETE FROM users;
-
--- ================================================
--- 1. Super Manager
--- Password: Admin1234!
--- ================================================
-INSERT INTO users (
-    user_type, user_id, name, email, password,
-    role, is_deleted, created_at
-) VALUES (
-    'SUPER_MANAGER',
-    '3e6f987d-8f92-48a5-b1a6-f28148358261',
-    'Super Admin',
-    'admin@udjattrack.com',
-    '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
-    'ROLE_SUPER_MANAGER',
-    FALSE,
-    CURRENT_TIMESTAMP
-);
-
-INSERT INTO super_managers (user_id) 
-VALUES ('3e6f987d-8f92-48a5-b1a6-f28148358261');
-
--- ================================================
--- 2. Fleet Manager (pre-approved for testing)
--- Password: Fleet1234!
--- ================================================
-
-
-INSERT INTO users (
-    user_type, user_id, name, email, password,
-    role, is_deleted, created_at
-) VALUES (
-    'FLEET_MANAGER',
-    '49e2cdde-97ec-4050-9c73-4a2c923d8495',
-    'Fleet Manager One',
-    'fleet@test.com',
-    '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
-    'ROLE_FLEET_MANAGER',
-    FALSE,
-    CURRENT_TIMESTAMP
-);
-
-INSERT INTO fleet_managers (
-    user_id, company_name, subscription_plan, verification_status
-) VALUES (
-    '49e2cdde-97ec-4050-9c73-4a2c923d8495',
-    'Test Company',
-    'BASIC',
-    'VERIFIED'
+    CONSTRAINT fk_trip_notif FOREIGN KEY (notification_id)
+        REFERENCES notifications (notification_id) ON DELETE CASCADE
 );
 
 -- ================================================
--- 3. Driver
--- Password: Driver1234!
+-- 8. TELEMETRY (TimescaleDB)
 -- ================================================
-
-
-INSERT INTO users (
-    user_type, user_id, name, email, password,
-    role, is_deleted, created_at
-) VALUES (
-    'DRIVER',
-    '0b5d7f74-a884-4b22-8a16-33ac4be0eecd',
-    'Ahmed Hassan',
-    'driver@test.com',
-    '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
-    'ROLE_DRIVER',
-    FALSE,
-    CURRENT_TIMESTAMP
-);
-
--- 8. TimescaleDB Telemetry Tracking
 DROP TABLE IF EXISTS telemetry_records CASCADE;
 
 CREATE TABLE telemetry_records (
@@ -351,8 +277,9 @@ CREATE TABLE telemetry_records (
     timestamp TIMESTAMP NOT NULL
 );
 
--- Elevate the telemetry table to a TimescaleDB Hypertable
--- Partitions data by 'timestamp' dynamically for massive time-series scale
 SELECT create_hypertable('telemetry_records', 'timestamp');
 
-CREATE INDEX idx_telemetry_trip_time ON telemetry_records (trip_id, timestamp DESC);
+CREATE INDEX idx_telemetry_trip_time
+    ON telemetry_records (trip_id, timestamp DESC);
+
+SELECT * FROM timescaledb_information.hypertables;

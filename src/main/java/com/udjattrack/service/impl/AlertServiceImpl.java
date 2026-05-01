@@ -5,13 +5,13 @@ import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.AlertResponse;
 import com.udjattrack.dto.websocket.AlertEventMessage;
 import com.udjattrack.entity.Alert;
-import com.udjattrack.entity.TripLog;
+import com.udjattrack.entity.Trip;
 import com.udjattrack.entity.enums.AlertType;
 import com.udjattrack.entity.enums.DriverState;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.AlertRepository;
-import com.udjattrack.repository.TripLogRepository;
+import com.udjattrack.repository.TripRepository;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
@@ -30,24 +30,27 @@ import java.util.stream.Collectors;
 public class AlertServiceImpl implements AlertService {
 
     private final AlertRepository alertRepository;
-    private final TripLogRepository tripLogRepository;
+    private final TripRepository tripRepository;
     private final WebSocketPublisher webSocketPublisher;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
-        TripLog tripLog = tripLogRepository.findById(request.tripLogId())
-                .orElseThrow(() -> new ResourceNotFoundException("TripLog", "id", request.tripLogId()));
+        Trip trip = tripRepository.findById(request.tripId())
+                .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", request.tripId()));
+        
         Alert alert = Alert.builder()
-                .tripLog(tripLog)
+                .trip(trip)
                 .alertType(request.alertType())
                 .severity(request.severity())
                 .message(request.message())
+                .alertableType(request.alertableType())
+                .alertableId(request.alertableId())
                 .acknowledged(false)
                 .build();
         Alert saved = alertRepository.save(alert);
         
         // Push alert via WebSocket
-        UUID managerId = tripLog.getTrip().getDriver().getFleetManager().getUserId();
+        UUID managerId = trip.getDriver().getFleetManager().getUserId();
         webSocketPublisher.publishAlert(managerId, toMessage(saved));
         
         return toResponse(saved);
@@ -78,8 +81,8 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AlertResponse> getAlertsByTripLog(UUID tripLogId) {
-        return alertRepository.findAllByTripLogLogIdOrderByTimestampDesc(tripLogId)
+    public List<AlertResponse> getAlertsByTrip(UUID tripId) {
+        return alertRepository.findAllByTripTripIdOrderByTimestampDesc(tripId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -91,18 +94,20 @@ public class AlertServiceImpl implements AlertService {
             SeverityLevel severity = request.driverState() == DriverState.UNCONSCIOUS
                     ? SeverityLevel.CRITICAL : SeverityLevel.HIGH;
 
-            tripLogRepository.findByTripTripId(request.tripId()).ifPresent(tripLog -> {
+            tripRepository.findById(request.tripId()).ifPresent(trip -> {
                 Alert alert = Alert.builder()
-                        .tripLog(tripLog)
+                        .trip(trip)
                         .alertType(AlertType.FATIGUE)
                         .severity(severity)
                         .message("Driver alertness degraded: " + request.driverState())
+                        .alertableType("TelemetryRecord") // Example source
+                        .alertableId(UUID.randomUUID()) // Placeholder or real ID if available
                         .acknowledged(false)
                         .build();
                 Alert saved = alertRepository.save(alert);
                 
                 // Publish Fatigue Alert
-                UUID managerId = tripLog.getTrip().getDriver().getFleetManager().getUserId();
+                UUID managerId = trip.getDriver().getFleetManager().getUserId();
                 webSocketPublisher.publishAlert(managerId, toMessage(saved));
                 
                 log.warn("FATIGUE ALERT created for trip: {} driver state: {}",
@@ -119,11 +124,13 @@ public class AlertServiceImpl implements AlertService {
     private AlertResponse toResponse(Alert a) {
         return AlertResponse.builder()
                 .alertId(a.getAlertId())
-                .tripLogId(a.getTripLog().getLogId())
+                .tripId(a.getTrip().getTripId())
                 .alertType(a.getAlertType())
                 .severity(a.getSeverity())
                 .acknowledged(a.getAcknowledged())
                 .message(a.getMessage())
+                .alertableType(a.getAlertableType())
+                .alertableId(a.getAlertableId())
                 .timestamp(a.getTimestamp())
                 .build();
     }
@@ -131,7 +138,7 @@ public class AlertServiceImpl implements AlertService {
     private AlertEventMessage toMessage(Alert a) {
         return AlertEventMessage.builder()
                 .alertId(a.getAlertId())
-                .tripId(a.getTripLog().getTrip().getTripId())
+                .tripId(a.getTrip().getTripId())
                 .type(a.getAlertType())
                 .severity(a.getSeverity())
                 .message(a.getMessage())

@@ -1,7 +1,7 @@
 package com.udjattrack.repository;
 
 import com.udjattrack.entity.Trip;
-import com.udjattrack.entity.enums.TripProgressState;
+import com.udjattrack.entity.enums.TripStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,11 +16,11 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
 
     List<Trip> findAllByDriverUserIdOrderByCreatedAtDesc(UUID driverId);
 
-    List<Trip> findAllByDriverUserIdAndTripStateInOrderByCreatedAtDesc(UUID driverId, List<TripProgressState> states);
+    List<Trip> findAllByDriverUserIdAndStatusInOrderByCreatedAtDesc(UUID driverId, List<TripStatus> statuses);
 
     List<Trip> findAllByVehicleVehicleIdOrderByCreatedAtDesc(UUID vehicleId);
 
-    List<Trip> findAllByTripState(TripProgressState state);
+    List<Trip> findAllByStatus(TripStatus status);
 
     @Query("""
             SELECT t FROM Trip t
@@ -32,7 +32,7 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
     @Query("""
             SELECT t FROM Trip t
             WHERE t.driver.userId = :driverId
-            AND t.tripState NOT IN ('COMPLETED', 'CANCELLED')
+            AND t.status NOT IN (com.udjattrack.entity.enums.TripStatus.FINISHED, com.udjattrack.entity.enums.TripStatus.CANCELLED)
             """)
     Optional<Trip> findActiveTrip(@Param("driverId") UUID driverId);
 }

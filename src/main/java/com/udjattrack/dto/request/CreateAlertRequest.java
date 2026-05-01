@@ -8,14 +8,18 @@ import java.util.UUID;
 
 public record CreateAlertRequest(
 
-        @NotNull(message = "Trip log ID is required")
-        UUID tripLogId,
+        @NotNull(message = "Trip ID is required")
+        UUID tripId,
 
         @NotNull(message = "Alert type is required")
         AlertType alertType,
 
         @NotNull(message = "Severity is required")
         SeverityLevel severity,
+
+        String alertableType,
+
+        UUID alertableId,
 
         String message
 ) {}

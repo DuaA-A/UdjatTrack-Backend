@@ -34,12 +34,15 @@ com\udjattrack\websocket\WebSocketConfig.class
 com\udjattrack\entity\enums\SeverityLevel.class
 com\udjattrack\dto\request\UpdateDriverRequest.class
 com\udjattrack\entity\IssueRequest.class
+com\udjattrack\config\WebMvcConfig.class
 com\udjattrack\dto\response\ApiResponse$ApiResponseBuilder.class
 com\udjattrack\dto\websocket\AlertEventMessage.class
 com\udjattrack\entity\AlertTriggeredNotification$AlertTriggeredNotificationBuilderImpl.class
+com\udjattrack\service\FileStorageService.class
 com\udjattrack\exception\BusinessException.class
 com\udjattrack\controller\DriverController.class
 com\udjattrack\config\AsyncConfig.class
+com\udjattrack\service\impl\LocalFileStorageServiceImpl.class
 com\udjattrack\dto\response\TripLogResponse$TripLogResponseBuilder.class
 com\udjattrack\entity\User$UserBuilder.class
 com\udjattrack\entity\TripState.class
@@ -77,6 +80,7 @@ com\udjattrack\dto\request\CreateIncidentRequest.class
 com\udjattrack\entity\SOSRequest$SOSRequestBuilder.class
 com\udjattrack\dto\request\CreateDriverRequest.class
 com\udjattrack\entity\RefreshToken$RefreshTokenBuilder.class
+com\udjattrack\entity\enums\TripStatus.class
 com\udjattrack\service\impl\EmailServiceImpl.class
 com\udjattrack\dto\response\VehicleResponse.class
 com\udjattrack\dto\response\MaintenanceLogResponse.class
@@ -127,7 +131,6 @@ com\udjattrack\dto\request\UpdateFleetManagerRequest.class
 com\udjattrack\entity\TripState$TripStateBuilder.class
 com\udjattrack\entity\enums\IncidentType.class
 com\udjattrack\dto\response\TripStateResponse.class
-com\udjattrack\service\impl\TripServiceImpl$1.class
 com\udjattrack\dto\response\DependentResponse$DependentResponseBuilder.class
 com\udjattrack\entity\Dependent$DependentBuilder.class
 com\udjattrack\controller\AlertController.class

@@ -12,8 +12,9 @@ import java.util.UUID;
 
 /**
  * Alert — raised when the system detects a critical event during a trip.
- * Implements the Alertable marker interface.
- * Linked to a TripLog for historical correlation.
+ * Linked directly to the active Trip (not TripLog) to support real-time alerting.
+ * Uses alertableType/alertableId as a polymorphic reference to the source issue
+ * (e.g., Incident, SOSRequest, MaintenanceRequest).
  */
 @Entity
 @Table(name = "alerts")
@@ -31,8 +32,16 @@ public class Alert {
     private UUID alertId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_log_id", nullable = false)
-    private TripLog tripLog;
+    @JoinColumn(name = "trip_id", nullable = false)
+    private Trip trip;
+
+    // Polymorphic reference to the source entity that triggered this alert
+    // e.g. 'Incident', 'SOSRequest', 'MaintenanceRequest'
+    @Column(name = "alertable_type", nullable = false, length = 50)
+    private String alertableType;
+
+    @Column(name = "alertable_id", nullable = false)
+    private UUID alertableId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "alert_type", nullable = false, length = 30)

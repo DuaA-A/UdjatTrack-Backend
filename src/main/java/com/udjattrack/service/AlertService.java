@@ -17,7 +17,7 @@ public interface AlertService {
     AlertResponse getAlertById(UUID alertId);
     AlertResponse acknowledgeAlert(UUID alertId);
     List<AlertResponse> getUnacknowledgedAlerts(UUID fleetManagerId);
-    List<AlertResponse> getAlertsByTripLog(UUID tripLogId);
+    List<AlertResponse> getAlertsByTrip(UUID tripId);
     void evaluateEvent(TelemetryRequest telemetryRequest);
     void notifyFleetManager(UUID alertId);
 }

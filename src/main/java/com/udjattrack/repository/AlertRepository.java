@@ -14,7 +14,7 @@ import java.util.UUID;
 @Repository
 public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
-    List<Alert> findAllByTripLogLogIdOrderByTimestampDesc(UUID tripLogId);
+    List<Alert> findAllByTripTripIdOrderByTimestampDesc(UUID tripId);
 
     List<Alert> findAllByAcknowledgedFalse();
 
@@ -22,7 +22,7 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
     @Query("""
             SELECT a FROM Alert a
-            WHERE a.tripLog.trip.driver.fleetManager.userId = :managerId
+            WHERE a.trip.driver.fleetManager.userId = :managerId
             AND a.acknowledged = false
             ORDER BY a.timestamp DESC
             """)
@@ -30,7 +30,7 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
 
     @Query("""
             SELECT a FROM Alert a
-            WHERE a.tripLog.trip.driver.fleetManager.userId = :managerId
+            WHERE a.trip.driver.fleetManager.userId = :managerId
             AND a.severity = :severity
             ORDER BY a.timestamp DESC
             """)

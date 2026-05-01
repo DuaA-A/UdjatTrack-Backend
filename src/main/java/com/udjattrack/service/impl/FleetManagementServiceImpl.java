@@ -10,6 +10,7 @@ import com.udjattrack.exception.DuplicateResourceException;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
 import com.udjattrack.service.EmailService;
+import com.udjattrack.service.FileStorageService;
 import com.udjattrack.service.FleetManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final FileStorageService fileStorageService;
 
     // ===== Fleet Manager =====
 
@@ -157,7 +160,18 @@ public class FleetManagementServiceImpl implements FleetManagementService {
         return toDriverResponse(findDriverOrThrow(driverId));
     }
 
-    // ===== Vehicles =====
+    @Override
+    public DriverResponse uploadDriverPhoto(UUID driverId, MultipartFile file) {
+        Driver driver = findDriverOrThrow(driverId);
+        // Delete old photo from storage if it exists
+        if (driver.getPhotoUrl() != null) {
+            fileStorageService.deleteFile(driver.getPhotoUrl());
+        }
+        String newPhotoUrl = fileStorageService.storeFile(file, "drivers");
+        driver.setPhotoUrl(newPhotoUrl);
+        return toDriverResponse(driverRepository.save(driver));
+    }
+
 
     @Override
     public VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request) {
@@ -248,7 +262,8 @@ public class FleetManagementServiceImpl implements FleetManagementService {
         return DriverResponse.builder()
                 .userId(d.getUserId()).name(d.getName()).email(d.getEmail())
                 .licenseNumber(d.getLicenseNumber()).phoneNumber(d.getPhoneNumber())
-                .idle(d.getIdle()).fleetManagerId(d.getFleetManager().getUserId())
+                .idle(d.getIdle()).photoUrl(d.getPhotoUrl())
+                .fleetManagerId(d.getFleetManager().getUserId())
                 .createdAt(d.getCreatedAt())
                 .build();
     }

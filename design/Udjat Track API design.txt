@@ -1,4 +1,4 @@
-UdjatTrack
+﻿UdjatTrack
 API Design
 v2.0:  Final Implementation Reference
 ________________
@@ -95,42 +95,9 @@ Response:
   "success": true,
   "data": {
     "fleetManagerId": "uuid",
-    "status": "PENDING_APPROVAL"
+    "status": "ACTIVE"
   }
 }
-Notes: Only callable by SUPER_MANAGER. The account is inactive until approved.
-
-
-PATCH
-	/auth/fleet-managers/{id}/approve
-	Super Manager approves a pending fleet manager account
-	
-
-Response:
-200 OK
-{
-  "success": true,
-  "data": { "fleetManagerId": "uuid", "status": "ACTIVE" }
-}
-
-
-Notes: Role: SUPER_MANAGER only. Triggers welcome email.
-
-
-PATCH
-	/auth/fleet-managers/{id}/reject
-	Super Manager rejects a pending fleet manager account
-	
-
-Request Body:
-{ "reason": "Incomplete documentation" }
-
-
-Response:
-200 OK
-{ "success": true, "data": { "status": "REJECTED" } }
-
-
 
 
 Role: SUPER_MANAGER, FLEET_MANAGER, DRIVER
@@ -285,6 +252,7 @@ Request Body:
   "password":      "InitialPass1!",
   "phone":         "0100000000",
   "licenseNumber": "LIC-EG-4521",
+  “Photo”: “...png”,
 }
 
 
@@ -318,7 +286,8 @@ Response:
     "blindSpotAlerts":  7,
     "totalTrips":       42,
     "lastTripDuration": 480,
-    "lastUpdated":      "2026-02-21T09:00:00Z"
+    "lastUpdated":      "2026-02-21T09:00:00Z",
+    “Photo”: “...png”,
   }
 
 
@@ -330,30 +299,71 @@ Role:  FLEET_MANAGER
 GET
 	/drivers/{id}
 	Get driver profile by ID
-	
+	Response:
+{
+  "success": true,
+  "data": {
+    "driverId": "drv-uuid-1",
+    "name": "Ahmed Hassan",
+    "email": "ahmed@mail.com",
+    "phoneNumber": "0100000000",
+    "licenseNumber": "LIC-EG-4521",
+    "idle": false,
+    "currentStatus": "DRIVING",
+    "plateNumber": "ABC-123",
+    "fatigueAlerts": 3,
+    "blindSpotAlerts": 7,
+    "totalTrips": 42,
+    "lastTripDuration": 480,
+    "lastUpdated": "2026-02-21T09:00:00Z",
+    "photo": "https://udjattrack.com/images/drv-uuid-1.png",
+    "lastAlertTime": "2026-02-21T08:45:00Z",
+    "fatiguePercentage": "60%"
+  }
+}
 
-Response:
-200 OK — same schema as /drivers/me
+
+
+
+
+
 
 
 GET
 	/drivers
 	List all drivers in the fleet (with optional filters)
-	
-
-Response:
-200 OK
-{
+	Response:
+200 OK{
   "success": true,
-  "data": [ 
-{ 
- "driverId":"uuid",
- "name":"...", 
- "status":"IDLE", 
+  "data": [
+    {
+      "driverId": "drv-uuid-1",
+      "name": "Ahmed Hassan",
+      "email": "ahmed@mail.com",
+      "phoneNumber": "0100000000",
+      "licenseNumber": "LIC-EG-4521",
+      "idle": false,
+      "status": "ACTIVE",
+      "vehicle": {
+        "vehicleId": "veh-uuid-1",
+        "truckName": "MAN TGX",
+        "plateNumber": "ABC-123"
+      }
+    },
+    {
+      "driverId": "drv-uuid-2",
+      "name": "Khaled Ali",
+      "email": "khaled@mail.com",
+      "phoneNumber": "0109999999",
+      "licenseNumber": "LIC-EG-9999",
+      "idle": true,
+      "status": "IDLE",
+      "vehicle": "UNASSIGNED"
+    }
+  ]
 }
-     ],
-  "page": 0, "size": 20, "totalElements": 85
-}
+
+
 
 
 Query params: status, page, size
@@ -371,6 +381,9 @@ Response:
 Notes: Role: FLEET_MANAGER. Cannot delete driver with an active trip.
 
 
+Filter the driver b the status if active or not
+
+
 3.2 Vehicle Endpoints
 Role: FLEET_MANAGER.
 POST
@@ -383,7 +396,7 @@ Request Body:
   "plateNumber":           "ABC-123",
   "model":                 "MAN TGX",
   "ManufactureYear":        2021,
-   “License number”
+   “License number”:
 }
 
 
@@ -398,20 +411,56 @@ Role: FLEET_MANAGER.
 GET
 	/vehicles/{id}
 	Get vehicle details
-	
-
-Response:
-200 OK — vehicleId, plateNumber, model, year, assignmentStatus
+	Response:
+200 OK 
+{
+  "success": true,
+  "data": {
+    "vehicleId": "veh-uuid-1",
+    "plateNumber": "ABC-123",
+    "model": "MAN TGX",
+“License number”:
+    "manufactureYear": 2021,
+    "idle": false,
+    "working": true,
+    "assignmentStatus": "ASSIGNED"
+  }
+}
 
 
 Role: FLEET_MANAGER.
 GET
 	/vehicles
 	List all vehicles
-	
+	Response:
+200 OK 
+{
+  "success": true,
+  "data": [
+    {
+      "vehicleId": "veh-uuid-1",
+      "plateNumber": "ABC-123",
+      "model": "MAN TGX",
+          “License number”:
+      "manufactureYear": 2021,
+      "idle": false,
+      "working": true,
+      "assignmentStatus": "ASSIGNED"
+    },
+    {
+      "vehicleId": "veh-uuid-2",
+      "plateNumber": "XYZ-789",
+      "model": "Volvo FH",
+          “License number”:
+      "manufactureYear": 2019,
+      "idle": true,
+      "working": true,
+      "assignmentStatus": "UNASSIGNED"
+    }
+  ]
+}
 
-Response:
-200 OK — paginated list
+
 
 
 Query params: assignmentStatus, page, size
@@ -429,7 +478,6 @@ Keep in mind a restriction that we Cannot delete vehicles with an active trip.
 
 
 
-هذاعبث
 GET
 	/vehicles/{vehicleId}/maintenance-logs
 	Populates the Vehicle Maintenance CheckList widget.
@@ -473,7 +521,7 @@ Request Body:
   "source":            "Cairo",
   "destination":       "Suez",
   "scheduledStartTime":"2026-02-22T06:00:00Z",
-  "scheduledEndTime":  "2026-02-22T14:00:00Z"
+  "scheduledEndTime":  "2026-02-22T14:00:00Z",
 }
 
 
@@ -481,7 +529,7 @@ Response:
 201 Created
 {
   "success": true,
-  "data": { "tripId": "uuid", "status": "PLANNED" }
+  "data": { "tripId": "uuid", "status": "created" }
 }
 
 
@@ -523,7 +571,7 @@ Response:
     "destination":       "Suez",
     "drivingSeconds":    3600,
     "breakSeconds":      600,
-    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" }
+    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" “License number”: }
   }
 },
 {
@@ -538,7 +586,7 @@ Response:
     "destination":       "Suez",
     "drivingSeconds":    3600,
     "breakSeconds":      600,
-    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" }
+    "vehicle":           { "plateNumber": "ABC-123", "model": "MAN TGX" “License number”: }
   }
 }
 }
@@ -581,16 +629,21 @@ Response:
       "driverId": "DR-1023",
       "name": "Ahmed Ali",
       "phone": "0100000000"
-    },
-    "vehicle": {
-      "vehicleId": "Ve-305",
-      "plateNumber": "ABC-123",
-      "type": "Toyota Hiace"
-    },
+          },
+"vehicle": { 
+    "vehicleId": "veh-uuid-1", 
+"plateNumber": "ABC-123", 
+"model": "MAN TGX", 
+"manufactureYear": 2021, 
+"idle": false, "working": true, 
+"assignmentStatus": "ASSIGNED"
+ },
     "route": {
       "startCoords": { "lat": 30.0444, "lng": 31.2357 },
-      "endCoords": { "lat": 24.0889, "lng": 32.8998 }
+      "endCoords": { "lat": 24.0889, "lng": 32.8998 } if end
     }
+
+
 }
 
 
@@ -606,10 +659,43 @@ Roles: FLEET_MANAGER, DRIVER (own trips only). // filter based on needs of the w
 GET
 	/trips?status:active
 	List trips with filters
-	
+	Response:
+200 OK 
+{
+  "success": true,
+  "data": [
+    {
+      "tripId": "TR-105",
+      "title": "Cairo - Aswan Route",
+      "status": "ONGOING",
+      "source": "Cairo",
+      "destination": "Aswan",
+      "scheduledStartTime": "2026-03-12T05:20:00Z",
+      "actualStartTime": "2026-03-12T05:25:00Z",
+      "estimatedArrivalTime": "2026-03-12T13:20:00Z",
+      "progressPct": 64,
+      "driver": {
+        "driverId": "drv-uuid-1",
+        "name": "Ahmed Hassan",
+        "phone": "0100000000"
+      },
+      "vehicle": {
+        "vehicleId": "veh-uuid-1",
+        "plateNumber": "ABC-123",
+        "model": "MAN TGX"
+      },
+      "tripState": {
+        "driverState": "Normal",
+        "tripProgressState": "Started",
+        "latitude": "24.0889",
+        "longitude": "32.8998",
+        "lastUpdatedAt": "2026-03-12T10:05:00Z"
+      }
+    }
+  ]
+}
 
-Response:
-200 OK — paginated list
+
 
 
 
@@ -918,12 +1004,13 @@ Request Body:
   "type": "TRAFFIC_COLLISION", 
   "severity": "HIGH",
   "location": { "lat": 30.222, "lng": 31.333 },
-  "payload": {
-    "description": "Rear-ended a sedan at the stoplight.",
-    "vehiclesInvolved": 2
-  }
+  "description": "Rear-ended a sedan at the stoplight."
 }
  
+
+
+
+
 
 
 
@@ -1051,60 +1138,6 @@ Response:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 4. Dependent (Emergency Contact) Endpoints:
 
 
@@ -1152,22 +1185,30 @@ Response Body:
     }
   ]
 ________________
-5. Telemetry Ingestion (Mobile App)
-All telemetry data from mobile devices MUST be sent via HTTP POST to ensure reliable delivery and server acknowledgement. WebSockets are NOT used for ingestion to prevent data loss during network drops.
+5. Telemetry
+Sent every 5–10 seconds from the mobile app + Raspberry Pi during an active trip. Stored as time-series data. High frequency — must be lightweight and respond fast.
+It splits ingestion into Live (single objects pushed instantly) and Offline Sync (batch arrays pushed upon network recovery).
+
 
 POST
 	/trips/{tripId}/telemetry
-	Send periodic heartbeat snapshot (Location, Speed, State)
-	Rate: Recommended every 5–10 seconds.
+	Send periodic heartbeat snapshot 
+	Validate this body with the appropriate needed data
 Request Body:
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "timestamp": "2026-03-03T09:00:01Z",
-  "location": { "lat": 30.0444, "lng": 31.2357 },
-  "speedKmh": 68.4,
-  "driverState": "NORMAL",
-  "payload": 
+  "tripId": "TR-105",
+  "timeStamp": "2026-03-03T09:00:01Z",
+  "location": "30.0444, 31.2357",
+  "speed": 68.4,
+  "driverState": "Normal",
+  "details": {
+    "tripProgressState": "Started",
+    "fatigueLevel": "LOW"
+  }
 }
+
+
 
 
 Response:
@@ -1205,7 +1246,7 @@ eventType
 	AI model — combined high-risk threshold breached
 	UNCONSCIOUS
 	AI model — driver unresponsive classification
-	CRASH
+	m
 	IMU — acceleration magnitude exceeds crash threshold
 	ROLLOVER
 	IMU — gyroscope detects rollover angle
@@ -1225,13 +1266,13 @@ POST
 
 Request Body:
 {
-  "id": "evt-uuid-1",
-  "timestamp": "2026-03-03T09:05:00Z",
   "eventType": "CRASH",
-  "severity": "CRITICAL",
+  "severity": "Critical",
+  "timeStamp": "2026-03-03T09:05:00Z",
   "payload": {
-                trigger": "MANUAL", 
-"notes": "Engine failure"
+    "sensor": "IMU",
+    "trigger": "AUTOMATIC",
+    "accelerationMagnitude": "9.8G"
   }
 }
 
@@ -1240,11 +1281,14 @@ Response:
 201 Created
 {
   "success": true,
+  "message": "Event recorded. Emergency alert generated.",
   "data": {
-    "eventId":         "uuid",
-    "alertCreated":    true,
+    "id": "evt-uuid-1",
+    "alertCreated": true
   }
 }
+
+
 
 
 
@@ -1286,7 +1330,22 @@ Request Body:
 
 Response:
 202 Accepted
-________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 7. Alerts
@@ -1294,12 +1353,30 @@ Alerts are auto-created from Events. They appear in the driver's mobile app and 
 
 
 GET
-	/alerts/?status=UNACKNOWLEDGED 
+	/alerts?status=UNACKNOWLEDGED 
 	List alerts with filters
 	
 
 Response:
-[ { "alertId": "uuid", "eventType": "FATIGUE", "severity": "HIGH", "driverName": "Ahmed Ali" } ]
+{
+  "success": true,
+  "data": [
+    {
+      "alertId": "alert-uuid-101",
+      "alertType": "Fatigue",
+      "severity": "HIGH",
+      "driverName": "Ahmed Ali",
+      "timeStamp": "2026-03-03T18:20:00Z"
+    },
+    {
+      "alertId": "alert-uuid-108",
+      "alertType": "SOSReq",
+      "severity": "CRITICAL",
+      "driverName": "Omar Said",
+      "timeStamp": "2026-03-03T11:00:00Z"
+    }
+  ]
+}
 
 
 Query params: tripId, driverId, severity, acknowledged, eventType, page, size
@@ -1377,33 +1454,6 @@ Response:
 
 
 
-POST
-	/alerts/{alertId}/read
-	Fleet manager marks alert notification as seen/read
-	Role: FLEET_MANAGER
-
-
-No request needed, as it will be Called automatically when the manager opens or views the alert detail screen
-Response:
-{ "success": true,
-  "data": {
-    "alertId":       "uuid",
-    "readByManager": true,
-    "readAt":        "2026-03-03T07:20:00Z"
-  },
-  "message": "Alert marked as read",
-  "errors":  []
- }
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1413,12 +1463,36 @@ Response:
 
 
 GET
-	/issues?resolved=false&type=SOS
-	Lists SOS and Maintenance tickets that require human intervention.
+	/issues?status=OPEN 
+	Lists SOS and Maintenance tickets that require human intervention. Query Params: status (OPEN|RESOLVED), category (SOS|ENGINE|TIRE|etc)
 	
 
 Response:
-[ { "issueId": "uuid", "tripId": "uuid", "type": "SOS", "resolved": "false", "createdAt": "..." } ]
+Response: 200 OK 
+{ "success": true, 
+  "message": "Open issues retrieved successfully", 
+  "data": 
+[ { 
+    "id": "req-uuid-881", 
+     "tripId": "TR-108", 
+     "status": "OPEN", 
+     "category": "SOS", 
+     "triggeredAt": "2026-03-03T11:00:00Z", 
+     "reportedAt": "2026-03-03T11:00:00Z", 
+     "payload": {} 
+ },
+{ 
+"id": "req-uuid-882", 
+"tripId": "TR-110", 
+"status": "OPEN", 
+"category": "ENGINE", 
+"maintenanceType": "ENGINE_FAILURE", 
+"triggeredAt": "2026-03-03T14:30:00Z", 
+"reportedAt": "2026-03-03T14:30:00Z", 
+"payload": { 
+               "description": "Engine is overheating and losing power on inclines." 
+  }
+ } 
 
 
 
@@ -1435,98 +1509,213 @@ POST
 
 
 GET
-	GET /incidents
-	Lists historical accidents/near-misses for the Alerts & Incidents page
+	/incidents
+	Lists historical accidents, hazards, and near-misses for the Incidents logbook. Query Params: incidentType 
 	
 
 Response:
-[ { "incidentId": "uuid", "type": "COLLISION", "severity": "HIGH", "description": "..." } ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+200 OK 
+{ 
+"success": true, 
+"message": "Incidents retrieved successfully", 
+"data": [
+{ "incidentId": "inc-auto-uuid-302", 
+  "tripId": "TR-105", 
+"incidentType": "TRAFFIC_COLLISION", 
+"severity": "Critical", 
+"description": "Auto-generated incident from IoT sudden deceleration detection." 
+},
+{ "incidentId": "inc-uuid-301", 
+  "tripId": "TR-102", 
+   "incidentType": "ROAD_BLOCK", 
+    "severity": "Medium", 
+    "description": "Tree fallen across the main highway, finding alternate route." 
+   }
+} 
 
 
 12. Dashboard & Fleet Monitoring (WebSockets)
-This section is for Server-to-Client broadcasting only. Fleet Managers subscribe to these topics to receive live updates without polling.
+This page gives a high-level overview of the live operations, driver states, and active alerts.
 
-Protocol: STOMP over WebSocket
-Endpoint: /ws (prefixed by context path if applicable)
 
-Live Map Tracking (WebSockets)
+Live Map Data (WebSockets)
 SUBSCRIBE
-	/topic/fleet/{managerId}/live-tracking
-	Stream: Live GPS coordinates, speed, and trip status updates.
-	Frequency: Triggered instantly when any trip telemetry is received via HTTP.
+	/topic/fleet/{fleetId}/telemetry
+	Stream live GPS coordinates, speed, and status to smoothly move the truck icons on the map.
+	{
+  "tripStateId": "ts-uuid-999",
+  "tripId": "TR-105",
+  "driverState": "Normal", 
+  "tripProgressState": "Started",
+  "progressPct": 64,  // ADD THIS so the frontend table updates live!
+  "latitude": "24.0889",
+  "longitude": "32.8998",
+  "lastUpdatedAt": "2026-03-12T10:05:00Z"
+}
+
+
+
 
 Live Alerts (WebSockets)
 SUBSCRIBE
-	/topic/fleet/{managerId}/alerts
-	Stream: Pushes an Alert JSON object the exact millisecond an event (Crash, Drowsiness, etc.) is reported via HTTP.
-	
+	/topic/fleet/{fleetId}/alerts
+	Pushes an Alert JSON object the exact millisecond the backend creates an incident or issue request..
+	complete, exact JSON bodies for every possible alert scenario your frontend must be prepared to handle. 
+the complete, exact JSON bodies for all five possible alert scenarios pushed to /topic/fleet/{fleetManagerId}/alerts.
+1. The SOS Panic Alert
+* Trigger: Driver hits the SOS button (POST /trips/{tripId}/issues/sos).
+* Alertable Wrapper: SOSRequest
+200 OK
+{
+  "alertId": "alert-uuid-104",
+  "tripId": "TR-108",
+  "alertType": "SOSReq",
+  "severity": "Critical",
+  "timeStamp": "2026-03-03T11:00:00Z",
+  "acknowledged": false,
+  "message": "CRITICAL: SOS Triggered",
+  "driver": {
+    "driverId": "DR-1088",
+    "name": "Omar Said"
+  },
+  "vehicle": {
+    "plateNumber": "DEF-456",
+    "model": "Volvo FH"
+  },
+  "alertable": {
+    "type": "SOSRequest",
+    "id": "req-uuid-881",
+    "triggeredAt": "2026-03-03T11:00:00Z",
+    "status": "OPEN",
+    "category": "SOS",
+    "reportedAt": "2026-03-03T11:00:00Z",
+    "payload": {}
+  }
+}
 
 
 
+
+2. The Maintenance Alert
+* Trigger: Driver submits a mechanical issue (POST /trips/{tripId}/issues/maintenance).
+* Alertable Wrapper: MaintenanceRequest
+ {
+  "alertId": "alert-uuid-105",
+  "tripId": "TR-110",
+  "alertType": "Maintenance",
+  "severity": "Medium",
+  "timeStamp": "2026-03-03T14:30:00Z",
+  "acknowledged": false,
+  "message": "Maintenance Required",
+  "driver": {
+    "driverId": "DR-1100",
+    "name": "Mahmoud Ali"
+  },
+  "vehicle": {
+    "plateNumber": "LMN-123",
+    "model": "Mercedes Actros"
+  },
+  "alertable": {
+    "type": "MaintenanceRequest",
+    "id": "req-uuid-882",
+    "triggeredAt": "2026-03-03T14:30:00Z",
+    "status": "OPEN",
+    "category": "ENGINE",
+    "reportedAt": "2026-03-03T14:30:00Z",
+    "maintenanceType": "ENGINE_FAILURE",
+    "payload": {
+      "description": "Engine is overheating and losing power on inclines."
+    }
+  }
+}
+
+
+3. The Manual Incident Alert
+* Trigger: Driver safely stops and manually reports an incident (POST /trips/{tripId}/incidents).
+* Alertable Wrapper: Incident
+{
+  "alertId": "alert-uuid-103",
+  "tripId": "TR-105",
+  "alertType": "Incident",
+  "severity": "Medium",
+  "timeStamp": "2026-03-03T15:45:00Z",
+  "acknowledged": false,
+  "message": "Driver Reported Incident",
+  "driver": {
+    "driverId": "DR-1055",
+    "name": "Khaled Hassan"
+  },
+  "vehicle": {
+    "plateNumber": "XYZ-999",
+    "model": "MAN TGX"
+  },
+  "alertable": {
+    "type": "Incident",
+    "incidentId": "inc-uuid-301",
+    "incidentType": "ROAD_BLOCK",
+    "severity": "Medium",
+    "description": "Tree fallen across the main highway, finding alternate route."
+  }
+}
+
+
+4. The Auto-Detected Crash Alert
+* Trigger: The IoT IMU sensor detects a crash (POST /trips/{tripId}/events). The backend automatically spawns an Incident to alert the manager.
+* Alertable Wrapper: Incident
+{
+  "alertId": "alert-uuid-102",
+  "tripId": "TR-105",
+  "alertType": "Incident",
+  "severity": "Critical",
+  "timeStamp": "2026-03-03T16:05:00Z",
+  "acknowledged": false,
+  "message": "SYSTEM AUTO-DETECT: Crash Detected",
+  "driver": {
+    "driverId": "DR-1055",
+    "name": "Khaled Hassan"
+  },
+  "vehicle": {
+    "plateNumber": "XYZ-999",
+    "model": "MAN TGX"
+  },
+  "alertable": {
+    "type": "Incident",
+    "incidentId": "inc-auto-uuid-302",
+    "incidentType": "TRAFFIC_COLLISION",
+    "severity": "Critical",
+    "description": "Auto-generated incident from IoT sudden deceleration detection."
+  }
+}
+
+
+5. The AI Fatigue & Safety Alert
+* Trigger: The mobile app's AI camera detects drowsiness or the driver becomes unresponsive.
+* Alertable Wrapper: TripState (Your class diagram links TripState to Alertable so it can instantly pass the live coordinates and the DriverState enum to the dashboard's map).
+{
+  "alertId": "alert-uuid-101",
+  "tripId": "TR-100",
+  "alertType": "Fatigue",
+  "severity": "High",
+  "timeStamp": "2026-03-03T18:20:00Z",
+  "acknowledged": false,
+  "message": "Fatigue Alert: Driver is Drowsy",
+  "driver": {
+    "driverId": "DR-1023",
+    "name": "Ahmed Ali"
+  },
+  "vehicle": {
+    "plateNumber": "ABC-100",
+    "model": "Toyota Hiace"
+  },
+  "alertable": {
+    "type": "TripState",
+    "tripStateId": "ts-uuid-999",
+    "driverState": "Drowsy",
+    "latitude": "30.0444",
+    "longitude": "31.2357",
+    "lastUpdatedAt": "2026-03-03T18:20:00Z"
+  }
+}
 
 
 GET

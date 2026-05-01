@@ -30,6 +30,9 @@ public class Driver extends User {
     @Column(name = "is_idle")
     private Boolean idle = true;
 
+    @Column(name = "photo_url", length = 500)
+    private String photoUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fleet_manager_id", nullable = false)
     private FleetManager fleetManager;

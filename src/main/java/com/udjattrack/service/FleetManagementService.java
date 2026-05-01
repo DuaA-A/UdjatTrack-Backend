@@ -2,6 +2,7 @@ package com.udjattrack.service;
 
 import com.udjattrack.dto.request.*;
 import com.udjattrack.dto.response.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,16 @@ public interface FleetManagementService {
     List<DriverResponse> getDriversByManager(UUID fleetManagerId);
     DriverResponse getDriverById(UUID driverId);
 
-    // Vehicle operations (FleetManager)
+    /**
+     * Uploads a profile photo for a driver, stores it via FileStorageService,
+     * and persists the returned URL on the Driver entity.
+     *
+     * @param driverId the UUID of the driver
+     * @param file     the multipart image file
+     * @return the updated DriverResponse containing the new photoUrl
+     */
+    DriverResponse uploadDriverPhoto(UUID driverId, MultipartFile file);
+
     VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request);
     void deleteVehicle(UUID vehicleId);
     List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId);

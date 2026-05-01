@@ -6,6 +6,7 @@ import com.udjattrack.dto.response.TripResponse;
 import com.udjattrack.dto.response.TripStateResponse;
 import com.udjattrack.entity.*;
 import com.udjattrack.entity.enums.TripProgressState;
+import com.udjattrack.entity.enums.TripStatus;
 import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
@@ -54,14 +55,13 @@ public class TripServiceImpl implements TripService {
                 .source(request.source()).destination(request.destination())
                 .scheduledStartTime(request.scheduledStartTime())
                 .scheduledEndTime(request.scheduledEndTime())
-                .tripState(TripProgressState.CREATED)
+                .status(TripStatus.PLANNED)
                 .build();
         Trip saved = tripRepository.save(trip);
 
         // Create initial TripState snapshot
         TripState state = TripState.builder()
                 .trip(saved)
-                .tripProgressState(TripProgressState.CREATED)
                 .build();
         tripStateRepository.save(state);
 
@@ -94,10 +94,12 @@ public class TripServiceImpl implements TripService {
     @Override
     public TripResponse startTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        validateStateTransition(trip.getTripState(), TripProgressState.STARTED);
+        if (trip.getStatus() != TripStatus.PLANNED) {
+            throw new BusinessException("Only PLANNED trips can be started");
+        }
 
-        trip.setTripState(TripProgressState.STARTED);
-        updateTripState(trip, TripProgressState.STARTED);
+        trip.setStatus(TripStatus.ONGOING);
+        updateTripProgressState(trip, TripProgressState.STARTED);
 
         // Create trip log
         TripLog log = TripLog.builder().trip(trip).actualStartTime(LocalDateTime.now()).build();
@@ -115,26 +117,28 @@ public class TripServiceImpl implements TripService {
     @Override
     public TripResponse stopTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        validateStateTransition(trip.getTripState(), TripProgressState.PAUSED);
-        trip.setTripState(TripProgressState.PAUSED);
-        updateTripState(trip, TripProgressState.PAUSED);
-        return toResponse(tripRepository.save(trip));
+        if (trip.getStatus() != TripStatus.ONGOING) {
+            throw new BusinessException("Only ONGOING trips can be stopped (paused)");
+        }
+        updateTripProgressState(trip, TripProgressState.PAUSED);
+        return toResponse(trip);
     }
 
     @Override
     public TripResponse resumeTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        validateStateTransition(trip.getTripState(), TripProgressState.RESUMED);
-        trip.setTripState(TripProgressState.RESUMED);
-        updateTripState(trip, TripProgressState.RESUMED);
-        return toResponse(tripRepository.save(trip));
+        if (trip.getStatus() != TripStatus.ONGOING) {
+            throw new BusinessException("Only ONGOING trips can be resumed");
+        }
+        updateTripProgressState(trip, TripProgressState.RESUMED);
+        return toResponse(trip);
     }
 
     @Override
     public TripResponse completeTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        trip.setTripState(TripProgressState.COMPLETED);
-        updateTripState(trip, TripProgressState.COMPLETED);
+        trip.setStatus(TripStatus.FINISHED);
+        updateTripProgressState(trip, TripProgressState.COMPLETED);
 
         // Finalize trip log
         tripLogRepository.findByTripTripId(tripId).ifPresent(tl -> {
@@ -158,8 +162,8 @@ public class TripServiceImpl implements TripService {
     @Override
     public TripResponse cancelTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        trip.setTripState(TripProgressState.CANCELLED);
-        updateTripState(trip, TripProgressState.CANCELLED);
+        trip.setStatus(TripStatus.CANCELLED);
+        // Clear progress state if cancelled? Or leave it as is.
         trip.getDriver().setIdle(true);
         trip.getVehicle().setIdle(true);
         driverRepository.save(trip.getDriver());
@@ -189,14 +193,14 @@ public class TripServiceImpl implements TripService {
                     .stream().map(this::toResponse).collect(Collectors.toList());
         }
 
-        List<TripProgressState> targetStates = switch (status.toLowerCase()) {
-            case "active" -> List.of(TripProgressState.STARTED, TripProgressState.PAUSED, TripProgressState.RESUMED);
-            case "past" -> List.of(TripProgressState.COMPLETED, TripProgressState.CANCELLED);
-            case "upcoming" -> List.of(TripProgressState.CREATED);
+        List<TripStatus> targetStatuses = switch (status.toLowerCase()) {
+            case "active" -> List.of(TripStatus.ONGOING);
+            case "past" -> List.of(TripStatus.FINISHED, TripStatus.CANCELLED);
+            case "upcoming" -> List.of(TripStatus.PLANNED);
             default -> throw new BusinessException("Invalid trip status filter. Use: active, past, upcoming");
         };
 
-        return tripRepository.findAllByDriverUserIdAndTripStateInOrderByCreatedAtDesc(driverId, targetStates)
+        return tripRepository.findAllByDriverUserIdAndStatusInOrderByCreatedAtDesc(driverId, targetStatuses)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -211,9 +215,7 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public TripResponse getTripReport(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
-        TripResponse response = toResponse(trip);
-        // Log is already included in toResponse if present
-        return response;
+        return toResponse(trip);
     }
 
     // ===== Private helpers =====
@@ -223,31 +225,19 @@ public class TripServiceImpl implements TripService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
     }
 
-    private void updateTripState(Trip trip, TripProgressState state) {
+    private void updateTripProgressState(Trip trip, TripProgressState state) {
         tripStateRepository.findByTripTripId(trip.getTripId()).ifPresent(ts -> {
             ts.setTripProgressState(state);
             tripStateRepository.save(ts);
         });
     }
 
-    private void validateStateTransition(TripProgressState current, TripProgressState next) {
-        boolean valid = switch (next) {
-            case STARTED -> current == TripProgressState.CREATED;
-            case PAUSED -> current == TripProgressState.STARTED || current == TripProgressState.RESUMED;
-            case RESUMED -> current == TripProgressState.PAUSED;
-            case COMPLETED, CANCELLED -> current != TripProgressState.COMPLETED
-                    && current != TripProgressState.CANCELLED;
-            default -> false;
-        };
-        if (!valid) {
-            throw new BusinessException("Invalid trip state transition: " + current + " → " + next);
-        }
-    }
-
     private TripResponse toResponse(Trip trip) {
         TripLogResponse logResponse = null;
+        LocalDateTime actualStartTime = null;
         if (trip.getTripLog() != null) {
             TripLog tl = trip.getTripLog();
+            actualStartTime = tl.getActualStartTime();
             logResponse = TripLogResponse.builder()
                     .logId(tl.getLogId()).tripId(trip.getTripId())
                     .actualStartTime(tl.getActualStartTime())
@@ -256,6 +246,28 @@ public class TripServiceImpl implements TripService {
                     .totalBreakTime(tl.getTotalBreakTime())
                     .build();
         }
+
+        // Calculate transient properties
+        String title = trip.getSource() + " \u2192 " + trip.getDestination();
+        
+        Double expectedDurationHours = null;
+        if (trip.getScheduledStartTime() != null && trip.getScheduledEndTime() != null) {
+            expectedDurationHours = (double) Duration.between(trip.getScheduledStartTime(), trip.getScheduledEndTime()).toMinutes() / 60.0;
+        }
+
+        LocalDateTime estimatedArrivalTime = null;
+        if (actualStartTime != null && expectedDurationHours != null) {
+            estimatedArrivalTime = actualStartTime.plusMinutes((long)(expectedDurationHours * 60));
+        }
+
+        Integer progressPct = 0;
+        if (trip.getStatus() == TripStatus.FINISHED) {
+            progressPct = 100;
+        } else if (trip.getStatus() == TripStatus.ONGOING && actualStartTime != null && expectedDurationHours != null) {
+            long elapsedMinutes = Duration.between(actualStartTime, LocalDateTime.now()).toMinutes();
+            progressPct = (int) Math.min(100, Math.max(0, (elapsedMinutes / (expectedDurationHours * 60.0)) * 100));
+        }
+
         return TripResponse.builder()
                 .tripId(trip.getTripId())
                 .driverId(trip.getDriver().getUserId())
@@ -265,8 +277,14 @@ public class TripServiceImpl implements TripService {
                 .source(trip.getSource()).destination(trip.getDestination())
                 .scheduledStartTime(trip.getScheduledStartTime())
                 .scheduledEndTime(trip.getScheduledEndTime())
-                .tripState(trip.getTripState()).createdAt(trip.getCreatedAt())
+                .status(trip.getStatus())
+                .createdAt(trip.getCreatedAt())
                 .tripLog(logResponse)
+                .title(title)
+                .expectedDurationHours(expectedDurationHours)
+                .estimatedArrivalTime(estimatedArrivalTime)
+                .progressPct(progressPct)
+                .totalDistanceKm(0.0) // Placeholder
                 .build();
     }
 
