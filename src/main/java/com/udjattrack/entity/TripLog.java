@@ -40,6 +40,4 @@ public class TripLog {
     @Column(name = "total_break_time")
     private Double totalBreakTime;  // in minutes
 
-    @OneToMany(mappedBy = "tripLog", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<Alert> alerts = new java.util.ArrayList<>();
 }

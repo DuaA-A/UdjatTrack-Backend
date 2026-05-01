@@ -283,3 +283,5 @@ CREATE INDEX idx_telemetry_trip_time
     ON telemetry_records (trip_id, timestamp DESC);
 
 SELECT * FROM timescaledb_information.hypertables;
+
+SELECT user_id, email, role, password FROM users;
