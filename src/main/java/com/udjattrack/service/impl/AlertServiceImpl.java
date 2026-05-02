@@ -35,6 +35,7 @@ public class AlertServiceImpl implements AlertService {
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final IncidentRepository incidentRepository;
     private final TripStateRepository tripStateRepository;
+    private final EventRecordRepository relationalRepository;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
@@ -49,12 +50,17 @@ public class AlertServiceImpl implements AlertService {
                 .alertableType(request.alertableType())
                 .alertableId(request.alertableId())
                 .acknowledged(false)
+                .readByManager(false)
                 .build();
         Alert saved = alertRepository.save(alert);
         
         // Push alert via WebSocket
-        UUID managerId = trip.getDriver().getFleetManager().getUserId();
-        webSocketPublisher.publishAlert(managerId, toMessage(saved));
+        if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
+            UUID managerId = trip.getDriver().getFleetManager().getUserId();
+            webSocketPublisher.publishAlert(managerId, toMessage(saved));
+        } else {
+            log.warn("Could not publish WebSocket alert: Trip {} has no associated Fleet Manager", trip.getTripId());
+        }
         
         return toResponse(saved);
     }
@@ -72,6 +78,7 @@ public class AlertServiceImpl implements AlertService {
         Alert alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", alertId));
         alert.setAcknowledged(true);
+        alert.setAckedAt(java.time.LocalDateTime.now());
         return toResponse(alertRepository.save(alert));
     }
 
@@ -107,6 +114,8 @@ public class AlertServiceImpl implements AlertService {
                 .alertType(a.getAlertType())
                 .severity(a.getSeverity())
                 .acknowledged(a.getAcknowledged())
+                .readByManager(a.getReadByManager())
+                .ackedAt(a.getAckedAt())
                 .message(a.getMessage())
                 .alertableType(a.getAlertableType())
                 .alertableId(a.getAlertableId())
@@ -126,6 +135,8 @@ public class AlertServiceImpl implements AlertService {
                 .severity(a.getSeverity())
                 .timeStamp(a.getTimestamp())
                 .acknowledged(a.getAcknowledged())
+                .readByManager(a.getReadByManager())
+                .ackedAt(a.getAckedAt())
                 .message(a.getMessage())
                 .driver(AlertEventMessage.DriverInfo.builder()
                         .driverId(trip.getDriver().getUserId())
@@ -147,7 +158,7 @@ public class AlertServiceImpl implements AlertService {
             case "MaintenanceRequest" -> maintenanceRequestRepository.findById(id).orElse(null);
             case "Incident" -> incidentRepository.findById(id).orElse(null);
             case "TripState" -> tripStateRepository.findById(id).orElse(null);
-            case "EventRecord" -> null; // User didn't specify EventRecord detail but Incident detail
+            case "EventRecord" -> relationalRepository.findById(id).orElse(null);
             default -> null;
         };
     }

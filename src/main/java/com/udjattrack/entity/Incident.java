@@ -20,7 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Incident extends IssueRequest {
+public class Incident extends IssueRequest implements Alertable {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false, length = 15)

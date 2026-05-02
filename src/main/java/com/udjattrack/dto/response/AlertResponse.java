@@ -16,6 +16,8 @@ public class AlertResponse {
     private AlertType alertType;
     private SeverityLevel severity;
     private Boolean acknowledged;
+    private Boolean readByManager;
+    private LocalDateTime ackedAt;
     private String message;
     private String alertableType;
     private UUID alertableId;

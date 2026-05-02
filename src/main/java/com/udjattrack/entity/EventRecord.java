@@ -25,7 +25,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EventRecord {
+public class EventRecord implements Alertable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

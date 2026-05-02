@@ -22,6 +22,8 @@ public class AlertEventMessage {
     private LocalDateTime timeStamp;
     
     private boolean acknowledged;
+    private boolean readByManager;
+    private LocalDateTime ackedAt;
     private String message;
     
     private DriverInfo driver;

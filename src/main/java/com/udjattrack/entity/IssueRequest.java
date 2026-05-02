@@ -29,7 +29,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public abstract class IssueRequest {
+public abstract class IssueRequest implements Alertable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -47,6 +47,9 @@ public abstract class IssueRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, insertable = false, updatable = false, length = 20)
     private IssueCategory category;
+
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "json")

@@ -75,35 +75,40 @@ public class EventServiceImpl implements EventService {
         boolean alertCreated = false;
 
         // 2. Auto-Trigger Alert for Dashboard
-        if (request.severity() != null && request.severity() != com.udjattrack.entity.enums.SeverityLevel.LOW) {
-            AlertType alertType = AlertType.TRIP_STATE;
-            String alertableType = "EventRecord";
-            UUID alertableId = relationalRecord.getId();
+        // We wrap this in a try-catch to ensure that even if alerting fails, 
+        // the EventRecord is still successfully stored in the database.
+        try {
+            if (request.severity() != null && request.severity() != com.udjattrack.entity.enums.SeverityLevel.LOW) {
+                AlertType alertType = AlertType.TRIP_STATE;
+                String alertableType = "EventRecord";
+                UUID alertableId = relationalRecord.getId();
 
-            if ("FATIGUE".equalsIgnoreCase(request.eventType()) || "DROWSY".equalsIgnoreCase(request.eventType())) {
-                alertType = AlertType.FATIGUE;
-                // For fatigue, the user specifically requested TripState as the alertable detail
-                try {
+                String type = request.eventType().toUpperCase();
+                if (type.contains("FATIGUE") || type.contains("DROWSY") || type.contains("DROWSINESS")) {
+                    alertType = AlertType.FATIGUE;
+                    // For fatigue, the user specifically requested TripState as the alertable detail
                     com.udjattrack.entity.TripState tripState = tripStateRepository.findByTripTripId(tripId).orElse(null);
                     if (tripState != null) {
                         alertableType = "TripState";
                         alertableId = tripState.getStateId();
                     }
-                } catch (Exception e) {
-                    log.error("Failed to fetch TripState for Fatigue alert: {}", e.getMessage());
+                } else if (type.contains("CRASH") || type.contains("ROLLOVER")) {
+                    alertType = AlertType.INCIDENT;
                 }
-            }
 
-            CreateAlertRequest alertReq = new CreateAlertRequest(
-                    tripId,
-                    alertType,
-                    request.severity(),
-                    alertableType,
-                    alertableId,
-                    "Critical Event Detected: " + request.eventType()
-            );
-            alertService.createAlert(alertReq); // this also broadcasts the websocket
-            alertCreated = true;
+                CreateAlertRequest alertReq = new CreateAlertRequest(
+                        tripId,
+                        alertType,
+                        request.severity(),
+                        alertableType,
+                        alertableId,
+                        "Critical Event Detected: " + request.eventType()
+                );
+                alertService.createAlert(alertReq); // this also broadcasts the websocket
+                alertCreated = true;
+            }
+        } catch (Exception e) {
+            log.error("Failed to auto-trigger alert for event {}: {}", relationalRecord.getId(), e.getMessage());
         }
 
         // 3. Auto-trigger Incident if it's a crash or rollover

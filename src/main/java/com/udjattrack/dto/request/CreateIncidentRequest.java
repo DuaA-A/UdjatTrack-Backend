@@ -19,5 +19,7 @@ public record CreateIncidentRequest(
 
         String location,
 
+        String description,
+
         Map<String, Object> payload
 ) {}

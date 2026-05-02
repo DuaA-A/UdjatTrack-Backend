@@ -22,7 +22,4 @@ public class MaintenanceRequest extends IssueRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "maintenance_type", nullable = false, length = 40)
     private MaintenanceType maintenanceType;
-
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
 }

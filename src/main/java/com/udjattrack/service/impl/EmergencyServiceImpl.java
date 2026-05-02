@@ -39,6 +39,7 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .location(request.location())
                 .autoTriggered(false)
                 .status(IssueStatus.OPEN)
+                .description(request.description())
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
@@ -63,6 +64,7 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .location(request.location())
                 .autoTriggered(true)
                 .status(IssueStatus.OPEN)
+                .description(request.description())
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
@@ -119,6 +121,7 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .severity(request.severity())
                 .location(request.location())
                 .status(IssueStatus.OPEN)
+                .description(request.description())
                 .payload(request.payload())
                 .build();
         Incident saved = incidentRepository.save(incident);
