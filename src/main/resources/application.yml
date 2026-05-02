@@ -98,6 +98,12 @@ application:
     # Allowed origins for WebSocket (set to your frontend URL in production)
     allowed-origins: ${WS_ALLOWED_ORIGINS:*}
 
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+    deserialization:
+      fail-on-unknown-properties: false
+
 # ===== Logging =====
 logging:
   level:
