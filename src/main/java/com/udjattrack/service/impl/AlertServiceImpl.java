@@ -10,8 +10,7 @@ import com.udjattrack.entity.enums.AlertType;
 import com.udjattrack.entity.enums.DriverState;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.exception.ResourceNotFoundException;
-import com.udjattrack.repository.AlertRepository;
-import com.udjattrack.repository.TripRepository;
+import com.udjattrack.repository.*;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,10 @@ public class AlertServiceImpl implements AlertService {
     private final AlertRepository alertRepository;
     private final TripRepository tripRepository;
     private final WebSocketPublisher webSocketPublisher;
+    private final SOSRequestRepository sosRequestRepository;
+    private final MaintenanceRequestRepository maintenanceRequestRepository;
+    private final IncidentRepository incidentRepository;
+    private final TripStateRepository tripStateRepository;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
@@ -112,13 +115,40 @@ public class AlertServiceImpl implements AlertService {
     }
 
     private AlertEventMessage toMessage(Alert a) {
+        Trip trip = a.getTrip();
+        
+        Object alertableObj = fetchAlertable(a.getAlertableType(), a.getAlertableId());
+        
         return AlertEventMessage.builder()
                 .alertId(a.getAlertId())
-                .tripId(a.getTrip().getTripId())
-                .type(a.getAlertType())
+                .tripId(trip.getTripId())
+                .alertType(a.getAlertType())
                 .severity(a.getSeverity())
+                .timeStamp(a.getTimestamp())
+                .acknowledged(a.getAcknowledged())
                 .message(a.getMessage())
-                .timestamp(a.getTimestamp())
+                .driver(AlertEventMessage.DriverInfo.builder()
+                        .driverId(trip.getDriver().getUserId())
+                        .name(trip.getDriver().getName())
+                        .build())
+                .vehicle(AlertEventMessage.VehicleInfo.builder()
+                        .plateNumber(trip.getVehicle().getPlateNumber())
+                        .model(trip.getVehicle().getModel())
+                        .build())
+                .alertable(alertableObj)
                 .build();
+    }
+
+    private Object fetchAlertable(String type, UUID id) {
+        if (type == null || id == null) return null;
+        
+        return switch (type) {
+            case "SOSRequest" -> sosRequestRepository.findById(id).orElse(null);
+            case "MaintenanceRequest" -> maintenanceRequestRepository.findById(id).orElse(null);
+            case "Incident" -> incidentRepository.findById(id).orElse(null);
+            case "TripState" -> tripStateRepository.findById(id).orElse(null);
+            case "EventRecord" -> null; // User didn't specify EventRecord detail but Incident detail
+            default -> null;
+        };
     }
 }

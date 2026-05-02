@@ -29,6 +29,7 @@ public class EmergencyServiceImpl implements EmergencyService {
     private final TripRepository tripRepository;
     private final DependentRepository dependentRepository;
     private final EmailService emailService;
+    private final com.udjattrack.service.AlertService alertService;
 
     @Override
     public SOSRequestResponse sendManualSOS(CreateSOSRequest request) {
@@ -41,6 +42,14 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
+        
+        // Trigger WebSocket Alert
+        alertService.createAlert(new CreateAlertRequest(
+                request.tripId(), com.udjattrack.entity.enums.AlertType.SOS_REQ, 
+                com.udjattrack.entity.enums.SeverityLevel.CRITICAL, 
+                "SOSRequest", saved.getIssueId(), "CRITICAL: SOS Triggered"
+        ));
+        
         notifyDependentsOnSOS(trip, request.location());
         log.warn("Manual SOS raised for trip: {}", request.tripId());
         return toSOSResponse(saved);
@@ -57,6 +66,14 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
+        
+        // Trigger WebSocket Alert
+        alertService.createAlert(new CreateAlertRequest(
+                request.tripId(), com.udjattrack.entity.enums.AlertType.SOS_REQ, 
+                com.udjattrack.entity.enums.SeverityLevel.CRITICAL, 
+                "SOSRequest", saved.getIssueId(), "SYSTEM AUTO-DETECT: SOS Triggered"
+        ));
+        
         notifyDependentsOnSOS(trip, request.location());
         log.warn("Auto SOS raised for trip: {}", request.tripId());
         return toSOSResponse(saved);
@@ -81,7 +98,16 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
                 .build();
-        return toMaintenanceResponse(maintenanceRequestRepository.save(maintenance));
+        MaintenanceRequest saved = maintenanceRequestRepository.save(maintenance);
+        
+        // Trigger WebSocket Alert
+        alertService.createAlert(new CreateAlertRequest(
+                request.tripId(), com.udjattrack.entity.enums.AlertType.MAINTENANCE, 
+                com.udjattrack.entity.enums.SeverityLevel.MEDIUM, 
+                "MaintenanceRequest", saved.getIssueId(), "Maintenance Required: " + request.maintenanceType()
+        ));
+        
+        return toMaintenanceResponse(saved);
     }
 
     @Override
@@ -95,7 +121,16 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
                 .build();
-        return toIncidentResponse(incidentRepository.save(incident));
+        Incident saved = incidentRepository.save(incident);
+        
+        // Trigger WebSocket Alert
+        alertService.createAlert(new CreateAlertRequest(
+                request.tripId(), com.udjattrack.entity.enums.AlertType.INCIDENT, 
+                request.severity(), 
+                "Incident", saved.getIssueId(), "Incident Reported: " + request.type()
+        ));
+        
+        return toIncidentResponse(saved);
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.udjattrack.entity.Trip;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.EventRecordRepository;
 import com.udjattrack.repository.TripRepository;
+import com.udjattrack.repository.TripStateRepository;
 import com.udjattrack.service.EventService;
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.CreateIncidentRequest;
@@ -35,6 +36,7 @@ public class EventServiceImpl implements EventService {
     private final AlertService alertService;
     private final EmergencyService emergencyService;
     private final com.udjattrack.service.TelemetryService telemetryService;
+    private final TripStateRepository tripStateRepository;
 
     @Override
     @Transactional
@@ -74,12 +76,30 @@ public class EventServiceImpl implements EventService {
 
         // 2. Auto-Trigger Alert for Dashboard
         if (request.severity() != null && request.severity() != com.udjattrack.entity.enums.SeverityLevel.LOW) {
+            AlertType alertType = AlertType.TRIP_STATE;
+            String alertableType = "EventRecord";
+            UUID alertableId = relationalRecord.getId();
+
+            if ("FATIGUE".equalsIgnoreCase(request.eventType()) || "DROWSY".equalsIgnoreCase(request.eventType())) {
+                alertType = AlertType.FATIGUE;
+                // For fatigue, the user specifically requested TripState as the alertable detail
+                try {
+                    com.udjattrack.entity.TripState tripState = tripStateRepository.findByTripTripId(tripId).orElse(null);
+                    if (tripState != null) {
+                        alertableType = "TripState";
+                        alertableId = tripState.getStateId();
+                    }
+                } catch (Exception e) {
+                    log.error("Failed to fetch TripState for Fatigue alert: {}", e.getMessage());
+                }
+            }
+
             CreateAlertRequest alertReq = new CreateAlertRequest(
                     tripId,
-                    AlertType.TRIP_STATE, // Or a more specific type based on event
+                    alertType,
                     request.severity(),
-                    "EventRecord",
-                    relationalRecord.getId(),
+                    alertableType,
+                    alertableId,
                     "Critical Event Detected: " + request.eventType()
             );
             alertService.createAlert(alertReq); // this also broadcasts the websocket

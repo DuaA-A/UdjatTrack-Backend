@@ -21,7 +21,7 @@ public class WebSocketPublisher {
      * Pushes to fleet managers for real-time dashboard updates.
      */
     public void publishLiveTracking(UUID managerId, TripStateUpdateMessage message) {
-        String destination = "/topic/fleet/" + managerId + "/live-tracking";
+        String destination = "/topic/fleet/" + managerId + "/telemetry";
         messagingTemplate.convertAndSend(destination, message);
         log.debug("Published live-tracking update to {}", destination);
     }

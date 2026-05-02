@@ -169,13 +169,13 @@ public class TelemetryServiceImpl implements TelemetryService {
             // Push update to fleet manager over WebSocket
             UUID managerId = trip.getDriver().getFleetManager().getUserId();
             webSocketPublisher.publishLiveTracking(managerId, TripStateUpdateMessage.builder()
+                    .tripStateId(state.getStateId())
                     .tripId(trip.getTripId())
                     .driverState(state.getDriverState())
                     .tripProgressState(state.getTripProgressState())
-                    .latitude(state.getLatitude())
-                    .longitude(state.getLongitude())
-                    .currentSpeed(request.speed())
-                    .timestamp(telemetryTime)
+                    .progressPct(calculateProgressPct(trip))
+                    .location(java.util.Map.of("lat", state.getLatitude(), "long", state.getLongitude()))
+                    .lastUpdatedAt(telemetryTime)
                     .build());
         }
 
@@ -259,5 +259,19 @@ public class TelemetryServiceImpl implements TelemetryService {
                 .currentSpeed(s.getCurrentSpeed())
                 .lastUpdatedAt(s.getLastUpdatedAt())
                 .build();
+    }
+
+    private Integer calculateProgressPct(Trip trip) {
+        if (trip.getStatus() == TripStatus.FINISHED) return 100;
+        if (trip.getTripLog() == null || trip.getTripLog().getActualStartTime() == null) return 0;
+        
+        LocalDateTime start = trip.getTripLog().getActualStartTime();
+        if (trip.getScheduledStartTime() != null && trip.getScheduledEndTime() != null) {
+            long totalMinutes = java.time.Duration.between(trip.getScheduledStartTime(), trip.getScheduledEndTime()).toMinutes();
+            if (totalMinutes <= 0) return 0;
+            long elapsedMinutes = java.time.Duration.between(start, LocalDateTime.now()).toMinutes();
+            return (int) Math.min(100, Math.max(0, (elapsedMinutes * 100) / totalMinutes));
+        }
+        return 0;
     }
 }
