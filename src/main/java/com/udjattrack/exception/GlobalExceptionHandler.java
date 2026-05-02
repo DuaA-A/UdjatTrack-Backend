@@ -43,8 +43,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleJsonErrors(HttpMessageNotReadableException ex) {
         log.error("JSON parse error: {}", ex.getMessage());
+        String details = ex.getMostSpecificCause().getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("Invalid request body or data format. Check enum values and types."));
+                .body(ApiResponse.error("Invalid request body or data format: " + details));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

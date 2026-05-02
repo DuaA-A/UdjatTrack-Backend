@@ -16,6 +16,7 @@ public class SOSRequestResponse {
     private IssueStatus status;
     private String location;
     private Boolean autoTriggered;
+    private String description;
     private Map<String, Object> payload;
     private LocalDateTime triggeredAt;
 }

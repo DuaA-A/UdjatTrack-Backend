@@ -113,6 +113,7 @@ public class TripController {
                 tripId, 
                 payload.location(), 
                 payload.autoTriggered(), 
+                payload.description(),
                 payload.payload()
         );
         

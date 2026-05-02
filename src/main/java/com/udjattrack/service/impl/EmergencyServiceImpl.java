@@ -176,8 +176,10 @@ public class EmergencyServiceImpl implements EmergencyService {
     private SOSRequestResponse toSOSResponse(SOSRequest s) {
         return SOSRequestResponse.builder()
                 .issueId(s.getIssueId()).tripId(s.getTrip().getTripId())
-                .status(s.getStatus()).location(s.getLocation())
-                .autoTriggered(s.getAutoTriggered()).payload(s.getPayload())
+                .status(s.getStatus())                .location(s.getLocation())
+                .autoTriggered(s.getAutoTriggered())
+                .description(s.getDescription())
+                .payload(s.getPayload())
                 .triggeredAt(s.getTriggeredAt())
                 .build();
     }
@@ -185,8 +187,10 @@ public class EmergencyServiceImpl implements EmergencyService {
     private MaintenanceRequestResponse toMaintenanceResponse(MaintenanceRequest m) {
         return MaintenanceRequestResponse.builder()
                 .issueId(m.getIssueId()).tripId(m.getTrip().getTripId())
-                .status(m.getStatus()).maintenanceType(m.getMaintenanceType())
-                .description(m.getDescription()).payload(m.getPayload())
+                .status(m.getStatus())
+                .maintenanceType(m.getMaintenanceType())
+                .description(m.getDescription())
+                .payload(m.getPayload())
                 .triggeredAt(m.getTriggeredAt())
                 .build();
     }
@@ -194,8 +198,11 @@ public class EmergencyServiceImpl implements EmergencyService {
     private IncidentResponse toIncidentResponse(Incident i) {
         return IncidentResponse.builder()
                 .incidentId(i.getIssueId()).tripId(i.getTrip().getTripId())
-                .severity(i.getSeverity()).type(i.getType())
-                .location(i.getLocation()).payload(i.getPayload())
+                .severity(i.getSeverity())
+                .type(i.getType())
+                .location(i.getLocation())
+                .description(i.getDescription())
+                .payload(i.getPayload())
                 .reportedAt(i.getReportedAt())
                 .build();
     }

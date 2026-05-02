@@ -115,9 +115,10 @@ public class EventServiceImpl implements EventService {
         if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
             CreateIncidentRequest incReq = new CreateIncidentRequest(
                     tripId,
-                    IncidentType.TRAFFIC_COLLISION, // Or map specifically
+                    IncidentType.OTHER_INCIDENT,
                     request.severity(),
                     "Auto-detected location", // could extract from payload
+                    "Auto-generated incident from critical event: " + request.eventType(),
                     request.payload()
             );
             emergencyService.createIncident(incReq);
