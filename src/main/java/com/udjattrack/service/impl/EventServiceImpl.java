@@ -4,7 +4,7 @@ import com.udjattrack.dto.request.EventRequest;
 import com.udjattrack.dto.request.OfflineSyncRequest;
 import com.udjattrack.dto.response.EventResponse;
 import com.udjattrack.dto.websocket.AlertEventMessage;
-import com.udjattrack.entity.Trip;
+import com.udjattrack.entity.*;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.EventRecordRepository;
 import com.udjattrack.repository.TripRepository;
@@ -112,16 +112,20 @@ public class EventServiceImpl implements EventService {
         }
 
         // 3. Auto-trigger Incident if it's a crash or rollover
-        if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
-            CreateIncidentRequest incReq = new CreateIncidentRequest(
-                    tripId,
-                    IncidentType.OTHER_INCIDENT,
-                    request.severity(),
-                    "Auto-detected location", // could extract from payload
-                    "Auto-generated incident from critical event: " + request.eventType(),
-                    request.payload()
-            );
-            emergencyService.createIncident(incReq);
+        try {
+            if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
+                CreateIncidentRequest incReq = new CreateIncidentRequest(
+                        tripId,
+                        IncidentType.OTHER_INCIDENT,
+                        request.severity(),
+                        "Auto-detected location", // could extract from payload
+                        "Auto-generated incident from critical event: " + request.eventType(),
+                        request.payload()
+                );
+                emergencyService.createIncident(incReq);
+            }
+        } catch (Exception e) {
+            log.error("Failed to auto-trigger incident for event {}: {}", relationalRecord.getId(), e.getMessage());
         }
 
         return toResponse(relationalRecord, alertCreated);
