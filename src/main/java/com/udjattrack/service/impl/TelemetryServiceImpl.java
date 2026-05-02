@@ -93,7 +93,20 @@ public class TelemetryServiceImpl implements TelemetryService {
         // Update live trip state in relational DB
         TripState state = tripStateRepository.findByTripTripId(request.tripId()).orElse(null);
         if (state != null) {
-            if (request.driverState() != null) state.setDriverState(request.driverState());
+            if (request.driverState() != null && state.getDriverState() != request.driverState()) {
+                DriverState oldState = state.getDriverState();
+                state.setDriverState(request.driverState());
+                
+                // Trigger Alert for Driver State Change
+                alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
+                        trip.getTripId(),
+                        com.udjattrack.entity.enums.AlertType.TRIP_STATE,
+                        SeverityLevel.MEDIUM,
+                        "TripState",
+                        state.getStateId(),
+                        "Driver State Changed: " + oldState + " -> " + request.driverState()
+                ));
+            }
             if (request.location() != null) {
                 state.setLatitude(String.valueOf(request.location().lat()));
                 state.setLongitude(String.valueOf(request.location().lng()));
@@ -158,6 +171,16 @@ public class TelemetryServiceImpl implements TelemetryService {
                                 .timestamp(telemetryTime)
                                 .build();
                         eventRecordRepository.save(statusEvent);
+
+                        // Trigger Alert for Status Change
+                        alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
+                                trip.getTripId(),
+                                com.udjattrack.entity.enums.AlertType.INCIDENT,
+                                SeverityLevel.LOW,
+                                "EventRecord",
+                                statusEvent.getId(),
+                                "Trip Status Changed: " + oldStatus + " -> " + newStatus
+                        ));
                     }
                 } catch (IllegalArgumentException e) {
                     log.warn("Invalid tripState received in telemetry for trip {}: {}", trip.getTripId(), newStateStr);

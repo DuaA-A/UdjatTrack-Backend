@@ -74,58 +74,40 @@ public class EventServiceImpl implements EventService {
 
         boolean alertCreated = false;
 
-        // 2. Auto-Trigger Alert for Dashboard
-        // We wrap this in a try-catch to ensure that even if alerting fails, 
-        // the EventRecord is still successfully stored in the database.
-        try {
-            if (request.severity() != null && request.severity() != com.udjattrack.entity.enums.SeverityLevel.LOW) {
-                AlertType alertType = AlertType.TRIP_STATE;
-                String alertableType = "EventRecord";
-                UUID alertableId = relationalRecord.getId();
-
-                String type = request.eventType().toUpperCase();
-                if (type.contains("FATIGUE") || type.contains("DROWSY") || type.contains("DROWSINESS")) {
-                    alertType = AlertType.FATIGUE;
-                    // For fatigue, the user specifically requested TripState as the alertable detail
-                    com.udjattrack.entity.TripState tripState = tripStateRepository.findByTripTripId(tripId).orElse(null);
-                    if (tripState != null) {
-                        alertableType = "TripState";
-                        alertableId = tripState.getStateId();
-                    }
-                } else if (type.contains("CRASH") || type.contains("ROLLOVER")) {
-                    alertType = AlertType.INCIDENT;
-                }
-
-                CreateAlertRequest alertReq = new CreateAlertRequest(
+        // 2. Scenario A: Auto-detected CRASH or ROLLOVER -> Create Incident (which triggers its own Alert)
+        if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
+            try {
+                emergencyService.createIncident(new com.udjattrack.dto.request.CreateIncidentRequest(
+                        tripId,
+                        "CRASH".equalsIgnoreCase(request.eventType()) ? IncidentType.ROAD_ACCIDENT : IncidentType.OTHER_INCIDENT,
+                        request.severity(),
+                        "Auto-detected location",
+                        "Auto-generated incident from IoT event: " + request.eventType(),
+                        request.payload()
+                ));
+                alertCreated = true; // Alert is handled by createIncident
+            } catch (Exception e) {
+                log.error("Failed to auto-trigger incident for crash event {}: {}", relationalRecord.getId(), e.getMessage());
+            }
+        } 
+        // 3. Scenario B: All other Safety Events -> Create Alert linked directly to EventRecord
+        else {
+            try {
+                AlertType alertType = request.eventType().toUpperCase().contains("FATIGUE") ? AlertType.FATIGUE : AlertType.INCIDENT;
+                
+                com.udjattrack.dto.request.CreateAlertRequest alertReq = new com.udjattrack.dto.request.CreateAlertRequest(
                         tripId,
                         alertType,
                         request.severity(),
-                        alertableType,
-                        alertableId,
-                        "Critical Event Detected: " + request.eventType()
+                        "EventRecord",
+                        relationalRecord.getId(),
+                        "Safety Event Detected: " + request.eventType()
                 );
-                alertService.createAlert(alertReq); // this also broadcasts the websocket
+                alertService.createAlert(alertReq);
                 alertCreated = true;
+            } catch (Exception e) {
+                log.error("Failed to auto-trigger alert for safety event {}: {}", relationalRecord.getId(), e.getMessage());
             }
-        } catch (Exception e) {
-            log.error("Failed to auto-trigger alert for event {}: {}", relationalRecord.getId(), e.getMessage());
-        }
-
-        // 3. Auto-trigger Incident if it's a crash or rollover
-        try {
-            if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
-                CreateIncidentRequest incReq = new CreateIncidentRequest(
-                        tripId,
-                        IncidentType.OTHER_INCIDENT,
-                        request.severity(),
-                        "Auto-detected location", // could extract from payload
-                        "Auto-generated incident from critical event: " + request.eventType(),
-                        request.payload()
-                );
-                emergencyService.createIncident(incReq);
-            }
-        } catch (Exception e) {
-            log.error("Failed to auto-trigger incident for event {}: {}", relationalRecord.getId(), e.getMessage());
         }
 
         return toResponse(relationalRecord, alertCreated);

@@ -23,7 +23,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TripState {
+public class TripState implements Alertable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
