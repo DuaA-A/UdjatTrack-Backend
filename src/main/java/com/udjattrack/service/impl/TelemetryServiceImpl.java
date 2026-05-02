@@ -45,13 +45,25 @@ public class TelemetryServiceImpl implements TelemetryService {
         Trip trip = tripRepository.findById(request.tripId())
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", request.tripId()));
 
+        // Freeze telemetry if trip is ON_BREAK
+        if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.ON_BREAK) {
+            log.warn("Trip {} is ON_BREAK. Telemetry rejected.", trip.getTripId());
+            return null; // Or throw exception, but ignoring is usually better for mobile clients polling
+        }
+
+        String locationStr = null;
+        if (request.location() != null) {
+            locationStr = request.location().lat() + "," + request.location().lng();
+        }
+
         // Save to time-series DB
         TelemetryRecord record = TelemetryRecord.builder()
                 .tripId(request.tripId())
                 .speed(request.speed())
-                .location(request.location())
+                .location(locationStr)
                 .driverState(request.driverState())
                 .details(request.details())
+                .timestamp(request.timeStamp() != null ? request.timeStamp() : LocalDateTime.now())
                 .build();
         TelemetryRecord saved = telemetryRecordRepository.save(record);
 
@@ -60,11 +72,8 @@ public class TelemetryServiceImpl implements TelemetryService {
         if (state != null) {
             if (request.driverState() != null) state.setDriverState(request.driverState());
             if (request.location() != null) {
-                String[] parts = request.location().split(",");
-                if (parts.length == 2) {
-                    state.setLatitude(parts[0].trim());
-                    state.setLongitude(parts[1].trim());
-                }
+                state.setLatitude(String.valueOf(request.location().lat()));
+                state.setLongitude(String.valueOf(request.location().lng()));
             }
             tripStateRepository.save(state);
             
@@ -81,8 +90,7 @@ public class TelemetryServiceImpl implements TelemetryService {
                     .build());
         }
 
-        // Evaluate for alerts
-        alertService.evaluateEvent(request);
+        // (Evaluation moved to EventService)
 
         return toResponse(saved);
     }

@@ -16,8 +16,8 @@ public interface TripService {
     TripResponse assignDriver(UUID tripId, UUID driverId);
     TripResponse assignVehicle(UUID tripId, UUID vehicleId);
     TripResponse startTrip(UUID tripId);
-    TripResponse stopTrip(UUID tripId);
-    TripResponse resumeTrip(UUID tripId);
+    TripResponse stopTrip(UUID tripId, com.udjattrack.dto.request.LocationDTO location);
+    TripResponse resumeTrip(UUID tripId, com.udjattrack.dto.request.LocationDTO location);
     TripResponse completeTrip(UUID tripId);
     TripResponse cancelTrip(UUID tripId);
     TripStateResponse trackTripProgress(UUID tripId);

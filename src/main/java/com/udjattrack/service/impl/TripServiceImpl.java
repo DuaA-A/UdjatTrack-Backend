@@ -12,6 +12,11 @@ import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
 import com.udjattrack.service.NotificationService;
 import com.udjattrack.service.TripService;
+import com.udjattrack.service.AlertService;
+import com.udjattrack.websocket.WebSocketPublisher;
+import com.udjattrack.dto.request.CreateAlertRequest;
+import com.udjattrack.entity.enums.AlertType;
+import com.udjattrack.entity.enums.SeverityLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +40,8 @@ public class TripServiceImpl implements TripService {
     private final DriverRepository driverRepository;
     private final VehicleRepository vehicleRepository;
     private final NotificationService notificationService;
+    private final AlertService alertService;
+    private final WebSocketPublisher webSocketPublisher;
 
     @Override
     public TripResponse createTrip(CreateTripRequest request) {
@@ -99,7 +106,7 @@ public class TripServiceImpl implements TripService {
         }
 
         trip.setStatus(TripStatus.ONGOING);
-        updateTripProgressState(trip, TripProgressState.STARTED);
+        updateTripProgressState(trip, TripProgressState.STARTED, null);
 
         // Create trip log
         TripLog log = TripLog.builder().trip(trip).actualStartTime(LocalDateTime.now()).build();
@@ -115,30 +122,46 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
-    public TripResponse stopTrip(UUID tripId) {
+    public TripResponse stopTrip(UUID tripId, com.udjattrack.dto.request.LocationDTO location) {
         Trip trip = findTripOrThrow(tripId);
         if (trip.getStatus() != TripStatus.ONGOING) {
             throw new BusinessException("Only ONGOING trips can be stopped (paused)");
         }
-        updateTripProgressState(trip, TripProgressState.PAUSED);
-        return toResponse(trip);
+        trip.setStatus(TripStatus.ON_BREAK);
+        updateTripProgressState(trip, TripProgressState.PAUSED, location);
+        
+        CreateAlertRequest alertReq = new CreateAlertRequest(
+                tripId, AlertType.TRIP_STATE, SeverityLevel.MEDIUM,
+                "TripState", trip.getTripId(), "Trip paused for break"
+        );
+        alertService.createAlert(alertReq);
+
+        return toResponse(tripRepository.save(trip));
     }
 
     @Override
-    public TripResponse resumeTrip(UUID tripId) {
+    public TripResponse resumeTrip(UUID tripId, com.udjattrack.dto.request.LocationDTO location) {
         Trip trip = findTripOrThrow(tripId);
-        if (trip.getStatus() != TripStatus.ONGOING) {
-            throw new BusinessException("Only ONGOING trips can be resumed");
+        if (trip.getStatus() != TripStatus.ON_BREAK) {
+            throw new BusinessException("Only ON_BREAK trips can be resumed");
         }
-        updateTripProgressState(trip, TripProgressState.RESUMED);
-        return toResponse(trip);
+        trip.setStatus(TripStatus.ONGOING);
+        updateTripProgressState(trip, TripProgressState.RESUMED, location);
+
+        CreateAlertRequest alertReq = new CreateAlertRequest(
+                tripId, AlertType.TRIP_STATE, SeverityLevel.LOW,
+                "TripState", trip.getTripId(), "Trip resumed from break"
+        );
+        alertService.createAlert(alertReq);
+
+        return toResponse(tripRepository.save(trip));
     }
 
     @Override
     public TripResponse completeTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
         trip.setStatus(TripStatus.FINISHED);
-        updateTripProgressState(trip, TripProgressState.COMPLETED);
+        updateTripProgressState(trip, TripProgressState.COMPLETED, null);
 
         // Finalize trip log
         tripLogRepository.findByTripTripId(tripId).ifPresent(tl -> {
@@ -225,9 +248,13 @@ public class TripServiceImpl implements TripService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
     }
 
-    private void updateTripProgressState(Trip trip, TripProgressState state) {
+    private void updateTripProgressState(Trip trip, TripProgressState state, com.udjattrack.dto.request.LocationDTO location) {
         tripStateRepository.findByTripTripId(trip.getTripId()).ifPresent(ts -> {
             ts.setTripProgressState(state);
+            if (location != null) {
+                ts.setLatitude(String.valueOf(location.lat()));
+                ts.setLongitude(String.valueOf(location.lng()));
+            }
             tripStateRepository.save(ts);
         });
     }

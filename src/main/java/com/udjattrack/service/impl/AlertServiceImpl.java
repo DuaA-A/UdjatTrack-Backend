@@ -88,32 +88,8 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public void evaluateEvent(TelemetryRequest request) {
-        if (request.driverState() == null) return;
-
-        if (request.driverState() == DriverState.DROWSY || request.driverState() == DriverState.UNCONSCIOUS) {
-            SeverityLevel severity = request.driverState() == DriverState.UNCONSCIOUS
-                    ? SeverityLevel.CRITICAL : SeverityLevel.HIGH;
-
-            tripRepository.findById(request.tripId()).ifPresent(trip -> {
-                Alert alert = Alert.builder()
-                        .trip(trip)
-                        .alertType(AlertType.FATIGUE)
-                        .severity(severity)
-                        .message("Driver alertness degraded: " + request.driverState())
-                        .alertableType("TelemetryRecord") // Example source
-                        .alertableId(UUID.randomUUID()) // Placeholder or real ID if available
-                        .acknowledged(false)
-                        .build();
-                Alert saved = alertRepository.save(alert);
-                
-                // Publish Fatigue Alert
-                UUID managerId = trip.getDriver().getFleetManager().getUserId();
-                webSocketPublisher.publishAlert(managerId, toMessage(saved));
-                
-                log.warn("FATIGUE ALERT created for trip: {} driver state: {}",
-                        request.tripId(), request.driverState());
-            });
-        }
+        // Telemetry no longer carries event/severity data.
+        // Events are evaluated and trigger Alerts exclusively via EventService.
     }
 
     @Override

@@ -26,16 +26,16 @@ public class TelemetryController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_DRIVER')")
     @Operation(summary = "Send periodic heartbeat snapshot")
-    public ResponseEntity<ApiResponse<TelemetryRecordResponse>> ingestTelemetry(
+    public ResponseEntity<ApiResponse<Void>> ingestTelemetry(
             @PathVariable UUID tripId,
             @Valid @RequestBody TelemetryRequest request) {
         // We should ensure the request.tripId matches PathVariable tripId
-        TelemetryRecordResponse response = telemetryService.ingestTelemetry(request);
+        telemetryService.ingestTelemetry(request);
         return ResponseEntity.accepted()
-                .body(ApiResponse.<TelemetryRecordResponse>builder()
+                .body(ApiResponse.<Void>builder()
                         .success(true)
                         .message("Telemetry recorded")
-                        .data(response)
+                        .timestamp(request.timeStamp())
                         .build());
     }
 

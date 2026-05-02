@@ -48,7 +48,6 @@ public class TelemetryRecord {
     @Column(name = "details", columnDefinition = "json")
     private Map<String, Object> details;
 
-    @CreatedDate
     @Column(name = "timestamp", nullable = false, updatable = false)
     private LocalDateTime timestamp;
 }

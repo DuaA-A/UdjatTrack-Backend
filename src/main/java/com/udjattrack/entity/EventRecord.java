@@ -47,7 +47,6 @@ public class EventRecord {
     @Column(name = "payload", columnDefinition = "json")
     private Map<String, Object> payload;
 
-    @CreatedDate
     @Column(name = "timestamp", nullable = false, updatable = false)
     private LocalDateTime timestamp;
 }

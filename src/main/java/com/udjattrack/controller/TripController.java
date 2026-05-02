@@ -47,18 +47,18 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok("Trip started successfully", tripService.startTrip(tripId)));
     }
 
-    @PostMapping("/{tripId}/pause")
+    @PostMapping("/{tripId}/Paused")
     @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
     @Operation(summary = "Driver begins a rest break (ONGOING → ON_BREAK)")
-    public ResponseEntity<ApiResponse<TripResponse>> pauseTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip paused for break", tripService.stopTrip(tripId)));
+    public ResponseEntity<ApiResponse<TripResponse>> pauseTrip(@PathVariable UUID tripId, @Valid @RequestBody(required = false) com.udjattrack.dto.request.LocationDTO location) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip paused for break", tripService.stopTrip(tripId, location)));
     }
 
-    @PostMapping("/{tripId}/resume")
+    @PostMapping("/{tripId}/Resumed")
     @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
     @Operation(summary = "Driver ends break and resumes trip (ON_BREAK → ONGOING)")
-    public ResponseEntity<ApiResponse<TripResponse>> resumeTrip(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip resumed successfully", tripService.resumeTrip(tripId)));
+    public ResponseEntity<ApiResponse<TripResponse>> resumeTrip(@PathVariable UUID tripId, @Valid @RequestBody(required = false) com.udjattrack.dto.request.LocationDTO location) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip resumed successfully", tripService.resumeTrip(tripId, location)));
     }
 
     @PostMapping("/{tripId}/end")

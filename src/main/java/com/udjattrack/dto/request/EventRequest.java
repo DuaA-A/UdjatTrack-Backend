@@ -3,14 +3,15 @@ package com.udjattrack.dto.request;
 import com.udjattrack.entity.enums.SeverityLevel;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
 public record EventRequest(
-    UUID id,
     
     @NotNull(message = "Timestamp is required")
+    @JsonProperty("timeStamp")
     LocalDateTime timestamp,
     
     @NotBlank(message = "Event type is required")

@@ -9,6 +9,12 @@ import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.EventRecordRepository;
 import com.udjattrack.repository.TripRepository;
 import com.udjattrack.service.EventService;
+import com.udjattrack.dto.request.CreateAlertRequest;
+import com.udjattrack.dto.request.CreateIncidentRequest;
+import com.udjattrack.entity.enums.AlertType;
+import com.udjattrack.entity.enums.IncidentType;
+import com.udjattrack.service.AlertService;
+import com.udjattrack.service.EmergencyService;
 import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +32,8 @@ public class EventServiceImpl implements EventService {
     private final EventRecordRepository relationalRepository;
     private final TripRepository tripRepository;
     private final WebSocketPublisher webSocketPublisher;
+    private final AlertService alertService;
+    private final EmergencyService emergencyService;
 
     @Override
     @Transactional
@@ -43,18 +51,35 @@ public class EventServiceImpl implements EventService {
                 .build();
         relationalRepository.save(relationalRecord);
 
-        // 3. Broadcast over WebSocket to Fleet Manager
-        UUID managerId = trip.getDriver().getFleetManager().getUserId();
-        webSocketPublisher.publishAlert(managerId, AlertEventMessage.builder()
-                .alertId(relationalRecord.getId())
-                .tripId(tripId)
-                .type(com.udjattrack.entity.enums.AlertType.TRIP_STATE) // Map to TRIP_STATE or custom
-                .severity(request.severity())
-                .message("Event detected: " + request.eventType())
-                .timestamp(relationalRecord.getTimestamp())
-                .build());
+        boolean alertCreated = false;
 
-        return toResponse(relationalRecord, true);
+        // 2. Auto-Trigger Alert for Dashboard
+        if (request.severity() != null && request.severity() != com.udjattrack.entity.enums.SeverityLevel.LOW) {
+            CreateAlertRequest alertReq = new CreateAlertRequest(
+                    tripId,
+                    AlertType.TRIP_STATE, // Or a more specific type based on event
+                    request.severity(),
+                    "EventRecord",
+                    relationalRecord.getId(),
+                    "Critical Event Detected: " + request.eventType()
+            );
+            alertService.createAlert(alertReq); // this also broadcasts the websocket
+            alertCreated = true;
+        }
+
+        // 3. Auto-trigger Incident if it's a crash or rollover
+        if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
+            CreateIncidentRequest incReq = new CreateIncidentRequest(
+                    tripId,
+                    IncidentType.TRAFFIC_COLLISION, // Or map specifically
+                    request.severity(),
+                    "Auto-detected location", // could extract from payload
+                    request.payload()
+            );
+            emergencyService.createIncident(incReq);
+        }
+
+        return toResponse(relationalRecord, alertCreated);
     }
 
     @Override

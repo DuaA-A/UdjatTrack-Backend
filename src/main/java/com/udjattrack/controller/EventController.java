@@ -26,12 +26,13 @@ public class EventController {
     @PostMapping("/trips/{tripId}/events")
     @PreAuthorize("hasRole('ROLE_DRIVER')")
     @Operation(summary = "Sent instantly upon critical condition detection")
-    public ResponseEntity<ApiResponse<EventResponse>> reportEvent(
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> reportEvent(
             @PathVariable UUID tripId,
             @Valid @RequestBody EventRequest request) {
         EventResponse response = eventService.reportEvent(tripId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.created("Event recorded", response));
+                .body(ApiResponse.created("Event recorded. Emergency alert generated.", 
+                        java.util.Map.of("id", response.getEventId(), "alertCreated", response.isAlertCreated())));
     }
 
     @GetMapping("/events")

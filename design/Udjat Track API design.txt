@@ -1069,7 +1069,31 @@ Request Body:
 
 
 
-5. Trip filtering - Driver mobile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+6. Trip filtering - Driver mobile
 Role: DRIVER
 timeframe convenience mapping
 timeframe
@@ -1138,7 +1162,7 @@ Response:
 
 
 
-4. Dependent (Emergency Contact) Endpoints:
+7. Dependent (Emergency Contact) Endpoints:
 
 
 Role: DRIVER
@@ -1185,7 +1209,7 @@ Response Body:
     }
   ]
 ________________
-5. Telemetry
+8. Telemetry
 Sent every 5–10 seconds from the mobile app + Raspberry Pi during an active trip. Stored as time-series data. High frequency — must be lightweight and respond fast.
 It splits ingestion into Live (single objects pushed instantly) and Offline Sync (batch arrays pushed upon network recovery).
 
@@ -1193,13 +1217,12 @@ It splits ingestion into Live (single objects pushed instantly) and Offline Sync
 POST
 	/trips/{tripId}/telemetry
 	Send periodic heartbeat snapshot 
-	Validate this body with the appropriate needed data
+	Validate this body with the appropriate needed data, note that the details is a json column
 Request Body:
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
   "tripId": "TR-105",
   "timeStamp": "2026-03-03T09:00:01Z",
-  "location": "30.0444, 31.2357",
+  "location": {lat:"30.0444, log:”31.2357"},
   "speed": 68.4,
   "driverState": "Normal",
   "details": {
@@ -1207,8 +1230,6 @@ Request Body:
     "fatigueLevel": "LOW"
   }
 }
-
-
 
 
 Response:
@@ -1233,7 +1254,7 @@ Response:
 ________________
 
 
-6. Events
+9. Events
 Safety events sent immediately (not on the heartbeat schedule) when a critical condition is detected. Each event may auto-create an Alert and/or Incident.
 
 
@@ -1246,7 +1267,7 @@ eventType
 	AI model — combined high-risk threshold breached
 	UNCONSCIOUS
 	AI model — driver unresponsive classification
-	m
+	crash
 	IMU — acceleration magnitude exceeds crash threshold
 	ROLLOVER
 	IMU — gyroscope detects rollover angle
@@ -1348,7 +1369,7 @@ Response:
 
 
 
-7. Alerts
+10. Alerts
 Alerts are auto-created from Events. They appear in the driver's mobile app and the fleet manager dashboard.
 
 
@@ -1399,8 +1420,6 @@ Response:
     "readByManager": false,
     "createdAt":     "2026-03-03T07:15:30Z",
     "ackedAt":       null,
-
-
     "trip": {
       "tripId":          "uuid",
       "title":           "Cairo → Suez",
@@ -1454,14 +1473,6 @@ Response:
 
 
 
-
-
-
-
-
-
-
-
 GET
 	/issues?status=OPEN 
 	Lists SOS and Maintenance tickets that require human intervention. Query Params: status (OPEN|RESOLVED), category (SOS|ENGINE|TIRE|etc)
@@ -1492,7 +1503,9 @@ Response: 200 OK
 "payload": { 
                "description": "Engine is overheating and losing power on inclines." 
   }
- } 
+}
+]
+}
 
 
 
@@ -1534,7 +1547,7 @@ Response:
 } 
 
 
-12. Dashboard & Fleet Monitoring (WebSockets)
+11. Dashboard & Fleet Monitoring (WebSockets)
 This page gives a high-level overview of the live operations, driver states, and active alerts.
 
 
@@ -1547,9 +1560,8 @@ SUBSCRIBE
   "tripId": "TR-105",
   "driverState": "Normal", 
   "tripProgressState": "Started",
-  "progressPct": 64,  // ADD THIS so the frontend table updates live!
-  "latitude": "24.0889",
-  "longitude": "32.8998",
+  "progressPct": 64,  
+  location:{lat: "24.0889", long: "32.8998"},
   "lastUpdatedAt": "2026-03-12T10:05:00Z"
 }
 
@@ -1592,8 +1604,6 @@ the complete, exact JSON bodies for all five possible alert scenarios pushed to 
     "payload": {}
   }
 }
-
-
 
 
 2. The Maintenance Alert
@@ -1826,7 +1836,7 @@ GET /locations/nearest-help
 
 
 
-13. Report Generation 
+12. Report Generation 
 Auto-generated PDF reports for compliance, insurance, and post-incident review.
 
 
