@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public record CreateMaintenanceRequest(
 
-        @NotNull(message = "Trip ID is required")
         UUID tripId,
 
         @NotNull(message = "Maintenance type is required")

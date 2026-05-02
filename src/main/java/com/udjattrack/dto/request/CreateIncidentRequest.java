@@ -9,7 +9,6 @@ import java.util.UUID;
 
 public record CreateIncidentRequest(
 
-        @NotNull(message = "Trip ID is required")
         UUID tripId,
 
         @NotNull(message = "Incident type is required")

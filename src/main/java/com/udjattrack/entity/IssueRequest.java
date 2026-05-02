@@ -22,7 +22,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "issue_requests")
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "issue_category", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorColumn(name = "category", discriminatorType = DiscriminatorType.STRING)
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter

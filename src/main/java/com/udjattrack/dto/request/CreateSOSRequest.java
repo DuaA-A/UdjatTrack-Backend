@@ -7,7 +7,6 @@ import java.util.UUID;
 
 public record CreateSOSRequest(
 
-        @NotNull(message = "Trip ID is required")
         UUID tripId,
 
         String location,

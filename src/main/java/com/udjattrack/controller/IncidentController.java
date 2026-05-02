@@ -40,8 +40,17 @@ public class IncidentController {
     public ResponseEntity<ApiResponse<IncidentResponse>> reportIncident(
             @PathVariable UUID tripId,
             @Valid @RequestBody CreateIncidentRequest request) {
-        // Implementation might need update in emergencyService to support tripId in path
-        IncidentResponse response = emergencyService.createIncident(request);
+        
+        // Merge tripId from path into request
+        CreateIncidentRequest finalRequest = new CreateIncidentRequest(
+                tripId, 
+                request.type(), 
+                request.severity(), 
+                request.location(), 
+                request.payload()
+        );
+        
+        IncidentResponse response = emergencyService.createIncident(finalRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Incident reported", response));
     }

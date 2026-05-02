@@ -88,18 +88,36 @@ public class TripController {
     public ResponseEntity<ApiResponse<com.udjattrack.dto.response.MaintenanceRequestResponse>> reportMaintenance(
             @PathVariable UUID tripId, 
             @RequestBody @Valid com.udjattrack.dto.request.CreateMaintenanceRequest payload) {
+        
+        // Inject tripId from path
+        com.udjattrack.dto.request.CreateMaintenanceRequest finalRequest = new com.udjattrack.dto.request.CreateMaintenanceRequest(
+                tripId, 
+                payload.maintenanceType(), 
+                payload.description(), 
+                payload.payload()
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("Maintenance issue reported", 
-                emergencyService.reportMaintenanceRequest(payload)));
+                emergencyService.reportMaintenanceRequest(finalRequest)));
     }
-
+    
     @PostMapping("/{tripId}/issues/sos")
     @PreAuthorize("hasRole('ROLE_DRIVER')")
     @Operation(summary = "Submit SOS emergency from mobile app")
     public ResponseEntity<ApiResponse<com.udjattrack.dto.response.SOSRequestResponse>> reportSOS(
             @PathVariable UUID tripId, 
             @RequestBody @Valid com.udjattrack.dto.request.CreateSOSRequest payload) {
+        
+        // Inject tripId from path
+        com.udjattrack.dto.request.CreateSOSRequest finalRequest = new com.udjattrack.dto.request.CreateSOSRequest(
+                tripId, 
+                payload.location(), 
+                payload.autoTriggered(), 
+                payload.payload()
+        );
+        
         return ResponseEntity.ok(ApiResponse.ok("SOS alert triggered", 
-                emergencyService.sendManualSOS(payload)));
+                emergencyService.sendManualSOS(finalRequest)));
     }
 
     @GetMapping("/{tripId}")
