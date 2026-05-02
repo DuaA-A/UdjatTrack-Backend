@@ -24,7 +24,7 @@ public class EventController {
     private final com.udjattrack.service.EventService eventService;
 
     @PostMapping("/trips/{tripId}/events")
-    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
+    // @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Sent instantly upon critical condition detection")
     public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> reportEvent(
             @PathVariable UUID tripId,
