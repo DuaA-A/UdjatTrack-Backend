@@ -48,7 +48,7 @@ public class EventServiceImpl implements EventService {
             throw new com.udjattrack.exception.BusinessException("Cannot report events for a trip that has not started yet.");
         }
 
-        LocalDateTime eventTime = request.timestamp() != null ? request.timestamp().toLocalDateTime() : LocalDateTime.now();
+        LocalDateTime eventTime = request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now();
 
         if (trip.getTripLog() != null) {
             LocalDateTime start = trip.getTripLog().getActualStartTime();
@@ -68,7 +68,7 @@ public class EventServiceImpl implements EventService {
                 .eventType(request.eventType())
                 .severity(request.severity())
                 .payload(request.payload())
-                .timestamp(request.timestamp() != null ? request.timestamp().toLocalDateTime() : LocalDateTime.now())
+                .timestamp(request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now())
                 .build();
         relationalRepository.save(relationalRecord);
 

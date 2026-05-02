@@ -24,7 +24,7 @@ public class EventController {
     private final com.udjattrack.service.EventService eventService;
 
     @PostMapping("/trips/{tripId}/events")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Sent instantly upon critical condition detection")
     public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> reportEvent(
             @PathVariable UUID tripId,
@@ -36,7 +36,7 @@ public class EventController {
     }
 
     @GetMapping("/events")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "List events with filters")
     public ResponseEntity<ApiResponse<List<EventResponse>>> listEvents(
             @RequestParam(required = false) UUID tripId,
@@ -45,14 +45,14 @@ public class EventController {
     }
 
     @GetMapping("/events/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get event details")
     public ResponseEntity<ApiResponse<EventResponse>> getEvent(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(eventService.getEventById(id)));
     }
 
     @PostMapping("/sync/offline-data")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Triggered only when the mobile app reconnects after a network drop")
     public ResponseEntity<ApiResponse<Void>> syncOfflineData(
             @Valid @RequestBody OfflineSyncRequest request) {

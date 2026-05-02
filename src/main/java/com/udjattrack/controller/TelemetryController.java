@@ -24,7 +24,7 @@ public class TelemetryController {
     private final TelemetryService telemetryService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Send periodic heartbeat snapshot")
     public ResponseEntity<ApiResponse<Void>> ingestTelemetry(
             @PathVariable UUID tripId,
@@ -40,7 +40,7 @@ public class TelemetryController {
     }
 
     @PostMapping("/batch")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Upload batched telemetry records (used when recovering from offline status)")
     public ResponseEntity<ApiResponse<String>> ingestTelemetryBatch(
             @PathVariable UUID tripId,
@@ -54,7 +54,7 @@ public class TelemetryController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Retrieve telemetry history for a trip with time filters")
     public ResponseEntity<ApiResponse<List<TelemetryRecordResponse>>> getTelemetryByTrip(
             @PathVariable UUID tripId) {

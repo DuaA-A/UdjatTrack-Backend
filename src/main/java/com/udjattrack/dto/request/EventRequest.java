@@ -11,8 +11,8 @@ import java.util.UUID;
 public record EventRequest(
     
     @NotNull(message = "Timestamp is required")
-    @JsonProperty("timestamp")
-    OffsetDateTime timestamp,
+    @JsonProperty("timeStamp")
+    OffsetDateTime timeStamp,
     
     @NotBlank(message = "Event type is required")
     String eventType,

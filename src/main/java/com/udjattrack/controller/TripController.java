@@ -31,7 +31,7 @@ public class TripController {
     private final EventService eventService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Create a new planned trip")
     public ResponseEntity<ApiResponse<TripResponse>> createTrip(
             @Valid @RequestBody CreateTripRequest request) {
@@ -41,35 +41,35 @@ public class TripController {
     }
 
     @PostMapping("/{tripId}/start")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER')")
     @Operation(summary = "Driver starts a PLANNED trip")
     public ResponseEntity<ApiResponse<TripResponse>> startTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok("Trip started successfully", tripService.startTrip(tripId)));
     }
 
     @PostMapping("/{tripId}/Paused")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER')")
     @Operation(summary = "Driver begins a rest break (ONGOING → ON_BREAK)")
     public ResponseEntity<ApiResponse<TripResponse>> pauseTrip(@PathVariable UUID tripId, @Valid @RequestBody(required = false) com.udjattrack.dto.request.LocationDTO location) {
         return ResponseEntity.ok(ApiResponse.ok("Trip paused for break", tripService.stopTrip(tripId, location)));
     }
 
     @PostMapping("/{tripId}/Resumed")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER')")
     @Operation(summary = "Driver ends break and resumes trip (ON_BREAK → ONGOING)")
     public ResponseEntity<ApiResponse<TripResponse>> resumeTrip(@PathVariable UUID tripId, @Valid @RequestBody(required = false) com.udjattrack.dto.request.LocationDTO location) {
         return ResponseEntity.ok(ApiResponse.ok("Trip resumed successfully", tripService.resumeTrip(tripId, location)));
     }
 
     @PostMapping("/{tripId}/end")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER')")
     @Operation(summary = "Driver ends the trip (ONGOING → FINISHED)")
     public ResponseEntity<ApiResponse<TripResponse>> endTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok("Trip ended successfully. Summary generation triggered.", tripService.completeTrip(tripId)));
     }
 
     @PostMapping("/{tripId}/cancel")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Fleet Manager remotely cancels/terminates an active trip")
     public ResponseEntity<ApiResponse<TripResponse>> cancelTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok("Trip cancelled by management", tripService.cancelTrip(tripId)));
@@ -83,7 +83,7 @@ public class TripController {
     }
 
     @PostMapping("/{tripId}/issues/maintenance")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Submit Maintenance issue from mobile app")
     public ResponseEntity<ApiResponse<com.udjattrack.dto.response.MaintenanceRequestResponse>> reportMaintenance(
             @PathVariable UUID tripId, 
@@ -102,7 +102,7 @@ public class TripController {
     }
     
     @PostMapping("/{tripId}/issues/sos")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Submit SOS emergency from mobile app")
     public ResponseEntity<ApiResponse<com.udjattrack.dto.response.SOSRequestResponse>> reportSOS(
             @PathVariable UUID tripId, 
@@ -121,14 +121,14 @@ public class TripController {
     }
 
     @GetMapping("/{tripId}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Retrieves full trip details")
     public ResponseEntity<ApiResponse<TripResponse>> getTrip(@PathVariable UUID tripId) {
         return ResponseEntity.ok(ApiResponse.ok(tripService.getTripById(tripId)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List trips with filters (status, driverId, vehicleId, etc.)")
     public ResponseEntity<ApiResponse<List<TripResponse>>> listTrips(
             @RequestParam(required = false) String status,

@@ -24,7 +24,7 @@ public class IncidentController {
     private final EmergencyService emergencyService;
 
     @GetMapping("/incidents")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Lists historical accidents/near-misses for the Alerts & Incidents page")
     public ResponseEntity<ApiResponse<List<IncidentResponse>>> listIncidents(
             @RequestParam(required = false) UUID managerId) {
@@ -35,7 +35,7 @@ public class IncidentController {
     }
 
     @PostMapping("/trips/{tripId}/incidents")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "POST Incident (Driver manually reports)")
     public ResponseEntity<ApiResponse<IncidentResponse>> reportIncident(
             @PathVariable UUID tripId,
