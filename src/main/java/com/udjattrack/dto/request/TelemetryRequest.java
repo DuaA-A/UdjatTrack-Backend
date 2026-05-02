@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ public record TelemetryRequest(
 
         @NotNull(message = "Timestamp is required")
         @JsonProperty("timeStamp")
-        LocalDateTime timeStamp,
+        OffsetDateTime timeStamp,
 
         LocationDTO location,
 

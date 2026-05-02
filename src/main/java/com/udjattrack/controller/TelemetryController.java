@@ -35,7 +35,7 @@ public class TelemetryController {
                 .body(ApiResponse.<Void>builder()
                         .success(true)
                         .message("Telemetry recorded")
-                        .timestamp(request.timeStamp())
+                        .timestamp(request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : null)
                         .build());
     }
 

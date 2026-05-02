@@ -34,6 +34,7 @@ public class EventServiceImpl implements EventService {
     private final WebSocketPublisher webSocketPublisher;
     private final AlertService alertService;
     private final EmergencyService emergencyService;
+    private final com.udjattrack.service.TelemetryService telemetryService;
 
     @Override
     @Transactional
@@ -41,13 +42,31 @@ public class EventServiceImpl implements EventService {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
 
+        if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.PLANNED) {
+            throw new com.udjattrack.exception.BusinessException("Cannot report events for a trip that has not started yet.");
+        }
+
+        LocalDateTime eventTime = request.timestamp() != null ? request.timestamp().toLocalDateTime() : LocalDateTime.now();
+
+        if (trip.getTripLog() != null) {
+            LocalDateTime start = trip.getTripLog().getActualStartTime();
+            LocalDateTime end = trip.getTripLog().getActualEndTime();
+
+            if (start != null && eventTime.isBefore(start)) {
+                throw new com.udjattrack.exception.BusinessException("Event timestamp cannot be before the trip's actual start time.");
+            }
+            if (end != null && eventTime.isAfter(end)) {
+                throw new com.udjattrack.exception.BusinessException("Event timestamp cannot be after the trip's actual end time.");
+            }
+        }
+
         // 1. Save to Relational DB (long-term management & history)
         com.udjattrack.entity.EventRecord relationalRecord = com.udjattrack.entity.EventRecord.builder()
                 .trip(trip)
                 .eventType(request.eventType())
                 .severity(request.severity())
                 .payload(request.payload())
-                .timestamp(request.timestamp() != null ? request.timestamp() : LocalDateTime.now())
+                .timestamp(request.timestamp() != null ? request.timestamp().toLocalDateTime() : LocalDateTime.now())
                 .build();
         relationalRepository.save(relationalRecord);
 
@@ -113,8 +132,30 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public void syncOfflineData(OfflineSyncRequest request) {
-        log.info("Syncing offline data: {} telemetry, {} events", 
-                 request.telemetryRecords().size(), request.events().size());
+        log.info("Syncing offline data for trip {}: {} telemetry, {} events", 
+                 request.tripId(),
+                 request.telemetryRecords() != null ? request.telemetryRecords().size() : 0, 
+                 request.events() != null ? request.events().size() : 0);
+                 
+        if (request.telemetryRecords() != null && !request.telemetryRecords().isEmpty()) {
+            request.telemetryRecords().forEach(telemetry -> {
+                try {
+                    telemetryService.ingestTelemetry(telemetry);
+                } catch (Exception e) {
+                    log.error("Failed to sync offline telemetry record: {}", e.getMessage());
+                }
+            });
+        }
+        
+        if (request.events() != null && !request.events().isEmpty()) {
+            request.events().forEach(event -> {
+                try {
+                    reportEvent(request.tripId(), event);
+                } catch (Exception e) {
+                    log.error("Failed to sync offline event record: {}", e.getMessage());
+                }
+            });
+        }
     }
 
     private EventResponse toResponse(com.udjattrack.entity.EventRecord record, boolean alertCreated) {

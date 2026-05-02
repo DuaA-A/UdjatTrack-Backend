@@ -45,10 +45,28 @@ public class TelemetryServiceImpl implements TelemetryService {
         Trip trip = tripRepository.findById(request.tripId())
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", request.tripId()));
 
-        // Freeze telemetry if trip is ON_BREAK
+        if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.PLANNED) {
+            throw new com.udjattrack.exception.BusinessException("Cannot ingest telemetry for a trip that has not started yet.");
+        }
+
+        LocalDateTime telemetryTime = request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now();
+
+        if (trip.getTripLog() != null) {
+            LocalDateTime start = trip.getTripLog().getActualStartTime();
+            LocalDateTime end = trip.getTripLog().getActualEndTime();
+
+            if (start != null && telemetryTime.isBefore(start)) {
+                throw new com.udjattrack.exception.BusinessException("Telemetry timestamp cannot be before the trip's actual start time.");
+            }
+            if (end != null && telemetryTime.isAfter(end)) {
+                throw new com.udjattrack.exception.BusinessException("Telemetry timestamp cannot be after the trip's actual end time.");
+            }
+        }
+
+        // We now save telemetry regardless of trip status to maintain history.
+        // If the trip is ON_BREAK, we still record the telemetry and notify the dashboard.
         if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.ON_BREAK) {
-            log.warn("Trip {} is ON_BREAK. Telemetry rejected.", trip.getTripId());
-            return null; // Or throw exception, but ignoring is usually better for mobile clients polling
+            log.info("Trip {} is ON_BREAK. Telemetry is being recorded for history.", trip.getTripId());
         }
 
         String locationStr = null;
@@ -63,7 +81,7 @@ public class TelemetryServiceImpl implements TelemetryService {
                 .location(locationStr)
                 .driverState(request.driverState())
                 .details(request.details())
-                .timestamp(request.timeStamp() != null ? request.timeStamp() : LocalDateTime.now())
+                .timestamp(request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now())
                 .build();
         TelemetryRecord saved = telemetryRecordRepository.save(record);
 
