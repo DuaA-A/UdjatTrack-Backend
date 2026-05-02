@@ -321,6 +321,7 @@ public class TripServiceImpl implements TripService {
                 .driverState(state.getDriverState())
                 .tripProgressState(state.getTripProgressState())
                 .latitude(state.getLatitude()).longitude(state.getLongitude())
+                .currentSpeed(state.getCurrentSpeed())
                 .lastUpdatedAt(state.getLastUpdatedAt())
                 .build();
     }

@@ -17,5 +17,6 @@ public class TripStateResponse {
     private TripProgressState tripProgressState;
     private String latitude;
     private String longitude;
+    private Double currentSpeed;
     private LocalDateTime lastUpdatedAt;
 }

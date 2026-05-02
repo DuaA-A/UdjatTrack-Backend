@@ -3,6 +3,7 @@
   <component name="DataSourcePerFileMappings">
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/316e09ce-9596-4742-acbd-36814af6972e/console.sql" value="316e09ce-9596-4742-acbd-36814af6972e" />
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/316e09ce-9596-4742-acbd-36814af6972e/console_1.sql" value="316e09ce-9596-4742-acbd-36814af6972e" />
-    <file url="file://$PROJECT_DIR$/udjattrack_pg_schema.sql" value="5405975d-925b-4953-81e2-d9fc76906315" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/81aa3692-cae7-45af-ab0f-bcf2e2a8649d/console.sql" value="81aa3692-cae7-45af-ab0f-bcf2e2a8649d" />
+    <file url="file://$PROJECT_DIR$/udjattrack_pg_schema.sql" value="81aa3692-cae7-45af-ab0f-bcf2e2a8649d" />
   </component>
 </project>

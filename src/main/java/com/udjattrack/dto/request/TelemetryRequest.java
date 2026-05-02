@@ -21,9 +21,10 @@ public record TelemetryRequest(
 
         LocationDTO location,
 
+        @JsonProperty("speedKmh")
         Double speed,
 
         DriverState driverState,
 
-        Map<String, Object> details
+        Map<String, Object> payload
 ) {}

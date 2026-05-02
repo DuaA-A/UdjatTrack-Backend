@@ -284,4 +284,26 @@ CREATE INDEX idx_telemetry_trip_time
 
 SELECT * FROM timescaledb_information.hypertables;
 
-SELECT user_id, email, role, password FROM users;
+SELECT * FROM users;
+
+INSERT INTO users (
+    user_type,
+    user_id,
+    name,
+    email,
+    password,
+    role,
+    is_deleted,
+    created_at
+)
+VALUES (
+           'SUPER_MANAGER',
+           gen_random_uuid(),  -- safer than hardcoding
+           'Super Admin',
+           'admin2@udjattrack.com',
+           '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
+           'ROLE_SUPER_MANAGER',
+           FALSE,
+           CURRENT_TIMESTAMP
+       )
+RETURNING user_id;

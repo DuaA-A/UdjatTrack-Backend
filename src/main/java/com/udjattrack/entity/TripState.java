@@ -48,6 +48,9 @@ public class TripState {
     @Column(name = "longitude", length = 50)
     private String longitude;
 
+    @Column(name = "current_speed")
+    private Double currentSpeed;
+
     @LastModifiedDate
     @Column(name = "last_updated_at")
     private LocalDateTime lastUpdatedAt;
