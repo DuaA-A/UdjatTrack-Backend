@@ -164,7 +164,6 @@ CREATE TABLE issue_requests (
     category VARCHAR(20) NOT NULL,
     payload JSONB,
     triggered_at TIMESTAMP NOT NULL,
-    reported_at TIMESTAMP,
     PRIMARY KEY (issue_id),
     CONSTRAINT fk_issue_requests_trip FOREIGN KEY (trip_id)
         REFERENCES trips (trip_id)
@@ -308,4 +307,48 @@ VALUES (
        )
 RETURNING user_id;
 
-truncate database 
+-- 1. Standardize Alert Acknowledgment naming
+-- Renaming 'acked_at' to 'acknowledged_at' to match the updated Entity naming and code logic.
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS acknowledged_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- 2. Enhance Real-Time Tracking
+-- Adding 'current_speed' to 'trip_states' to support the dashboard's live map gauges.
+ALTER TABLE trip_states ADD COLUMN IF NOT EXISTS current_speed DOUBLE PRECISION;
+
+-- 3. Cleanup Legacy Fields (Safety Validation)
+-- Ensuring NO 'description' columns remain in the polymorphic Issue tables.
+ALTER TABLE incidents DROP COLUMN IF EXISTS description;
+ALTER TABLE maintenance_requests DROP COLUMN IF EXISTS description;
+ALTER TABLE sos_requests DROP COLUMN IF EXISTS description;
+ALTER TABLE issue_requests DROP COLUMN IF EXISTS description;
+
+-- 4. Verification:
+-- The 'alerts' table already has 'timestamp', no action needed.
+-- The 'users' table already has 'is_read', 'is_deleted', etc.
+
+-- 1. Remove deprecated 'description' fields from Issue tracking tables
+-- Since IssueRequest uses the JOINED inheritance strategy, we check the child tables.
+ALTER TABLE incidents DROP COLUMN IF EXISTS description;
+ALTER TABLE maintenance_requests DROP COLUMN IF EXISTS description;
+ALTER TABLE sos_requests DROP COLUMN IF EXISTS description;
+
+-- 2. Cleanup 'alerts' table
+-- We removed 'read_by_manager' in favor of the 'acknowledged' status.
+ALTER TABLE alerts DROP COLUMN IF EXISTS read_by_manager;
+
+-- 3. Ensure polymorphic Alertable IDs are standard UUIDs
+-- If your previous schema used VARCHAR for IDs, ensure they are converted to UUID.
+-- ALTER TABLE alerts ALTER COLUMN alertable_id TYPE UUID USING alertable_id::UUID;
+
+-- 4. Optimization: Ensure payload columns use JSONB for faster indexing/querying
+-- (IssueRequest and its children use JSONB, while EventRecord uses standard JSON)
+ALTER TABLE issue_requests ALTER COLUMN payload TYPE JSONB USING payload::jsonb;
+ALTER TABLE event_records ALTER COLUMN payload TYPE JSON USING payload::json;
+
+-- 5. Indexing for High-Performance WebSocket Lookups
+-- We frequently query alerts and telemetry by Trip ID for real-time broadcasts.
+CREATE INDEX IF NOT EXISTS idx_alerts_trip_id ON alerts(trip_id);
+CREATE INDEX IF NOT EXISTS idx_event_records_trip_id ON event_records(trip_id);
+CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
+
+-- 6. Add Audit Columns if missing (required by JpaAuditing)

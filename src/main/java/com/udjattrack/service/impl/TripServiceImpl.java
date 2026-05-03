@@ -344,7 +344,7 @@ public class TripServiceImpl implements TripService {
         }
 
         // Add incidents to timeline
-        List<Incident> incidents = incidentRepository.findAllByTripTripIdOrderByReportedAtDesc(tripId);
+        List<Incident> incidents = incidentRepository.findAllByTripTripIdOrderByTriggeredAtDesc(tripId);
         for (Incident incident : incidents) {
             TripTimelineResponse.AlertDetails alertDetails = null;
             boolean isAlert = false;
@@ -366,7 +366,7 @@ public class TripServiceImpl implements TripService {
             details.put("incidentType", incident.getType());
             details.put("severity", incident.getSeverity());
             details.put("location", incident.getLocation());
-            details.put("reportedAt", incident.getReportedAt());
+            details.put("triggeredAt", incident.getTriggeredAt());
 
             timeline.add(TripTimelineResponse.TimelineItem.builder()
                     .timestamp(incident.getTriggeredAt())

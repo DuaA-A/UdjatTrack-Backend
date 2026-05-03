@@ -12,12 +12,12 @@ import java.util.UUID;
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, UUID> {
 
-    List<Incident> findAllByTripTripIdOrderByReportedAtDesc(UUID tripId);
+    List<Incident> findAllByTripTripIdOrderByTriggeredAtDesc(UUID tripId);
 
     @Query("""
             SELECT i FROM Incident i
             WHERE i.trip.driver.fleetManager.userId = :managerId
-            ORDER BY i.reportedAt DESC
+            ORDER BY i.triggeredAt DESC
             """)
     List<Incident> findAllByFleetManager(@Param("managerId") UUID managerId);
 }

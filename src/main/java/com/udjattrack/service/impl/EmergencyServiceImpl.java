@@ -196,7 +196,7 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .type(i.getType())
                 .location(i.getLocation())
                 .payload(i.getPayload())
-                .reportedAt(i.getReportedAt())
+                .triggeredAt(i.getTriggeredAt())
                 .build();
     }
 }

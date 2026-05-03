@@ -85,7 +85,7 @@ public class AlertServiceImpl implements AlertService {
         Alert alert = alertRepository.findById(alertId)
                 .orElseThrow(() -> new ResourceNotFoundException("Alert", "id", alertId));
         alert.setAcknowledged(true);
-        alert.setAckedAt(java.time.LocalDateTime.now());
+        alert.setAcknowledgedAt(java.time.LocalDateTime.now());
         return toResponse(alertRepository.save(alert));
     }
 
@@ -121,7 +121,7 @@ public class AlertServiceImpl implements AlertService {
                 .alertType(a.getAlertType())
                 .severity(a.getSeverity())
                 .acknowledged(a.getAcknowledged())
-                .ackedAt(a.getAckedAt())
+                .acknowledgedAt(a.getAcknowledgedAt())
                 .message(a.getMessage())
                 .alertableType(a.getAlertableType())
                 .alertableId(a.getAlertableId())
@@ -152,7 +152,7 @@ public class AlertServiceImpl implements AlertService {
                 alertableDetails.put("triggeredAt", sos.getTriggeredAt());
                 alertableDetails.put("status", sos.getStatus());
                 alertableDetails.put("category", "SOS");
-                alertableDetails.put("reportedAt", sos.getReportedAt() != null ? sos.getReportedAt() : sos.getTriggeredAt());
+                alertableDetails.put("triggeredAt", sos.getTriggeredAt());
                 alertableDetails.put("payload", sos.getPayload());
             });
         } else if ("MaintenanceRequest".equalsIgnoreCase(a.getAlertableType())) {
@@ -162,7 +162,7 @@ public class AlertServiceImpl implements AlertService {
                 alertableDetails.put("triggeredAt", m.getTriggeredAt());
                 alertableDetails.put("status", m.getStatus());
                 alertableDetails.put("category", "ENGINE"); // Placeholder or mapped
-                alertableDetails.put("reportedAt", m.getReportedAt() != null ? m.getReportedAt() : m.getTriggeredAt());
+                alertableDetails.put("triggeredAt", m.getTriggeredAt());
                 alertableDetails.put("maintenanceType", m.getMaintenanceType());
                 alertableDetails.put("payload", m.getPayload());
             });

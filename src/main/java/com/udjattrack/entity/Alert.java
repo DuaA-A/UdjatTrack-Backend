@@ -48,8 +48,8 @@ public class Alert {
     @Column(name = "acknowledged")
     private Boolean acknowledged = false;
 
-    @Column(name = "acked_at")
-    private LocalDateTime ackedAt;
+    @Column(name = "acknowledged_at")
+    private LocalDateTime acknowledgedAt;
 
     @Column(name = "message", columnDefinition = "TEXT")
     private String message;

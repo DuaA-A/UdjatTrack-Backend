@@ -45,7 +45,4 @@ public abstract class IssueRequest implements Alertable {
     @CreatedDate
     @Column(name = "triggered_at", nullable = false, updatable = false)
     private LocalDateTime triggeredAt;
-
-    @Column(name = "reported_at")
-    private LocalDateTime reportedAt;
 }

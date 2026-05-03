@@ -19,5 +19,5 @@ public class IncidentResponse {
     private String location;
 
     private Map<String, Object> payload;
-    private LocalDateTime reportedAt;
+    private LocalDateTime triggeredAt;
 }

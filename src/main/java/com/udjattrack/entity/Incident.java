@@ -10,7 +10,7 @@ import java.util.UUID;
 
 /**
  * Incident — reported during or after a trip by the driver or auto-detected.
- * Inherits common fields (trip, payload, reportedAt) from IssueRequest.
+ * Inherits common fields (trip, payload, triggeredAt) from IssueRequest.
  */
 @Entity
 @Table(name = "incidents")
