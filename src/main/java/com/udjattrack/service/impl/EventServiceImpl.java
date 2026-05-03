@@ -88,37 +88,29 @@ public class EventServiceImpl implements EventService {
 
         // 2. Scenario A: Auto-detected CRASH or ROLLOVER -> Create Incident (which triggers its own Alert)
         if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
-            try {
-                emergencyService.createIncident(new CreateIncidentRequest(
-                        tripId,
-                        "CRASH".equalsIgnoreCase(request.eventType()) ? IncidentType.ROAD_ACCIDENT : IncidentType.OTHER_INCIDENT,
-                        request.severity(),
-                        "Auto-detected location",
-                        request.payload()
-                ));
-                alertCreated = true; // Alert is handled by createIncident
-            } catch (Exception e) {
-                log.error("Failed to auto-trigger incident for crash event {}: {}", savedRecord.getId(), e.getMessage());
-            }
+            emergencyService.createIncident(new CreateIncidentRequest(
+                    tripId,
+                    "CRASH".equalsIgnoreCase(request.eventType()) ? IncidentType.ROAD_ACCIDENT : IncidentType.OTHER_INCIDENT,
+                    request.severity(),
+                    "Auto-detected location",
+                    request.payload()
+            ));
+            alertCreated = true; // Alert is handled by createIncident
         } 
         // 3. Scenario B: All other Safety Events -> Create Alert linked directly to EventRecord
         else {
-            try {
-                AlertType alertType = request.eventType().toUpperCase().contains("FATIGUE") ? AlertType.FATIGUE : AlertType.INCIDENT;
-                
-                CreateAlertRequest alertReq = new CreateAlertRequest(
-                        tripId,
-                        alertType,
-                        request.severity(),
-                        "EventRecord",
-                        savedRecord.getId(),
-                        "Safety Event Detected: " + request.eventType()
-                );
-                alertService.createAlert(alertReq);
-                alertCreated = true;
-            } catch (Exception e) {
-                log.error("Failed to auto-trigger alert for safety event {}: {}", savedRecord.getId(), e.getMessage());
-            }
+            AlertType alertType = request.eventType().toUpperCase().contains("FATIGUE") ? AlertType.FATIGUE : AlertType.INCIDENT;
+            
+            CreateAlertRequest alertReq = new CreateAlertRequest(
+                    tripId,
+                    alertType,
+                    request.severity(),
+                    "EventRecord",
+                    savedRecord.getId(),
+                    "Safety Event Detected: " + request.eventType()
+            );
+            alertService.createAlert(alertReq);
+            alertCreated = true;
         }
 
         return toResponse(savedRecord, alertCreated);
