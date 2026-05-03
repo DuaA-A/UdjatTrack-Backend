@@ -82,7 +82,7 @@ public class EventServiceImpl implements EventService {
                 .build();
         
         Objects.requireNonNull(relationalRecord);
-        relationalRepository.save(relationalRecord);
+        EventRecord savedRecord = relationalRepository.saveAndFlush(relationalRecord);
 
         boolean alertCreated = false;
 
@@ -98,7 +98,7 @@ public class EventServiceImpl implements EventService {
                 ));
                 alertCreated = true; // Alert is handled by createIncident
             } catch (Exception e) {
-                log.error("Failed to auto-trigger incident for crash event {}: {}", relationalRecord.getId(), e.getMessage());
+                log.error("Failed to auto-trigger incident for crash event {}: {}", savedRecord.getId(), e.getMessage());
             }
         } 
         // 3. Scenario B: All other Safety Events -> Create Alert linked directly to EventRecord
@@ -111,17 +111,17 @@ public class EventServiceImpl implements EventService {
                         alertType,
                         request.severity(),
                         "EventRecord",
-                        relationalRecord.getId(),
+                        savedRecord.getId(),
                         "Safety Event Detected: " + request.eventType()
                 );
                 alertService.createAlert(alertReq);
                 alertCreated = true;
             } catch (Exception e) {
-                log.error("Failed to auto-trigger alert for safety event {}: {}", relationalRecord.getId(), e.getMessage());
+                log.error("Failed to auto-trigger alert for safety event {}: {}", savedRecord.getId(), e.getMessage());
             }
         }
 
-        return toResponse(relationalRecord, alertCreated);
+        return toResponse(savedRecord, alertCreated);
     }
 
     @Override

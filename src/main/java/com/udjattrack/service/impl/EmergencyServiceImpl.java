@@ -40,8 +40,9 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .autoTriggered(false)
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
+                .triggeredAt(java.time.LocalDateTime.now())
                 .build();
-        SOSRequest saved = sosRequestRepository.save(sos);
+        SOSRequest saved = sosRequestRepository.saveAndFlush(sos);
         
         // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
@@ -64,8 +65,9 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .autoTriggered(true)
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
+                .triggeredAt(java.time.LocalDateTime.now())
                 .build();
-        SOSRequest saved = sosRequestRepository.save(sos);
+        SOSRequest saved = sosRequestRepository.saveAndFlush(sos);
         
         // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
@@ -96,8 +98,9 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .maintenanceType(request.maintenanceType())
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
+                .triggeredAt(java.time.LocalDateTime.now())
                 .build();
-        MaintenanceRequest saved = maintenanceRequestRepository.save(maintenance);
+        MaintenanceRequest saved = maintenanceRequestRepository.saveAndFlush(maintenance);
         
         // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
@@ -119,8 +122,9 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .location(request.location())
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
+                .triggeredAt(java.time.LocalDateTime.now())
                 .build();
-        Incident saved = incidentRepository.save(incident);
+        Incident saved = incidentRepository.saveAndFlush(incident);
         
         // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(

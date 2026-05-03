@@ -45,6 +45,7 @@ public class AlertServiceImpl implements AlertService {
                 .alertableType(request.alertableType())
                 .alertableId(request.alertableId())
                 .acknowledged(false)
+                .timestamp(java.time.LocalDateTime.now())
                 .build();
         Alert saved = alertRepository.save(alert);
         

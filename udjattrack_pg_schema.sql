@@ -352,3 +352,5 @@ CREATE INDEX IF NOT EXISTS idx_event_records_trip_id ON event_records(trip_id);
 CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
 
 -- 6. Add Audit Columns if missing (required by JpaAuditing)
+TRUNCATE TABLE alerts CASCADE;
+ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
