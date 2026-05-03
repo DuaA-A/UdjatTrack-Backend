@@ -38,9 +38,6 @@ public abstract class IssueRequest implements Alertable {
     @Column(name = "status", nullable = false, length = 20)
     private IssueStatus status = IssueStatus.OPEN;
 
-    @Column(name = "description", columnDefinition = "TEXT")
-    private String description;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "payload", columnDefinition = "jsonb")
     private Map<String, Object> payload;

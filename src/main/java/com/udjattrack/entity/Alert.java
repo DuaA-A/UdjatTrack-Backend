@@ -48,9 +48,6 @@ public class Alert {
     @Column(name = "acknowledged")
     private Boolean acknowledged = false;
 
-    @Column(name = "read_by_manager")
-    private Boolean readByManager = false;
-
     @Column(name = "acked_at")
     private LocalDateTime ackedAt;
 

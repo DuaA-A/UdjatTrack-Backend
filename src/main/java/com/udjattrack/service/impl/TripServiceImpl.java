@@ -4,6 +4,7 @@ import com.udjattrack.dto.request.CreateTripRequest;
 import com.udjattrack.dto.response.TripLogResponse;
 import com.udjattrack.dto.response.TripResponse;
 import com.udjattrack.dto.response.TripStateResponse;
+import com.udjattrack.dto.response.TripTimelineResponse;
 import com.udjattrack.entity.*;
 import com.udjattrack.entity.enums.TripProgressState;
 import com.udjattrack.entity.enums.TripStatus;
@@ -24,8 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +43,9 @@ public class TripServiceImpl implements TripService {
     private final NotificationService notificationService;
     private final AlertService alertService;
     private final WebSocketPublisher webSocketPublisher;
+    private final EventRecordRepository eventRecordRepository;
+    private final AlertRepository alertRepository;
+    private final IncidentRepository incidentRepository;
 
     @Override
     public TripResponse createTrip(CreateTripRequest request) {
@@ -186,7 +190,6 @@ public class TripServiceImpl implements TripService {
     public TripResponse cancelTrip(UUID tripId) {
         Trip trip = findTripOrThrow(tripId);
         trip.setStatus(TripStatus.CANCELLED);
-        // Clear progress state if cancelled? Or leave it as is.
         trip.getDriver().setIdle(true);
         trip.getVehicle().setIdle(true);
         driverRepository.save(trip.getDriver());
@@ -216,15 +219,17 @@ public class TripServiceImpl implements TripService {
                     .stream().map(this::toResponse).collect(Collectors.toList());
         }
 
-        List<TripStatus> targetStatuses = switch (status.toLowerCase()) {
-            case "active" -> List.of(TripStatus.ONGOING);
-            case "past" -> List.of(TripStatus.FINISHED, TripStatus.CANCELLED);
-            case "upcoming" -> List.of(TripStatus.PLANNED);
-            default -> throw new BusinessException("Invalid trip status filter. Use: active, past, upcoming");
-        };
+        List<TripStatus> targetStatuses = mapTimeframeToStatuses(status);
+        List<Trip> trips = tripRepository.findAllByDriverUserIdAndStatusInOrderByCreatedAtDesc(driverId, targetStatuses);
 
-        return tripRepository.findAllByDriverUserIdAndStatusInOrderByCreatedAtDesc(driverId, targetStatuses)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+        if ("upcoming".equalsIgnoreCase(status)) {
+            LocalDateTime now = LocalDateTime.now();
+            return trips.stream()
+                    .filter(t -> t.getScheduledStartTime() != null && t.getScheduledStartTime().isAfter(now))
+                    .map(this::toResponse).collect(Collectors.toList());
+        }
+
+        return trips.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -232,6 +237,158 @@ public class TripServiceImpl implements TripService {
     public List<TripResponse> getTripsByFleetManager(UUID managerId) {
         return tripRepository.findAllByFleetManager(managerId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripResponse> getTripsByFleetManagerWithFilters(UUID managerId, String status, UUID vehicleId, String dateFrom, String dateTo) {
+        List<TripStatus> targetStatuses = mapTimeframeToStatuses(status);
+
+        // Start with all trips by fleet manager, then filter
+        List<Trip> trips = tripRepository.findAllByFleetManager(managerId);
+
+        return trips.stream()
+                .filter(t -> targetStatuses.contains(t.getStatus()))
+                .filter(t -> {
+                    if ("upcoming".equalsIgnoreCase(status)) {
+                        return t.getScheduledStartTime() != null && t.getScheduledStartTime().isAfter(LocalDateTime.now());
+                    }
+                    return true;
+                })
+                .filter(t -> vehicleId == null || t.getVehicle().getVehicleId().equals(vehicleId))
+                .filter(t -> {
+                    if (dateFrom == null) return true;
+                    try {
+                        LocalDateTime from = LocalDateTime.parse(dateFrom);
+                        return t.getCreatedAt() != null && !t.getCreatedAt().isBefore(from);
+                    } catch (DateTimeParseException e) {
+                        return true;
+                    }
+                })
+                .filter(t -> {
+                    if (dateTo == null) return true;
+                    try {
+                        LocalDateTime to = LocalDateTime.parse(dateTo);
+                        return t.getCreatedAt() != null && !t.getCreatedAt().isAfter(to);
+                    } catch (DateTimeParseException e) {
+                        return true;
+                    }
+                })
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TripStateResponse> getActiveTripStates(UUID managerId) {
+        List<TripStatus> activeStatuses = List.of(TripStatus.ONGOING, TripStatus.ON_BREAK);
+        return tripRepository.findAllByFleetManager(managerId).stream()
+                .filter(t -> activeStatuses.contains(t.getStatus()))
+                .map(trip -> tripStateRepository.findByTripTripId(trip.getTripId()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(this::toStateResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TripTimelineResponse getTripTimeline(UUID tripId) {
+        Trip trip = findTripOrThrow(tripId);
+
+        // Get trip log for start/end times
+        TripLog tripLog = tripLogRepository.findByTripTripId(tripId).orElse(null);
+        UUID tripLogId = tripLog != null ? tripLog.getLogId() : null;
+        LocalDateTime actualStartTime = tripLog != null ? tripLog.getActualStartTime() : null;
+        LocalDateTime actualEndTime = tripLog != null ? tripLog.getActualEndTime() : null;
+        Double totalDurationHours = null;
+        if (tripLog != null && tripLog.getTotalDuration() != null) {
+            totalDurationHours = tripLog.getTotalDuration() / 60.0;
+        }
+
+        List<TripTimelineResponse.TimelineItem> timeline = new ArrayList<>();
+
+        // Add event records to timeline
+        List<EventRecord> events = eventRecordRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
+        for (EventRecord event : events) {
+            // Check if this event has an associated alert
+            TripTimelineResponse.AlertDetails alertDetails = null;
+            boolean isAlert = false;
+            List<Alert> alerts = alertRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
+            for (Alert alert : alerts) {
+                if ("EventRecord".equals(alert.getAlertableType()) && alert.getAlertableId().equals(event.getId())) {
+                    isAlert = true;
+                    alertDetails = TripTimelineResponse.AlertDetails.builder()
+                            .alertId(alert.getAlertId())
+                            .severity(alert.getSeverity().name())
+                            .acknowledged(alert.getAcknowledged())
+                            .build();
+                    break;
+                }
+            }
+
+            Map<String, Object> details = new LinkedHashMap<>();
+            details.put("eventId", event.getId());
+            details.put("eventType", event.getEventType());
+            if (event.getPayload() != null) {
+                details.put("payload", event.getPayload());
+            }
+
+            timeline.add(TripTimelineResponse.TimelineItem.builder()
+                    .timestamp(event.getTimestamp())
+                    .itemType("EVENT")
+                    .isAlert(isAlert)
+                    .alertDetails(alertDetails)
+                    .details(details)
+                    .build());
+        }
+
+        // Add incidents to timeline
+        List<Incident> incidents = incidentRepository.findAllByTripTripIdOrderByReportedAtDesc(tripId);
+        for (Incident incident : incidents) {
+            TripTimelineResponse.AlertDetails alertDetails = null;
+            boolean isAlert = false;
+            List<Alert> alerts = alertRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
+            for (Alert alert : alerts) {
+                if ("Incident".equals(alert.getAlertableType()) && alert.getAlertableId().equals(incident.getIssueId())) {
+                    isAlert = true;
+                    alertDetails = TripTimelineResponse.AlertDetails.builder()
+                            .alertId(alert.getAlertId())
+                            .severity(alert.getSeverity().name())
+                            .acknowledged(alert.getAcknowledged())
+                            .build();
+                    break;
+                }
+            }
+
+            Map<String, Object> details = new LinkedHashMap<>();
+            details.put("incidentId", incident.getIssueId());
+            details.put("incidentType", incident.getType());
+            details.put("severity", incident.getSeverity());
+            details.put("location", incident.getLocation());
+            details.put("reportedAt", incident.getReportedAt());
+
+            timeline.add(TripTimelineResponse.TimelineItem.builder()
+                    .timestamp(incident.getTriggeredAt())
+                    .itemType("INCIDENT")
+                    .isAlert(isAlert)
+                    .alertDetails(alertDetails)
+                    .details(details)
+                    .build());
+        }
+
+        // Sort all timeline items by timestamp ascending
+        timeline.sort(Comparator.comparing(TripTimelineResponse.TimelineItem::getTimestamp,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        return TripTimelineResponse.builder()
+                .tripLogId(tripLogId)
+                .tripId(tripId)
+                .actualStartTime(actualStartTime)
+                .actualEndTime(actualEndTime)
+                .totalDurationHours(totalDurationHours)
+                .timeline(timeline)
+                .build();
     }
 
     @Override
@@ -248,6 +405,20 @@ public class TripServiceImpl implements TripService {
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
     }
 
+    private List<TripStatus> mapTimeframeToStatuses(String status) {
+        return switch (status.toLowerCase()) {
+            case "active" -> List.of(TripStatus.ONGOING, TripStatus.ON_BREAK);
+            case "past" -> List.of(TripStatus.FINISHED, TripStatus.CANCELLED);
+            case "upcoming" -> List.of(TripStatus.PLANNED);
+            case "ongoing" -> List.of(TripStatus.ONGOING);
+            case "on_break" -> List.of(TripStatus.ON_BREAK);
+            case "planned" -> List.of(TripStatus.PLANNED);
+            case "finished" -> List.of(TripStatus.FINISHED);
+            case "cancelled" -> List.of(TripStatus.CANCELLED);
+            default -> throw new BusinessException("Invalid trip status filter. Use: active, past, upcoming, ongoing, on_break, planned, finished, cancelled");
+        };
+    }
+
     private void updateTripProgressState(Trip trip, TripProgressState state, com.udjattrack.dto.request.LocationDTO location) {
         tripStateRepository.findByTripTripId(trip.getTripId()).ifPresent(ts -> {
             ts.setTripProgressState(state);
@@ -262,9 +433,11 @@ public class TripServiceImpl implements TripService {
     private TripResponse toResponse(Trip trip) {
         TripLogResponse logResponse = null;
         LocalDateTime actualStartTime = null;
+        LocalDateTime actualEndTime = null;
         if (trip.getTripLog() != null) {
             TripLog tl = trip.getTripLog();
             actualStartTime = tl.getActualStartTime();
+            actualEndTime = tl.getActualEndTime();
             logResponse = TripLogResponse.builder()
                     .logId(tl.getLogId()).tripId(trip.getTripId())
                     .actualStartTime(tl.getActualStartTime())
@@ -295,6 +468,18 @@ public class TripServiceImpl implements TripService {
             progressPct = (int) Math.min(100, Math.max(0, (elapsedMinutes / (expectedDurationHours * 60.0)) * 100));
         }
 
+        // Build TripState response if available
+        TripStateResponse tripStateResponse = null;
+        try {
+            tripStateRepository.findByTripTripId(trip.getTripId()).ifPresent(ts -> {});
+            TripState ts = tripStateRepository.findByTripTripId(trip.getTripId()).orElse(null);
+            if (ts != null) {
+                tripStateResponse = toStateResponse(ts);
+            }
+        } catch (Exception e) {
+            log.debug("Could not load TripState for trip {}: {}", trip.getTripId(), e.getMessage());
+        }
+
         return TripResponse.builder()
                 .tripId(trip.getTripId())
                 .driverId(trip.getDriver().getUserId())
@@ -311,7 +496,13 @@ public class TripServiceImpl implements TripService {
                 .expectedDurationHours(expectedDurationHours)
                 .estimatedArrivalTime(estimatedArrivalTime)
                 .progressPct(progressPct)
-                .totalDistanceKm(0.0) // Placeholder
+                .actualStartTime(actualStartTime)
+                .actualEndTime(actualEndTime)
+                .tripState(tripStateResponse)
+                .vehicle(TripResponse.VehicleInfo.builder()
+                        .plateNumber(trip.getVehicle().getPlateNumber())
+                        .model(trip.getVehicle().getModel())
+                        .build())
                 .build();
     }
 

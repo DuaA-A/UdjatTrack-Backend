@@ -34,5 +34,15 @@ public class TripResponse {
     /** Progress percentage: 0-100, based on elapsed time vs total expected duration */
     private Integer progressPct;
     /** Total distance in km — provided by mobile telemetry, stored in TripLog if available */
-    private Double totalDistanceKm;
+    private LocalDateTime actualStartTime;
+    private LocalDateTime actualEndTime;
+    private TripStateResponse tripState;
+    private VehicleInfo vehicle;
+
+    @Getter
+    @Builder
+    public static class VehicleInfo {
+        private String plateNumber;
+        private String model;
+    }
 }

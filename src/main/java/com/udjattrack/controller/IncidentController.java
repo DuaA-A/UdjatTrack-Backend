@@ -47,7 +47,6 @@ public class IncidentController {
                 request.type(), 
                 request.severity(), 
                 request.location(), 
-                request.description(),
                 request.payload()
         );
         

@@ -14,9 +14,9 @@ import java.util.UUID;
  */
 public interface TelemetryService {
 
-    TelemetryRecordResponse ingestTelemetry(TelemetryRequest request);
+    TelemetryRecordResponse ingestTelemetry(UUID tripId, TelemetryRequest request);
 
-    void processTelemetryBatch(TelemetryBatchRequest batchRequest);   // @Async
+    void processTelemetryBatch(UUID tripId, TelemetryBatchRequest batchRequest);   // @Async
 
     TripStateResponse updateTripState(UUID tripId, String driverState, String progressState);
 

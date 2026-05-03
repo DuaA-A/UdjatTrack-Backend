@@ -47,10 +47,10 @@ public class TelemetryServiceImpl implements TelemetryService {
     private final TripLogRepository tripLogRepository;
 
     @Override
-    public TelemetryRecordResponse ingestTelemetry(TelemetryRequest request) {
+    public TelemetryRecordResponse ingestTelemetry(UUID tripId, TelemetryRequest request) {
         // Verify trip exists in relational DB
-        Trip trip = tripRepository.findById(request.tripId())
-                .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", request.tripId()));
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
 
         // Allow telemetry if its purpose is to start the trip (PLANNED → ONGOING)
         boolean isStartingTrip = request.payload() != null
@@ -88,7 +88,7 @@ public class TelemetryServiceImpl implements TelemetryService {
 
         // Save to time-series DB
         TelemetryRecord record = TelemetryRecord.builder()
-                .tripId(request.tripId())
+                .tripId(tripId)
                 .speed(request.speed())
                 .location(locationStr)
                 .driverState(request.driverState())
@@ -98,7 +98,7 @@ public class TelemetryServiceImpl implements TelemetryService {
         TelemetryRecord saved = telemetryRecordRepository.save(record);
 
         // Update live trip state in relational DB
-        TripState state = tripStateRepository.findByTripTripId(request.tripId()).orElse(null);
+        TripState state = tripStateRepository.findByTripTripId(tripId).orElse(null);
         if (state != null) {
             if (request.driverState() != null && state.getDriverState() != request.driverState()) {
                 DriverState oldState = state.getDriverState();
@@ -196,9 +196,9 @@ public class TelemetryServiceImpl implements TelemetryService {
 
             tripStateRepository.save(state);
             
-            // Push update to fleet manager over WebSocket
-            UUID managerId = trip.getDriver().getFleetManager().getUserId();
-            webSocketPublisher.publishLiveTracking(managerId, TripStateUpdateMessage.builder()
+            // Push update to fleet manager over WebSocket AFTER transaction commit
+            UUID fleetId = trip.getDriver().getFleetManager().getUserId();
+            TripStateUpdateMessage updateMsg = TripStateUpdateMessage.builder()
                     .tripStateId(state.getStateId())
                     .tripId(trip.getTripId())
                     .driverState(state.getDriverState())
@@ -209,7 +209,20 @@ public class TelemetryServiceImpl implements TelemetryService {
                             "long", state.getLongitude() != null ? state.getLongitude() : "0.0"
                     ))
                     .lastUpdatedAt(telemetryTime)
-                    .build());
+                    .build();
+
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
+                        }
+                    }
+                );
+            } else {
+                webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
+            }
         }
 
         return toResponse(saved);
@@ -217,14 +230,14 @@ public class TelemetryServiceImpl implements TelemetryService {
 
     @Override
     @Async("telemetryExecutor")
-    public void processTelemetryBatch(TelemetryBatchRequest batchRequest) {
+    public void processTelemetryBatch(UUID tripId, TelemetryBatchRequest batchRequest) {
         log.info("Processing telemetry batch: {} records", batchRequest.records().size());
         batchRequest.records().forEach(record -> {
             try {
-                ingestTelemetry(record);
+                ingestTelemetry(tripId, record);
             } catch (Exception e) {
                 log.error("Failed to process telemetry record for trip {}: {}",
-                        record.tripId(), e.getMessage());
+                        tripId, e.getMessage());
             }
         });
     }

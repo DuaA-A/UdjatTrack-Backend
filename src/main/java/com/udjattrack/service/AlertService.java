@@ -3,6 +3,7 @@ package com.udjattrack.service;
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.AlertResponse;
+import com.udjattrack.dto.response.AlertSummaryResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,8 +18,10 @@ public interface AlertService {
     AlertResponse getAlertById(UUID alertId);
     AlertResponse acknowledgeAlert(UUID alertId);
     List<AlertResponse> getUnacknowledgedAlerts(UUID fleetManagerId);
+    List<AlertResponse> getAcknowledgedAlerts(UUID fleetManagerId);
     List<AlertResponse> getAlertsByTrip(UUID tripId);
     List<AlertResponse> getAllAlertsByFleetManager(UUID fleetManagerId);
+    AlertSummaryResponse getAlertSummary(UUID fleetManagerId);
     void evaluateEvent(TelemetryRequest telemetryRequest);
     void notifyFleetManager(UUID alertId);
 }

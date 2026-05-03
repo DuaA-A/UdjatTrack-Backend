@@ -2,6 +2,7 @@ package com.udjattrack.controller;
 
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.response.AlertResponse;
+import com.udjattrack.dto.response.AlertSummaryResponse;
 import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.util.SecurityUtils;
@@ -33,13 +34,34 @@ public class AlertController {
             @RequestParam(required = false) UUID tripId,
             @RequestParam(required = false) String severity) {
         
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        
         if ("UNACKNOWLEDGED".equalsIgnoreCase(status)) {
-            UUID managerId = SecurityUtils.getCurrentUserId();
-            return ResponseEntity.ok(ApiResponse.ok(alertService.getUnacknowledgedAlerts(managerId)));
+            return ResponseEntity.ok(ApiResponse.ok("Unacknowledged alerts retrieved", 
+                    alertService.getUnacknowledgedAlerts(managerId)));
+        }
+        
+        if ("ACKNOWLEDGED".equalsIgnoreCase(status)) {
+            return ResponseEntity.ok(ApiResponse.ok("Acknowledged alerts retrieved", 
+                    alertService.getAcknowledgedAlerts(managerId)));
         }
 
+        if (tripId != null) {
+            return ResponseEntity.ok(ApiResponse.ok("Alerts retrieved for trip", 
+                    alertService.getAlertsByTrip(tripId)));
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok("All alerts retrieved", 
+                alertService.getAllAlertsByFleetManager(managerId)));
+    }
+
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get alert summary with counts by severity and acknowledgment status")
+    public ResponseEntity<ApiResponse<AlertSummaryResponse>> getAlertSummary() {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(ApiResponse.ok(alertService.getAllAlertsByFleetManager(managerId)));
+        return ResponseEntity.ok(ApiResponse.ok("Alert summary retrieved", 
+                alertService.getAlertSummary(managerId)));
     }
 
     @GetMapping("/{id}")
@@ -55,17 +77,6 @@ public class AlertController {
     public ResponseEntity<ApiResponse<AlertResponse>> acknowledgeAlert(@PathVariable UUID alertId) {
         return ResponseEntity.ok(ApiResponse.ok("Alert acknowledged",
                 alertService.acknowledgeAlert(alertId)));
-    }
-
-    @PostMapping("/{alertId}/read")
-    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
-    @Operation(summary = "Fleet manager marks alert notification as seen/read")
-    public ResponseEntity<ApiResponse<Void>> markAsRead(@PathVariable UUID alertId) {
-        // Stub for now
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .success(true)
-                .message("Alert marked as read")
-                .build());
     }
 
     @PostMapping

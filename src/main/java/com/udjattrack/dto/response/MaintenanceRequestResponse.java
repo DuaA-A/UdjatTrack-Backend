@@ -16,7 +16,7 @@ public class MaintenanceRequestResponse {
     private UUID tripId;
     private IssueStatus status;
     private MaintenanceType maintenanceType;
-    private String description;
+
     private Map<String, Object> payload;
     private LocalDateTime triggeredAt;
 }

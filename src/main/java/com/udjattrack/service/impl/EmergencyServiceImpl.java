@@ -39,7 +39,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .location(request.location())
                 .autoTriggered(false)
                 .status(IssueStatus.OPEN)
-                .description(request.description())
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
@@ -64,7 +63,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .location(request.location())
                 .autoTriggered(true)
                 .status(IssueStatus.OPEN)
-                .description(request.description())
                 .payload(request.payload())
                 .build();
         SOSRequest saved = sosRequestRepository.save(sos);
@@ -96,7 +94,6 @@ public class EmergencyServiceImpl implements EmergencyService {
         MaintenanceRequest maintenance = MaintenanceRequest.builder()
                 .trip(trip)
                 .maintenanceType(request.maintenanceType())
-                .description(request.description())
                 .status(IssueStatus.OPEN)
                 .payload(request.payload())
                 .build();
@@ -121,7 +118,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .severity(request.severity())
                 .location(request.location())
                 .status(IssueStatus.OPEN)
-                .description(request.description())
                 .payload(request.payload())
                 .build();
         Incident saved = incidentRepository.save(incident);
@@ -178,7 +174,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .issueId(s.getIssueId()).tripId(s.getTrip().getTripId())
                 .status(s.getStatus())                .location(s.getLocation())
                 .autoTriggered(s.getAutoTriggered())
-                .description(s.getDescription())
                 .payload(s.getPayload())
                 .triggeredAt(s.getTriggeredAt())
                 .build();
@@ -189,7 +184,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .issueId(m.getIssueId()).tripId(m.getTrip().getTripId())
                 .status(m.getStatus())
                 .maintenanceType(m.getMaintenanceType())
-                .description(m.getDescription())
                 .payload(m.getPayload())
                 .triggeredAt(m.getTriggeredAt())
                 .build();
@@ -201,7 +195,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .severity(i.getSeverity())
                 .type(i.getType())
                 .location(i.getLocation())
-                .description(i.getDescription())
                 .payload(i.getPayload())
                 .reportedAt(i.getReportedAt())
                 .build();

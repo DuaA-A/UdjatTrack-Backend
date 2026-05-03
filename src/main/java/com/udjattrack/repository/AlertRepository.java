@@ -38,4 +38,12 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
                                                @Param("severity") SeverityLevel severity);
     @Query("SELECT a FROM Alert a WHERE a.trip.driver.fleetManager.userId = :fleetManagerId ORDER BY a.timestamp DESC")
     List<Alert> findAllByFleetManager(@Param("fleetManagerId") UUID fleetManagerId);
+
+    @Query("""
+            SELECT a FROM Alert a
+            WHERE a.trip.driver.fleetManager.userId = :managerId
+            AND a.acknowledged = true
+            ORDER BY a.timestamp DESC
+            """)
+    List<Alert> findAcknowledgedAlertsForFleetManager(@Param("managerId") UUID managerId);
 }

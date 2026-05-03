@@ -17,7 +17,7 @@ public class IncidentResponse {
     private SeverityLevel severity;
     private IncidentType type;
     private String location;
-    private String description;
+
     private Map<String, Object> payload;
     private LocalDateTime reportedAt;
 }

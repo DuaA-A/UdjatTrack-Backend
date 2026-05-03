@@ -13,7 +13,5 @@ public record CreateSOSRequest(
 
         Boolean autoTriggered,
 
-        String description,
-
         Map<String, Object> payload
 ) {}

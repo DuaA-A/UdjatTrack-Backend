@@ -3,6 +3,7 @@ package com.udjattrack.service;
 import com.udjattrack.dto.request.CreateTripRequest;
 import com.udjattrack.dto.response.TripResponse;
 import com.udjattrack.dto.response.TripStateResponse;
+import com.udjattrack.dto.response.TripTimelineResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -24,5 +25,8 @@ public interface TripService {
     TripResponse getTripById(UUID tripId);
     List<TripResponse> getTripsByDriver(UUID driverId, String status);
     List<TripResponse> getTripsByFleetManager(UUID managerId);
+    List<TripResponse> getTripsByFleetManagerWithFilters(UUID managerId, String status, UUID vehicleId, String dateFrom, String dateTo);
+    List<TripStateResponse> getActiveTripStates(UUID managerId);
+    TripTimelineResponse getTripTimeline(UUID tripId);
     TripResponse getTripReport(UUID tripId);
 }

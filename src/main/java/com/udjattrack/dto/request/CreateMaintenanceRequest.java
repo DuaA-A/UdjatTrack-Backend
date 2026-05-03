@@ -13,7 +13,5 @@ public record CreateMaintenanceRequest(
         @NotNull(message = "Maintenance type is required")
         MaintenanceType maintenanceType,
 
-        String description,
-
         Map<String, Object> payload
 ) {}

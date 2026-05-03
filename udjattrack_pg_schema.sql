@@ -192,7 +192,6 @@ CREATE TABLE sos_requests (
 CREATE TABLE maintenance_requests (
     issue_id UUID NOT NULL,
     maintenance_type VARCHAR(40) NOT NULL,
-    description TEXT,
     PRIMARY KEY (issue_id),
     CONSTRAINT fk_maintenance_requests_issue FOREIGN KEY (issue_id)
         REFERENCES issue_requests (issue_id) ON DELETE CASCADE
@@ -207,6 +206,7 @@ CREATE TABLE alerts (
     alert_type VARCHAR(30) NOT NULL,
     severity VARCHAR(15) NOT NULL,
     acknowledged BOOLEAN DEFAULT FALSE,
+    acked_at TIMESTAMP,
     message TEXT,
     timestamp TIMESTAMP NOT NULL,
     alertable_type VARCHAR(50) NOT NULL, --  ADDED: Polymorphic wrapper type (e.g., 'Incident', 'SOSRequest')
@@ -298,12 +298,14 @@ INSERT INTO users (
 )
 VALUES (
            'SUPER_MANAGER',
-           gen_random_uuid(),  -- safer than hardcoding
+           gen_random_uuid(),
            'Super Admin',
-           'admin2@udjattrack.com',
-           '$2a$12$CG5tIyECF/3C.I4n9Sqfd.bzFYUJjV8120lMysyWaQPqGZIOOa7aO',
+           'adminDuaa@udjattrack.com',
+           '$2b$12$p1/bxE2zRWaMA/STgj0QjOQt3dTnPyWpECm8kKG2rXlfdxUhixjom',
            'ROLE_SUPER_MANAGER',
            FALSE,
            CURRENT_TIMESTAMP
        )
 RETURNING user_id;
+
+truncate database 

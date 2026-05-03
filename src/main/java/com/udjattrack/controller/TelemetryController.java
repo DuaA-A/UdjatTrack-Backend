@@ -30,7 +30,7 @@ public class TelemetryController {
             @Valid @RequestBody TelemetryRequest request) {
 
         try {
-            telemetryService.ingestTelemetry(request);
+            telemetryService.ingestTelemetry(tripId, request);
 
             return ResponseEntity.accepted()
                     .body(ApiResponse.<Void>builder()
@@ -43,10 +43,10 @@ public class TelemetryController {
 
         } catch (Exception e) {
             System.out.println("===== ERROR START =====");
-            e.printStackTrace(); // 🔥 THIS WILL PRINT THE REAL ERROR
+            e.printStackTrace(); 
             System.out.println("===== ERROR END =====");
 
-            throw e; // keep 500 response
+            throw e;
         }
     }
 
@@ -56,7 +56,7 @@ public class TelemetryController {
     public ResponseEntity<ApiResponse<String>> ingestTelemetryBatch(
             @PathVariable UUID tripId,
             @Valid @RequestBody com.udjattrack.dto.request.TelemetryBatchRequest request) {
-        telemetryService.processTelemetryBatch(request);
+        telemetryService.processTelemetryBatch(tripId, request);
         return ResponseEntity.accepted()
                 .body(ApiResponse.<String>builder()
                         .success(true)

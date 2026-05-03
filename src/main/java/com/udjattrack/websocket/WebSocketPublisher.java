@@ -19,8 +19,8 @@ public class WebSocketPublisher {
      * Section 13.1: Live Map Tracking
      * Pushes to fleet managers for real-time dashboard updates.
      */
-    public void publishLiveTracking(UUID managerId, TripStateUpdateMessage message) {
-        String destination = "/topic/fleet/" + managerId + "/telemetry";
+    public void publishLiveTracking(UUID fleetId, TripStateUpdateMessage message) {
+        String destination = "/topic/fleet/" + fleetId + "/telemetry";
         messagingTemplate.convertAndSend(destination, message);
         log.debug("Published live-tracking update to {}", destination);
     }
@@ -29,8 +29,8 @@ public class WebSocketPublisher {
      * Section 13.2: Alert Notifications
      * Pushes to fleet managers for critical alert popups (Accidents, SOS, etc.)
      */
-    public void publishAlert(UUID managerId, AlertEventMessage message) {
-        String destination = "/topic/fleet/" + managerId + "/alerts";
+    public void publishAlert(UUID fleetId, AlertEventMessage message) {
+        String destination = "/topic/fleet/" + fleetId + "/alerts";
         messagingTemplate.convertAndSend(destination, message);
         log.info("Published alert event to {}", destination);
     }

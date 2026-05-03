@@ -3,6 +3,7 @@ package com.udjattrack.service.impl;
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.AlertResponse;
+import com.udjattrack.dto.response.AlertSummaryResponse;
 import com.udjattrack.entity.*;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
@@ -30,7 +31,6 @@ public class AlertServiceImpl implements AlertService {
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final IncidentRepository incidentRepository;
     private final TripStateRepository tripStateRepository;
-    private final EventRecordRepository relationalRepository;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
@@ -45,14 +45,26 @@ public class AlertServiceImpl implements AlertService {
                 .alertableType(request.alertableType())
                 .alertableId(request.alertableId())
                 .acknowledged(false)
-                .readByManager(false)
                 .build();
         Alert saved = alertRepository.save(alert);
         
-        // Push alert via WebSocket
+        // Push alert via WebSocket AFTER transaction commit
         if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
-            UUID managerId = trip.getDriver().getFleetManager().getUserId();
-            webSocketPublisher.publishAlert(managerId, toMessage(saved));
+            UUID fleetId = trip.getDriver().getFleetManager().getUserId();
+            AlertEventMessage message = toMessage(saved);
+            
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            webSocketPublisher.publishAlert(fleetId, message);
+                        }
+                    }
+                );
+            } else {
+                webSocketPublisher.publishAlert(fleetId, message);
+            }
         } else {
             log.warn("Could not publish WebSocket alert: Trip {} has no associated Fleet Manager", trip.getTripId());
         }
@@ -109,7 +121,6 @@ public class AlertServiceImpl implements AlertService {
                 .alertType(a.getAlertType())
                 .severity(a.getSeverity())
                 .acknowledged(a.getAcknowledged())
-                .readByManager(a.getReadByManager())
                 .ackedAt(a.getAckedAt())
                 .message(a.getMessage())
                 .alertableType(a.getAlertableType())
@@ -119,19 +130,76 @@ public class AlertServiceImpl implements AlertService {
     }
     private AlertEventMessage toMessage(Alert a) {
         Trip trip = a.getTrip();
+        
+        // Map alert type string
+        String typeStr = switch (a.getAlertType()) {
+            case SOS_REQ -> "SOSReq";
+            case MAINTENANCE -> "Maintenance";
+            case INCIDENT -> "Incident";
+            case FATIGUE, TRIP_STATE -> "Fatigue";
+            default -> a.getAlertType().name();
+        };
+
+        // Capitalize Severity
+        String severityStr = a.getSeverity().name().charAt(0) + a.getSeverity().name().substring(1).toLowerCase();
+
+        // Fetch alertable details
+        java.util.Map<String, Object> alertableDetails = new java.util.HashMap<>();
+        if ("SOSRequest".equalsIgnoreCase(a.getAlertableType())) {
+            sosRequestRepository.findById(a.getAlertableId()).ifPresent(sos -> {
+                alertableDetails.put("type", "SOSRequest");
+                alertableDetails.put("id", sos.getIssueId());
+                alertableDetails.put("triggeredAt", sos.getTriggeredAt());
+                alertableDetails.put("status", sos.getStatus());
+                alertableDetails.put("category", "SOS");
+                alertableDetails.put("reportedAt", sos.getReportedAt() != null ? sos.getReportedAt() : sos.getTriggeredAt());
+                alertableDetails.put("payload", sos.getPayload());
+            });
+        } else if ("MaintenanceRequest".equalsIgnoreCase(a.getAlertableType())) {
+            maintenanceRequestRepository.findById(a.getAlertableId()).ifPresent(m -> {
+                alertableDetails.put("type", "MaintenanceRequest");
+                alertableDetails.put("id", m.getIssueId());
+                alertableDetails.put("triggeredAt", m.getTriggeredAt());
+                alertableDetails.put("status", m.getStatus());
+                alertableDetails.put("category", "ENGINE"); // Placeholder or mapped
+                alertableDetails.put("reportedAt", m.getReportedAt() != null ? m.getReportedAt() : m.getTriggeredAt());
+                alertableDetails.put("maintenanceType", m.getMaintenanceType());
+                alertableDetails.put("payload", m.getPayload());
+            });
+        } else if ("Incident".equalsIgnoreCase(a.getAlertableType())) {
+            incidentRepository.findById(a.getAlertableId()).ifPresent(i -> {
+                alertableDetails.put("type", "Incident");
+                alertableDetails.put("incidentId", i.getIssueId());
+                alertableDetails.put("incidentType", i.getType());
+                alertableDetails.put("severity", i.getSeverity().name().charAt(0) + i.getSeverity().name().substring(1).toLowerCase());
+                // Extract description from payload if present
+                String desc = "Manual Incident Report";
+                if (i.getPayload() != null && i.getPayload().containsKey("description")) {
+                    desc = String.valueOf(i.getPayload().get("description"));
+                } else if (a.getMessage() != null && a.getMessage().contains("AUTO-DETECT")) {
+                    desc = "Auto-generated incident from IoT sensor detection.";
+                }
+                alertableDetails.put("description", desc);
+            });
+        } else if ("TripState".equalsIgnoreCase(a.getAlertableType())) {
+            tripStateRepository.findById(a.getAlertableId()).ifPresent(s -> {
+                alertableDetails.put("type", "TripState");
+                alertableDetails.put("tripStateId", s.getStateId());
+                alertableDetails.put("driverState", s.getDriverState().name().charAt(0) + s.getDriverState().name().substring(1).toLowerCase());
+                alertableDetails.put("latitude", s.getLatitude());
+                alertableDetails.put("longitude", s.getLongitude());
+                alertableDetails.put("lastUpdatedAt", s.getLastUpdatedAt());
+            });
+        }
 
         return AlertEventMessage.builder()
                 .alertId(a.getAlertId())
                 .tripId(trip.getTripId())
-                .alertType(a.getAlertType())
-                .severity(a.getSeverity())
-                .timeStamp(a.getTimestamp())
+                .alertType(typeStr)
+                .severity(severityStr)
+                .timeStamp(a.getTimestamp().atOffset(java.time.ZoneOffset.UTC))
                 .acknowledged(a.getAcknowledged())
-                .readByManager(a.getReadByManager())
-                .ackedAt(a.getAckedAt())
                 .message(a.getMessage())
-                .alertableType(a.getAlertableType())
-                .alertableId(a.getAlertableId())
                 .driver(trip.getDriver() != null ? AlertEventMessage.DriverInfo.builder()
                         .driverId(trip.getDriver().getUserId())
                         .name(trip.getDriver().getName())
@@ -140,6 +208,7 @@ public class AlertServiceImpl implements AlertService {
                         .plateNumber(trip.getVehicle().getPlateNumber())
                         .model(trip.getVehicle().getModel())
                         .build() : null)
+                .alertable(alertableDetails)
                 .build();
     }
     @Override
@@ -147,5 +216,35 @@ public class AlertServiceImpl implements AlertService {
     public List<AlertResponse> getAllAlertsByFleetManager(UUID fleetManagerId) {
         return alertRepository.findAllByFleetManager(fleetManagerId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlertResponse> getAcknowledgedAlerts(UUID fleetManagerId) {
+        return alertRepository.findAcknowledgedAlertsForFleetManager(fleetManagerId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AlertSummaryResponse getAlertSummary(UUID fleetManagerId) {
+        List<Alert> allAlerts = alertRepository.findAllByFleetManager(fleetManagerId);
+        long total = allAlerts.size();
+        long acknowledged = allAlerts.stream().filter(a -> Boolean.TRUE.equals(a.getAcknowledged())).count();
+        long unacknowledged = total - acknowledged;
+        long critical = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.CRITICAL).count();
+        long high = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.HIGH).count();
+        long medium = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.MEDIUM).count();
+        long low = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.LOW).count();
+
+        return AlertSummaryResponse.builder()
+                .totalAlerts(total)
+                .acknowledgedCount(acknowledged)
+                .unacknowledgedCount(unacknowledged)
+                .criticalCount(critical)
+                .highCount(high)
+                .mediumCount(medium)
+                .lowCount(low)
+                .build();
     }
 }

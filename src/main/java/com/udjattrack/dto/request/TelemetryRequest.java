@@ -13,9 +13,6 @@ import java.util.UUID;
 
 public record TelemetryRequest(
 
-        @NotNull(message = "Trip ID is required")
-        UUID tripId,
-
         @NotNull(message = "Timestamp is required")
         @JsonProperty("timeStamp")
         @JsonAlias({"timestamp", "timestamp"})

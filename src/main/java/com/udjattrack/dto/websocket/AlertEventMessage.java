@@ -14,19 +14,15 @@ public class AlertEventMessage {
 
     private UUID alertId;
     private UUID tripId;
-    private AlertType alertType;
-    private SeverityLevel severity;
-    private LocalDateTime timeStamp;
+    private String alertType;
+    private String severity;
+    private java.time.OffsetDateTime timeStamp;
     private Boolean acknowledged;
-    private Boolean readByManager;
-    private LocalDateTime ackedAt;
     private String message;
-    private String alertableType;
-    private UUID alertableId;
-
-    // Simple flat info — NO entity references
+    
     private DriverInfo driver;
     private VehicleInfo vehicle;
+    private Object alertable;
 
     @Getter
     @Builder
