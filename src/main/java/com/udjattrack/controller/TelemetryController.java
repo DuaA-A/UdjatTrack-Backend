@@ -25,18 +25,29 @@ public class TelemetryController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_DRIVER')")
-    @Operation(summary = "Send periodic heartbeat snapshot")
     public ResponseEntity<ApiResponse<Void>> ingestTelemetry(
             @PathVariable UUID tripId,
             @Valid @RequestBody TelemetryRequest request) {
-        // We should ensure the request.tripId matches PathVariable tripId
-        telemetryService.ingestTelemetry(request);
-        return ResponseEntity.accepted()
-                .body(ApiResponse.<Void>builder()
-                        .success(true)
-                        .message("Telemetry recorded")
-                        .timestamp(request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : null)
-                        .build());
+
+        try {
+            telemetryService.ingestTelemetry(request);
+
+            return ResponseEntity.accepted()
+                    .body(ApiResponse.<Void>builder()
+                            .success(true)
+                            .message("Telemetry recorded")
+                            .timestamp(request.timeStamp() != null
+                                    ? request.timeStamp().toLocalDateTime()
+                                    : null)
+                            .build());
+
+        } catch (Exception e) {
+            System.out.println("===== ERROR START =====");
+            e.printStackTrace(); // 🔥 THIS WILL PRINT THE REAL ERROR
+            System.out.println("===== ERROR END =====");
+
+            throw e; // keep 500 response
+        }
     }
 
     @PostMapping("/batch")

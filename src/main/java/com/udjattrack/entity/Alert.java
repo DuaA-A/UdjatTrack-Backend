@@ -1,5 +1,6 @@
 package com.udjattrack.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.udjattrack.entity.enums.AlertType;
 import com.udjattrack.entity.enums.SeverityLevel;
 import jakarta.persistence.*;
@@ -10,12 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Alert — raised when the system detects a critical event during a trip.
- * Linked directly to the active Trip (not TripLog) to support real-time alerting.
- * Uses alertableType/alertableId as a polymorphic reference to the source issue
- * (e.g., Incident, SOSRequest, MaintenanceRequest).
- */
 @Entity
 @Table(name = "alerts")
 @EntityListeners(AuditingEntityListener.class)
@@ -33,10 +28,9 @@ public class Alert {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id", nullable = false)
+    @JsonIgnoreProperties({"driver", "vehicle", "tripLog", "tripState", "hibernateLazyInitializer", "handler"})
     private Trip trip;
 
-    // Polymorphic reference to the source entity that triggered this alert
-    // e.g. 'Incident', 'SOSRequest', 'MaintenanceRequest'
     @Column(name = "alertable_type", nullable = false, length = 50)
     private String alertableType;
 

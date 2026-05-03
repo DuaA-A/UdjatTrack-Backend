@@ -23,13 +23,23 @@ public class IssueController {
     private final EmergencyService emergencyService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Lists SOS and Maintenance tickets")
     public ResponseEntity<ApiResponse<List<Object>>> listIssues(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String type) {
-        // Simple aggregation stub
-        return ResponseEntity.ok(ApiResponse.ok(List.of()));
+
+        UUID managerId = com.udjattrack.util.SecurityUtils.getCurrentUserId();
+        List<Object> results = new java.util.ArrayList<>();
+
+        if (type == null || "SOS".equalsIgnoreCase(type)) {
+            results.addAll(emergencyService.getSOSRequestsByFleetManager(managerId));
+        }
+        if (type == null || "MAINTENANCE".equalsIgnoreCase(type)) {
+            results.addAll(emergencyService.getMaintenanceRequestsByFleetManager(managerId));
+        }
+
+        return ResponseEntity.ok(ApiResponse.ok(results));
     }
 
     @PostMapping("/{issueId}/resolve")

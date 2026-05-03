@@ -1,5 +1,6 @@
 package com.udjattrack.service.impl;
 
+import com.udjattrack.dto.request.LocationDTO;
 import com.udjattrack.dto.request.TelemetryBatchRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.TelemetryRecordResponse;
@@ -11,6 +12,7 @@ import com.udjattrack.entity.enums.DriverState;
 import com.udjattrack.entity.enums.TripProgressState;
 import com.udjattrack.entity.enums.TripStatus;
 import com.udjattrack.entity.enums.SeverityLevel;
+import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
 import com.udjattrack.repository.timeseries.TelemetryRecordRepository;
@@ -50,9 +52,14 @@ public class TelemetryServiceImpl implements TelemetryService {
         Trip trip = tripRepository.findById(request.tripId())
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", request.tripId()));
 
-        if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.PLANNED) {
-            throw new com.udjattrack.exception.BusinessException("Cannot ingest telemetry for a trip that has not started yet.");
+        // Allow telemetry if its purpose is to start the trip (PLANNED → ONGOING)
+        boolean isStartingTrip = request.payload() != null
+                && "ONGOING".equalsIgnoreCase(String.valueOf(request.payload().get("tripState")));
+
+        if (trip.getStatus() == TripStatus.PLANNED && !isStartingTrip) {
+            throw new BusinessException("Cannot ingest telemetry for a trip that has not started yet.");
         }
+
 
         LocalDateTime telemetryTime = request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now();
 
@@ -167,7 +174,7 @@ public class TelemetryServiceImpl implements TelemetryService {
                                 .trip(trip)
                                 .eventType("STATUS_CHANGE")
                                 .severity(SeverityLevel.LOW)
-                                .payload(java.util.Map.of("oldStatus", oldStatus, "newStatus", newStatus))
+                                .payload(java.util.Map.of("oldStatus", oldStatus.name(), "newStatus", newStatus.name()))
                                 .timestamp(telemetryTime)
                                 .build();
                         eventRecordRepository.save(statusEvent);
@@ -197,7 +204,10 @@ public class TelemetryServiceImpl implements TelemetryService {
                     .driverState(state.getDriverState())
                     .tripProgressState(state.getTripProgressState())
                     .progressPct(calculateProgressPct(trip))
-                    .location(java.util.Map.of("lat", state.getLatitude(), "long", state.getLongitude()))
+                    .location(java.util.Map.of(
+                            "lat",  state.getLatitude()  != null ? state.getLatitude()  : "0.0",
+                            "long", state.getLongitude() != null ? state.getLongitude() : "0.0"
+                    ))
                     .lastUpdatedAt(telemetryTime)
                     .build());
         }

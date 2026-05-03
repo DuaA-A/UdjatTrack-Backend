@@ -1,12 +1,11 @@
 package com.udjattrack.websocket;
 
-import com.udjattrack.dto.websocket.AlertEventMessage;
 import com.udjattrack.dto.websocket.TripStateUpdateMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
+import com.udjattrack.dto.websocket.AlertEventMessage;
 import java.util.UUID;
 
 @Service

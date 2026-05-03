@@ -3,20 +3,16 @@ package com.udjattrack.service.impl;
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.AlertResponse;
-import com.udjattrack.dto.websocket.AlertEventMessage;
 import com.udjattrack.entity.*;
-import com.udjattrack.entity.enums.AlertType;
-import com.udjattrack.entity.enums.DriverState;
-import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
+import com.udjattrack.dto.websocket.AlertEventMessage;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -121,12 +117,9 @@ public class AlertServiceImpl implements AlertService {
                 .timestamp(a.getTimestamp())
                 .build();
     }
-
     private AlertEventMessage toMessage(Alert a) {
         Trip trip = a.getTrip();
-        
-        Object alertableObj = fetchAlertable(a.getAlertableType(), a.getAlertableId());
-        
+
         return AlertEventMessage.builder()
                 .alertId(a.getAlertId())
                 .tripId(trip.getTripId())
@@ -137,28 +130,22 @@ public class AlertServiceImpl implements AlertService {
                 .readByManager(a.getReadByManager())
                 .ackedAt(a.getAckedAt())
                 .message(a.getMessage())
-                .driver(AlertEventMessage.DriverInfo.builder()
+                .alertableType(a.getAlertableType())
+                .alertableId(a.getAlertableId())
+                .driver(trip.getDriver() != null ? AlertEventMessage.DriverInfo.builder()
                         .driverId(trip.getDriver().getUserId())
                         .name(trip.getDriver().getName())
-                        .build())
-                .vehicle(AlertEventMessage.VehicleInfo.builder()
+                        .build() : null)
+                .vehicle(trip.getVehicle() != null ? AlertEventMessage.VehicleInfo.builder()
                         .plateNumber(trip.getVehicle().getPlateNumber())
                         .model(trip.getVehicle().getModel())
-                        .build())
-                .alertable(alertableObj)
+                        .build() : null)
                 .build();
     }
-
-    private Object fetchAlertable(String type, UUID id) {
-        if (type == null || id == null) return null;
-        
-        return switch (type) {
-            case "SOSRequest" -> sosRequestRepository.findById(id).orElse(null);
-            case "MaintenanceRequest" -> maintenanceRequestRepository.findById(id).orElse(null);
-            case "Incident" -> incidentRepository.findById(id).orElse(null);
-            case "TripState" -> tripStateRepository.findById(id).orElse(null);
-            case "EventRecord" -> relationalRepository.findById(id).orElse(null);
-            default -> null;
-        };
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlertResponse> getAllAlertsByFleetManager(UUID fleetManagerId) {
+        return alertRepository.findAllByFleetManager(fleetManagerId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 }

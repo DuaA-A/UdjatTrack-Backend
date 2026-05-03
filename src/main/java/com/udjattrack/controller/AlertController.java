@@ -37,8 +37,9 @@ public class AlertController {
             UUID managerId = SecurityUtils.getCurrentUserId();
             return ResponseEntity.ok(ApiResponse.ok(alertService.getUnacknowledgedAlerts(managerId)));
         }
-        
-        return ResponseEntity.ok(ApiResponse.ok("Query results", List.of()));
+
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(alertService.getAllAlertsByFleetManager(managerId)));
     }
 
     @GetMapping("/{id}")

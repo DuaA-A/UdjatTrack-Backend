@@ -1,5 +1,6 @@
 package com.udjattrack.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -7,10 +8,6 @@ import lombok.experimental.SuperBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Driver — operates vehicles and takes trips.
- * Belongs to a FleetManager. Can have dependents registered.
- */
 @Entity
 @Table(name = "drivers")
 @DiscriminatorValue("DRIVER")
@@ -35,11 +32,14 @@ public class Driver extends User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fleet_manager_id", nullable = false)
+    @JsonIgnoreProperties({"drivers", "vehicles", "hibernateLazyInitializer", "handler"})
     private FleetManager fleetManager;
 
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"driver", "hibernateLazyInitializer", "handler"})
     private List<Dependent> dependents = new ArrayList<>();
 
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"driver", "hibernateLazyInitializer", "handler"})
     private List<Trip> trips = new ArrayList<>();
 }

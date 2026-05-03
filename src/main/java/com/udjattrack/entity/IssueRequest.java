@@ -1,6 +1,5 @@
 package com.udjattrack.entity;
 
-import com.udjattrack.entity.enums.IssueCategory;
 import com.udjattrack.entity.enums.IssueStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,11 +13,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * IssueRequest — abstract base for all issues raised during trips.
- * Subtypes: SOSRequest, MaintenanceRequest.
- * Uses JOINED inheritance strategy.
- */
 @Entity
 @Table(name = "issue_requests")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -44,15 +38,11 @@ public abstract class IssueRequest implements Alertable {
     @Column(name = "status", nullable = false, length = 20)
     private IssueStatus status = IssueStatus.OPEN;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "category", nullable = false, insertable = false, updatable = false, length = 20)
-    private IssueCategory category;
-
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "payload", columnDefinition = "json")
+    @Column(name = "payload", columnDefinition = "jsonb")
     private Map<String, Object> payload;
 
     @CreatedDate
