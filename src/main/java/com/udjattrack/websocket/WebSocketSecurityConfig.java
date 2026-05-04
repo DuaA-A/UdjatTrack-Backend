@@ -17,6 +17,8 @@ public class WebSocketSecurityConfig {
                 .nullDestMatcher().authenticated()
                 .simpSubscribeDestMatchers("/topic/**").authenticated()
                 .simpDestMatchers("/app/**").authenticated()
+                .simpTypeMatchers(org.springframework.messaging.simp.SimpMessageType.DISCONNECT, 
+                                 org.springframework.messaging.simp.SimpMessageType.UNSUBSCRIBE).permitAll()
                 .anyMessage().denyAll();
         return messages.build();
     }
