@@ -355,3 +355,5 @@ CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
 TRUNCATE TABLE alerts CASCADE;
 ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
 select * from issue_requests;
+
+select * from trips

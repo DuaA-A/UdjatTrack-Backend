@@ -45,8 +45,9 @@ public class EventServiceImpl implements EventService {
     private final TelemetryService telemetryService;
     private final TripStateRepository tripStateRepository;
     
+    @org.springframework.beans.factory.annotation.Autowired
     @org.springframework.context.annotation.Lazy
-    private final EventService self;
+    private EventService self;
 
     @Override
     @Transactional
