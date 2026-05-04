@@ -47,8 +47,8 @@ public class IssueController {
     @Operation(summary = "Marks an SOS or maintenance ticket as completed")
     public ResponseEntity<ApiResponse<Void>> resolveIssue(
             @PathVariable UUID issueId,
-            @RequestBody String resolutionNote) {
-        // Implementation placeholder
+            @RequestBody(required = false) String resolutionNote) {
+        emergencyService.resolveIssue(issueId, resolutionNote);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)
                 .message("Issue resolved successfully")

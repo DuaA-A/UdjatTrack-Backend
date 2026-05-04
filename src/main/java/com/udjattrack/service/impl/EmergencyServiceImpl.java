@@ -30,6 +30,7 @@ public class EmergencyServiceImpl implements EmergencyService {
     private final DependentRepository dependentRepository;
     private final EmailService emailService;
     private final com.udjattrack.service.AlertService alertService;
+    private final com.udjattrack.service.NotificationService notificationService;
 
     @Override
     public SOSRequestResponse sendManualSOS(CreateSOSRequest request) {
@@ -155,6 +156,39 @@ public class EmergencyServiceImpl implements EmergencyService {
     public List<IncidentResponse> getIncidentsByFleetManager(UUID managerId) {
         return incidentRepository.findAllByFleetManager(managerId)
                 .stream().map(this::toIncidentResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    public void resolveIssue(UUID issueId, String resolutionNote) {
+        // Try SOS
+        sosRequestRepository.findById(issueId).ifPresent(sos -> {
+            sos.setStatus(IssueStatus.RESOLVED);
+            if (resolutionNote != null) {
+                sos.getPayload().put("resolutionNote", resolutionNote);
+            }
+            sosRequestRepository.save(sos);
+            notificationService.sendIssueResolvedNotification(sos.getTrip().getDriver(), "SOS", issueId);
+        });
+
+        // Try Maintenance
+        maintenanceRequestRepository.findById(issueId).ifPresent(m -> {
+            m.setStatus(IssueStatus.RESOLVED);
+            if (resolutionNote != null) {
+                m.getPayload().put("resolutionNote", resolutionNote);
+            }
+            maintenanceRequestRepository.save(m);
+            notificationService.sendIssueResolvedNotification(m.getTrip().getDriver(), "Maintenance", issueId);
+        });
+        
+        // Try Incident
+        incidentRepository.findById(issueId).ifPresent(i -> {
+            i.setStatus(IssueStatus.RESOLVED);
+            if (resolutionNote != null) {
+                i.getPayload().put("resolutionNote", resolutionNote);
+            }
+            incidentRepository.save(i);
+            notificationService.sendIssueResolvedNotification(i.getTrip().getDriver(), "Incident", issueId);
+        });
     }
 
     // ===== Private helpers =====

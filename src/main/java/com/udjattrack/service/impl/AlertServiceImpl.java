@@ -31,6 +31,7 @@ public class AlertServiceImpl implements AlertService {
     private final MaintenanceRequestRepository maintenanceRequestRepository;
     private final IncidentRepository incidentRepository;
     private final TripStateRepository tripStateRepository;
+    private final com.udjattrack.service.NotificationService notificationService;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
@@ -50,24 +51,32 @@ public class AlertServiceImpl implements AlertService {
         Alert saved = alertRepository.save(alert);
         
         // Push alert via WebSocket AFTER transaction commit
-        if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
-            UUID fleetId = trip.getDriver().getFleetManager().getUserId();
-            AlertEventMessage message = toMessage(saved);
+        if (trip.getDriver() != null) {
+            // Save notification for Driver History
+            notificationService.sendAlertTriggeredNotification(trip.getDriver(), saved.getAlertId(), saved.getMessage());
             
-            if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
-                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-                    new org.springframework.transaction.support.TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            webSocketPublisher.publishAlert(fleetId, message);
+            if (trip.getDriver().getFleetManager() != null) {
+                UUID fleetId = trip.getDriver().getFleetManager().getUserId();
+                // Save notification for Manager History
+                notificationService.sendAlertTriggeredNotification(trip.getDriver().getFleetManager(), saved.getAlertId(), saved.getMessage());
+                
+                AlertEventMessage message = toMessage(saved);
+                
+                if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+                    org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                webSocketPublisher.publishAlert(fleetId, message);
+                            }
                         }
-                    }
-                );
-            } else {
-                webSocketPublisher.publishAlert(fleetId, message);
+                    );
+                } else {
+                    webSocketPublisher.publishAlert(fleetId, message);
+                }
             }
         } else {
-            log.warn("Could not publish WebSocket alert: Trip {} has no associated Fleet Manager", trip.getTripId());
+            log.warn("Could not publish WebSocket alert: Trip {} has no associated Driver", trip.getTripId());
         }
         
         return toResponse(saved);

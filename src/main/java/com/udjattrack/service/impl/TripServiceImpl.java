@@ -101,7 +101,9 @@ public class TripServiceImpl implements TripService {
                 trip.getScheduledStartTime(), trip.getScheduledEndTime(), tripId);
 
         trip.setVehicle(vehicle);
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        notificationService.sendTripAssignedNotification(saved.getDriver(), saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -180,10 +182,19 @@ public class TripServiceImpl implements TripService {
         });
 
         // Free driver and vehicle
-        trip.getDriver().setIdle(true);
-        trip.getVehicle().setIdle(true);
-        driverRepository.save(trip.getDriver());
-        vehicleRepository.save(trip.getVehicle());
+        if (trip.getDriver() != null) {
+            trip.getDriver().setIdle(true);
+            driverRepository.save(trip.getDriver());
+        }
+        if (trip.getVehicle() != null) {
+            trip.getVehicle().setIdle(true);
+            vehicleRepository.save(trip.getVehicle());
+        }
+
+        // Notify manager
+        if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
+            notificationService.sendTripFinishedNotification(trip.getDriver().getFleetManager(), trip);
+        }
 
         return toResponse(tripRepository.save(trip));
     }
@@ -196,7 +207,11 @@ public class TripServiceImpl implements TripService {
         trip.getVehicle().setIdle(true);
         driverRepository.save(trip.getDriver());
         vehicleRepository.save(trip.getVehicle());
-        return toResponse(tripRepository.save(trip));
+        
+        Trip saved = tripRepository.save(trip);
+        notificationService.sendTripCancelledNotification(saved.getDriver(), saved);
+        
+        return toResponse(saved);
     }
 
     @Override
