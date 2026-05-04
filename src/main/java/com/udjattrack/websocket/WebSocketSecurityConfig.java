@@ -12,18 +12,12 @@ import org.springframework.security.messaging.access.intercept.MessageMatcherDel
 public class WebSocketSecurityConfig {
 
     @Bean
-    public AuthorizationManager<Message<?>> messageAuthorizationManager(MessageMatcherDelegatingAuthorizationManager.Builder messages) {
-        messages
-                .nullDestMatcher().authenticated()
-                .simpSubscribeDestMatchers("/topic/**").authenticated()
-                .simpDestMatchers("/app/**").authenticated()
-                .simpTypeMatchers(org.springframework.messaging.simp.SimpMessageType.DISCONNECT, 
-                                 org.springframework.messaging.simp.SimpMessageType.UNSUBSCRIBE).permitAll()
-                .anyMessage().denyAll();
+    public AuthorizationManager<Message<?>> messageAuthorizationManager(
+            MessageMatcherDelegatingAuthorizationManager.Builder messages) {
+        messages.anyMessage().permitAll();
         return messages.build();
     }
 
-    // Disable CSRF for simpler WebSocket testing/development
     @Bean("csrfChannelInterceptor")
     public Object csrfChannelInterceptor() {
         return null;

@@ -8,10 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
-/**
- * JPA Auditing configuration — provides the current authenticated user
- * as the auditor for @CreatedBy / @LastModifiedBy fields.
- */
+
 @Configuration
 public class AuditConfig {
 

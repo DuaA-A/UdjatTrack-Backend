@@ -7,10 +7,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
-/**
- * Async configuration for telemetry batch processing and email sending.
- * Separate thread pool keeps async work isolated from request threads.
- */
 @Configuration
 @EnableAsync
 public class AsyncConfig {

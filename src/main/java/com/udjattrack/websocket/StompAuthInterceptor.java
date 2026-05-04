@@ -37,6 +37,9 @@ public class StompAuthInterceptor implements ChannelInterceptor {
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
+            if (authHeader == null) {
+                authHeader = accessor.getFirstNativeHeader("authorization");
+            }
             
             if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
                 String jwt = authHeader.substring(BEARER_PREFIX.length());
