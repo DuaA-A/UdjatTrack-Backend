@@ -41,11 +41,14 @@ public class StompAuthInterceptor implements ChannelInterceptor {
                 authHeader = accessor.getFirstNativeHeader("authorization");
             }
             
+            log.debug("WebSocket CONNECT attempt. Header present: {}", authHeader != null);
+
             if (authHeader != null) {
                 String jwt = authHeader.startsWith(BEARER_PREFIX) ? 
                              authHeader.substring(BEARER_PREFIX.length()) : authHeader;
                 try {
                     String email = jwtUtil.extractEmail(jwt);
+                    log.debug("Extracted email from JWT: {}", email);
                     if (email != null) {
                         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                         if (jwtUtil.isTokenValid(jwt, userDetails.getUsername())) {
@@ -55,13 +58,15 @@ public class StompAuthInterceptor implements ChannelInterceptor {
                             SecurityContextHolder.getContext().setAuthentication(authToken);
                             accessor.setUser(authToken);
                             log.info("WebSocket STOMP CONNECT authenticated for user: {}", email);
+                        } else {
+                            log.warn("Invalid JWT token for user: {}", email);
                         }
                     }
                 } catch (Exception e) {
-                    log.warn("WebSocket STOMP JWT validation failed: {}", e.getMessage());
+                    log.error("WebSocket STOMP authentication error: {}", e.getMessage(), e);
                 }
             } else {
-                log.debug("No Authorization header in STOMP CONNECT frame for accessor: {}", accessor.getSessionId());
+                log.warn("No Authorization header found in STOMP CONNECT frame");
             }
         }
 
