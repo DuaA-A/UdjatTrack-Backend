@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UdjatTrack WebSocket Tester</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        input, button { padding: 10px; margin: 5px; width: 300px; }
+        #log { background: #f4f4f4; padding: 10px; border: 1px solid #ddd; height: 300px; overflow-y: scroll; font-family: monospace; }
+        .success { color: green; } .error { color: red; }
+    </style>
+</head>
+<body>
+    <h2>UdjatTrack STOMP Tester</h2>
+    <input id="url" value="wss://udjattrack-backend-production.up.railway.app/api/v1/ws"><br>
+    <input id="token" placeholder="eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiMzYwMWMzODctZjEwNS00NDlkLWE4NjYtNzE1MjMzMTJkMjI1Iiwic3ViIjoiZG9kb2F0aTQ1OTlAZ21haWwuY29tIiwiaWF0IjoxNzc3OTMxNzc4LCJleHAiOjE3NzgwMTgxNzh9.j4o6vKNRS1gECd1V9t-o9P3EywSGOslOycr2uRk58mVyNcnQGI5Pafd3FJ8VJLRf"><br>
+    <input id="channel" value="/topic/fleet/3601c387-f105-449d-a866-71523312d225/alerts"><br>
+    <button onclick="connect()">Connect & Subscribe</button>
+    <div id="log"></div>
+
+    <script>
+        let client = null;
+        function log(msg, cls) {
+            const div = document.createElement('div');
+            div.className = cls || '';
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            document.getElementById('log').appendChild(div);
+        }
+
+        function connect() {
+            const url = document.getElementById('url').value;
+            let token = document.getElementById('token').value || document.getElementById('token').placeholder;
+            const channel = document.getElementById('channel').value;
+
+            if (token && !token.startsWith('Bearer ')) {
+                token = 'Bearer ' + token;
+            }
+            
+            log("Connecting to " + url + "...");
+            const socket = new WebSocket(url);
+            client = Stomp.over(socket);
+
+            client.connect({'Authorization': token}, function(frame) {
+                log("CONNECTED: " + frame, "success");
+                client.subscribe(channel, function(message) {
+                    log("RECEIVED MESSAGE: " + message.body, "success");
+                });
+                log("Subscribed to: " + channel);
+            }, function(error) {
+                log("STOMP Error: " + error, "error");
+            });
+        }
+    </script>
+</body>
+</html>
