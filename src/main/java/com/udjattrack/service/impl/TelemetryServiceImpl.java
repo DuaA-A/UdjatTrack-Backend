@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
 public class TelemetryServiceImpl implements TelemetryService {
 
     private final TelemetryRecordRepository telemetryRecordRepository;
@@ -47,6 +46,7 @@ public class TelemetryServiceImpl implements TelemetryService {
     private final TripLogRepository tripLogRepository;
 
     @Override
+    @Transactional
     public TelemetryRecordResponse ingestTelemetry(UUID tripId, TelemetryRequest request) {
         // Verify trip exists in relational DB
         Trip trip = tripRepository.findById(tripId)
@@ -243,6 +243,7 @@ public class TelemetryServiceImpl implements TelemetryService {
     }
 
     @Override
+    @Transactional
     public TripStateResponse updateTripState(UUID tripId, String driverState, String progressState) {
         TripState state = tripStateRepository.findByTripTripId(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("TripState", "tripId", tripId));
@@ -253,6 +254,7 @@ public class TelemetryServiceImpl implements TelemetryService {
     }
 
     @Override
+    @Transactional
     public void updateDriverStatus(UUID driverId, String newState) {
         driverRepository.findById(driverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", driverId));
@@ -263,6 +265,7 @@ public class TelemetryServiceImpl implements TelemetryService {
     }
 
     @Override
+    @Transactional
     public void updateVehicleState(UUID vehicleId, boolean isWorking) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));

@@ -35,4 +35,26 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
             AND t.status NOT IN (com.udjattrack.entity.enums.TripStatus.FINISHED, com.udjattrack.entity.enums.TripStatus.CANCELLED)
             """)
     Optional<Trip> findActiveTrip(@Param("driverId") UUID driverId);
+
+    @Query("""
+            SELECT t FROM Trip t
+            WHERE t.driver.userId = :driverId
+            AND t.status != com.udjattrack.entity.enums.TripStatus.CANCELLED
+            AND t.scheduledStartTime < :endTime
+            AND t.scheduledEndTime > :startTime
+            """)
+    List<Trip> findConflictingTripsForDriver(@Param("driverId") UUID driverId, 
+                                             @Param("startTime") java.time.LocalDateTime startTime, 
+                                             @Param("endTime") java.time.LocalDateTime endTime);
+
+    @Query("""
+            SELECT t FROM Trip t
+            WHERE t.vehicle.vehicleId = :vehicleId
+            AND t.status != com.udjattrack.entity.enums.TripStatus.CANCELLED
+            AND t.scheduledStartTime < :endTime
+            AND t.scheduledEndTime > :startTime
+            """)
+    List<Trip> findConflictingTripsForVehicle(@Param("vehicleId") UUID vehicleId, 
+                                              @Param("startTime") java.time.LocalDateTime startTime, 
+                                              @Param("endTime") java.time.LocalDateTime endTime);
 }

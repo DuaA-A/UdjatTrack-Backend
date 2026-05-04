@@ -20,7 +20,11 @@ public record CreateTripRequest(
         @NotBlank(message = "Destination is required")
         String destination,
 
+        String routeName,
+
+        @NotNull(message = "Scheduled start time is required")
         LocalDateTime scheduledStartTime,
 
+        @NotNull(message = "Scheduled end time is required")
         LocalDateTime scheduledEndTime
 ) {}

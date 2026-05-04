@@ -134,6 +134,15 @@ public class TripController {
         return ResponseEntity.ok(ApiResponse.ok(tripService.getTripById(tripId)));
     }
 
+    @GetMapping("/driver/dashboard")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
+    @Operation(summary = "Get driver dashboard data (current, today, previous, upcoming trips)")
+    public ResponseEntity<ApiResponse<com.udjattrack.dto.response.DriverDashboardResponse>> getDriverDashboard() {
+        UUID driverId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok("Driver dashboard retrieved", 
+                tripService.getDriverDashboard(driverId)));
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List trips with filters (status, driverId, vehicleId, timeframe, etc.)")

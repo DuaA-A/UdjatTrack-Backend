@@ -18,6 +18,7 @@ public class TripResponse {
     private String vehiclePlate;
     private String source;
     private String destination;
+    private String routeName;
     private LocalDateTime scheduledStartTime;
     private LocalDateTime scheduledEndTime;
     private TripStatus status;

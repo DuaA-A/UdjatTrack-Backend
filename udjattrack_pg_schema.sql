@@ -320,7 +320,7 @@ ALTER TABLE trip_states ADD COLUMN IF NOT EXISTS current_speed DOUBLE PRECISION;
 ALTER TABLE incidents DROP COLUMN IF EXISTS description;
 ALTER TABLE maintenance_requests DROP COLUMN IF EXISTS description;
 ALTER TABLE sos_requests DROP COLUMN IF EXISTS description;
-ALTER TABLE issue_requests DROP COLUMN IF EXISTS description;
+ALTER TABLE issue_requests DROP COLUMN IF EXISTS reported_at;
 
 -- 4. Verification:
 -- The 'alerts' table already has 'timestamp', no action needed.
@@ -354,3 +354,4 @@ CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
 -- 6. Add Audit Columns if missing (required by JpaAuditing)
 TRUNCATE TABLE alerts CASCADE;
 ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
+select * from issue_requests;

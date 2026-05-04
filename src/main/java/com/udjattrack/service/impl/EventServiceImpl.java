@@ -44,6 +44,9 @@ public class EventServiceImpl implements EventService {
     private final EmergencyService emergencyService;
     private final TelemetryService telemetryService;
     private final TripStateRepository tripStateRepository;
+    
+    @org.springframework.context.annotation.Lazy
+    private final EventService self;
 
     @Override
     @Transactional
@@ -145,7 +148,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    @Transactional
     public void syncOfflineData(OfflineSyncRequest request) {
         if (request == null) return;
         
@@ -173,9 +175,10 @@ public class EventServiceImpl implements EventService {
         if (request.events() != null && !request.events().isEmpty()) {
             request.events().forEach(event -> {
                 try {
-                    reportEvent(tripId, event);
+                    self.reportEvent(tripId, event);
                 } catch (Exception e) {
-                    log.error("Failed to sync offline event record for trip {}: {}", tripId, e.getMessage());
+                    log.error("Failed to sync offline event record for trip {}: {}. Error details: ", 
+                             tripId, e.getMessage(), e);
                 }
             });
         }

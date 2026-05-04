@@ -54,16 +54,13 @@ public class TripServiceImpl implements TripService {
         Vehicle vehicle = vehicleRepository.findById(request.vehicleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", request.vehicleId()));
 
-        if (Boolean.FALSE.equals(driver.getIdle())) {
-            throw new BusinessException("Driver is already assigned to an active trip");
-        }
-        if (Boolean.FALSE.equals(vehicle.getIdle())) {
-            throw new BusinessException("Vehicle is already in use on another trip");
-        }
+        validateSchedule(request.driverId(), request.vehicleId(), 
+                request.scheduledStartTime(), request.scheduledEndTime(), null);
 
         Trip trip = Trip.builder()
                 .driver(driver).vehicle(vehicle)
                 .source(request.source()).destination(request.destination())
+                .routeName(request.routeName())
                 .scheduledStartTime(request.scheduledStartTime())
                 .scheduledEndTime(request.scheduledEndTime())
                 .status(TripStatus.PLANNED)
@@ -88,6 +85,9 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(tripId);
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", driverId));
+        validateSchedule(driverId, trip.getVehicle().getVehicleId(), 
+                trip.getScheduledStartTime(), trip.getScheduledEndTime(), tripId);
+        
         trip.setDriver(driver);
         notificationService.sendTripAssignedNotification(driver, trip);
         return toResponse(tripRepository.save(trip));
@@ -98,6 +98,9 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(tripId);
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+        validateSchedule(trip.getDriver().getUserId(), vehicleId, 
+                trip.getScheduledStartTime(), trip.getScheduledEndTime(), tripId);
+
         trip.setVehicle(vehicle);
         return toResponse(tripRepository.save(trip));
     }
@@ -398,7 +401,62 @@ public class TripServiceImpl implements TripService {
         return toResponse(trip);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public com.udjattrack.dto.response.DriverDashboardResponse getDriverDashboard(UUID driverId) {
+        List<Trip> allTrips = tripRepository.findAllByDriverUserIdOrderByCreatedAtDesc(driverId);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime todayStart = now.toLocalDate().atStartOfDay();
+        LocalDateTime todayEnd = now.toLocalDate().atTime(23, 59, 59);
+
+        TripResponse currentTrip = allTrips.stream()
+                .filter(t -> t.getStatus() == TripStatus.ONGOING || t.getStatus() == TripStatus.ON_BREAK)
+                .findFirst().map(this::toResponse).orElse(null);
+
+        TripResponse todaysTrip = allTrips.stream()
+                .filter(t -> t.getStatus() == TripStatus.PLANNED)
+                .filter(t -> t.getScheduledStartTime() != null && 
+                            !t.getScheduledStartTime().isBefore(todayStart) && 
+                            !t.getScheduledStartTime().isAfter(todayEnd))
+                .sorted(Comparator.comparing(Trip::getScheduledStartTime))
+                .findFirst().map(this::toResponse).orElse(null);
+
+        TripResponse previousTrip = allTrips.stream()
+                .filter(t -> t.getStatus() == TripStatus.FINISHED)
+                .sorted(Comparator.comparing(Trip::getCreatedAt).reversed())
+                .findFirst().map(this::toResponse).orElse(null);
+
+        List<TripResponse> upcomingTrips = allTrips.stream()
+                .filter(t -> t.getStatus() == TripStatus.PLANNED)
+                .filter(t -> t.getScheduledStartTime() != null && t.getScheduledStartTime().isAfter(todayEnd))
+                .sorted(Comparator.comparing(Trip::getScheduledStartTime))
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        return com.udjattrack.dto.response.DriverDashboardResponse.builder()
+                .currentTrip(currentTrip)
+                .todaysTrip(todaysTrip)
+                .previousTrip(previousTrip)
+                .upcomingTrips(upcomingTrips)
+                .build();
+    }
+
     // ===== Private helpers =====
+
+    private void validateSchedule(UUID driverId, UUID vehicleId, LocalDateTime start, LocalDateTime end, UUID excludeTripId) {
+        if (start == null || end == null) return;
+        if (start.isAfter(end)) throw new BusinessException("Scheduled start time must be before end time");
+
+        List<Trip> driverConflicts = tripRepository.findConflictingTripsForDriver(driverId, start, end);
+        if (driverConflicts.stream().anyMatch(t -> !t.getTripId().equals(excludeTripId))) {
+            throw new BusinessException("Driver is already assigned to another trip during this period (" + start + " to " + end + ")");
+        }
+
+        List<Trip> vehicleConflicts = tripRepository.findConflictingTripsForVehicle(vehicleId, start, end);
+        if (vehicleConflicts.stream().anyMatch(t -> !t.getTripId().equals(excludeTripId))) {
+            throw new BusinessException("Vehicle is already scheduled for another trip during this period (" + start + " to " + end + ")");
+        }
+    }
 
     private Trip findTripOrThrow(UUID tripId) {
         return tripRepository.findById(tripId)
@@ -487,6 +545,7 @@ public class TripServiceImpl implements TripService {
                 .vehicleId(trip.getVehicle().getVehicleId())
                 .vehiclePlate(trip.getVehicle().getPlateNumber())
                 .source(trip.getSource()).destination(trip.getDestination())
+                .routeName(trip.getRouteName())
                 .scheduledStartTime(trip.getScheduledStartTime())
                 .scheduledEndTime(trip.getScheduledEndTime())
                 .status(trip.getStatus())

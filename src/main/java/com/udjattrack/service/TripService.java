@@ -29,4 +29,5 @@ public interface TripService {
     List<TripStateResponse> getActiveTripStates(UUID managerId);
     TripTimelineResponse getTripTimeline(UUID tripId);
     TripResponse getTripReport(UUID tripId);
+    com.udjattrack.dto.response.DriverDashboardResponse getDriverDashboard(UUID driverId);
 }
