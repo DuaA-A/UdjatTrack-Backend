@@ -32,6 +32,7 @@ public class AlertServiceImpl implements AlertService {
     private final IncidentRepository incidentRepository;
     private final TripStateRepository tripStateRepository;
     private final com.udjattrack.service.NotificationService notificationService;
+    private final com.udjattrack.service.EmailService emailService;
 
     @Override
     public AlertResponse createAlert(CreateAlertRequest request) {
@@ -56,9 +57,14 @@ public class AlertServiceImpl implements AlertService {
             notificationService.sendAlertTriggeredNotification(trip.getDriver(), saved.getAlertId(), saved.getMessage());
             
             if (trip.getDriver().getFleetManager() != null) {
-                UUID fleetId = trip.getDriver().getFleetManager().getUserId();
+                FleetManager manager = trip.getDriver().getFleetManager();
+                UUID fleetId = manager.getUserId();
+
                 // Save notification for Manager History
-                notificationService.sendAlertTriggeredNotification(trip.getDriver().getFleetManager(), saved.getAlertId(), saved.getMessage());
+                notificationService.sendAlertTriggeredNotification(manager, saved.getAlertId(), saved.getMessage());
+                
+                // SEND REAL-TIME EMAIL TO MANAGER
+                emailService.sendAlertNotification(manager.getEmail(), manager.getName(), saved);
                 
                 AlertEventMessage message = toMessage(saved);
                 

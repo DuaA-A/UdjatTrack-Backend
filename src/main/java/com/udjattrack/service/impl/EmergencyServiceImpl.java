@@ -201,9 +201,16 @@ public class EmergencyServiceImpl implements EmergencyService {
     private void notifyDependentsOnSOS(Trip trip, String location) {
         String driverName = trip.getDriver().getName();
         String loc = location != null ? location : "Unknown location";
+        
+        // Notify Fleet Manager via Email
+        if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
+            FleetManager manager = trip.getDriver().getFleetManager();
+            emailService.sendEmergencyAlert(manager.getEmail(), driverName, loc);
+        }
+
+        // Notify dependents (placeholder logic remains but manager is the primary recipient now)
         dependentRepository.findAllByDriverUserId(trip.getDriver().getUserId()).forEach(dep ->
-                emailService.sendEmergencyAlert(dep.getPhoneNumber() + "@placeholder.com",
-                        driverName, loc)
+                log.info("SOS notification triggered for dependent: {} [Phone: {}]", dep.getName(), dep.getPhoneNumber())
         );
     }
 
