@@ -217,8 +217,8 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     }
 
     @Override
-    public DependentResponse addDependent(CreateDependentRequest request) {
-        Driver driver = findDriverOrThrow(request.driverId());
+    public DependentResponse addDependent(UUID driverId, CreateDependentRequest request) {
+        Driver driver = findDriverOrThrow(driverId);
         Dependent dep = Dependent.builder()
                 .driver(driver)
                 .name(request.name())

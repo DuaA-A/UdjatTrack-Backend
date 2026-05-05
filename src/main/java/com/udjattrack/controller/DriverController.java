@@ -76,7 +76,7 @@ public class DriverController {
             @PathVariable UUID driverId,
             @Valid @RequestBody CreateDependentRequest request) {
         // Logic to ensure driverId matches request or caller has authority
-        DependentResponse response = fleetManagementService.addDependent(request);
+        DependentResponse response = fleetManagementService.addDependent(driverId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Emergency contact added", response));
     }

@@ -7,10 +7,6 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record CreateDependentRequest(
-
-        @NotNull(message = "Driver ID is required")
-        UUID driverId,
-
         @NotBlank(message = "Name is required")
         @Size(max = 150)
         String name,
@@ -22,3 +18,4 @@ public record CreateDependentRequest(
         @Size(max = 50)
         String relation
 ) {}
+

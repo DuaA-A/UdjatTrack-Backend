@@ -44,6 +44,6 @@ public interface FleetManagementService {
     VehicleResponse getVehicleById(UUID vehicleId);
 
     // Dependent operations
-    DependentResponse addDependent(CreateDependentRequest request);
+    DependentResponse addDependent(UUID driverId, CreateDependentRequest request);
     List<DependentResponse> getDependentsByDriver(UUID driverId);
 }
