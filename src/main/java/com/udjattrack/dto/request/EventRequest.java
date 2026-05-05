@@ -19,8 +19,6 @@ public record EventRequest(
     @NotBlank(message = "Event type is required")
     String eventType,
     
-    @NotNull(message = "Severity is required")
-    SeverityLevel severity,
-    
     Map<String, Object> payload
 ) {}
+

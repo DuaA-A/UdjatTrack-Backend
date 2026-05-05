@@ -159,6 +159,13 @@ public class EmergencyServiceImpl implements EmergencyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<IncidentResponse> getAllIncidents() {
+        return incidentRepository.findAll()
+                .stream().map(this::toIncidentResponse).collect(Collectors.toList());
+    }
+
+    @Override
     public void resolveIssue(UUID issueId, String resolutionNote) {
         // Try SOS
         sosRequestRepository.findById(issueId).ifPresent(sos -> {

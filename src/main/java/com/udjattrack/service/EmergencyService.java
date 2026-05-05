@@ -20,5 +20,6 @@ public interface EmergencyService {
     List<SOSRequestResponse> getSOSRequestsByFleetManager(UUID managerId);
     List<MaintenanceRequestResponse> getMaintenanceRequestsByFleetManager(UUID managerId);
     List<IncidentResponse> getIncidentsByFleetManager(UUID managerId);
+    List<IncidentResponse> getAllIncidents();
     void resolveIssue(UUID issueId, String resolutionNote);
 }

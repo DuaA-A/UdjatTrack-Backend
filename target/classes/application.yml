@@ -34,21 +34,22 @@ spring:
   # ===== Mail =====
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:465}
-    username: ${MAIL_USERNAME:udjattrack@gmail.com}
-    password: ${MAIL_PASSWORD:zwyy dbzm lkzo fsza}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
           auth: true
           ssl:
-            enable: true
-          starttls:
             enable: false
+          starttls:
+            enable: true
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
         debug: false
+
 
   # ===== Cache =====
   cache:

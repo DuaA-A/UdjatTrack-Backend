@@ -76,11 +76,13 @@ public class EventServiceImpl implements EventService {
             }
         }
 
+        SeverityLevel severity = determineSeverity(request.eventType());
+
         // 1. Save to Relational DB (long-term management & history)
         EventRecord relationalRecord = EventRecord.builder()
                 .trip(trip)
                 .eventType(request.eventType())
-                .severity(request.severity())
+                .severity(severity)
                 .payload(request.payload())
                 .timestamp(eventTime)
                 .build();
@@ -95,7 +97,7 @@ public class EventServiceImpl implements EventService {
             emergencyService.createIncident(new CreateIncidentRequest(
                     tripId,
                     "CRASH".equalsIgnoreCase(request.eventType()) ? IncidentType.ROAD_ACCIDENT : IncidentType.OTHER_INCIDENT,
-                    request.severity(),
+                    severity,
                     "Auto-detected location",
                     request.payload()
             ));
@@ -108,7 +110,7 @@ public class EventServiceImpl implements EventService {
             CreateAlertRequest alertReq = new CreateAlertRequest(
                     tripId,
                     alertType,
-                    request.severity(),
+                    severity,
                     "EventRecord",
                     savedRecord.getId(),
                     "Safety Event Detected: " + request.eventType()
@@ -197,5 +199,12 @@ public class EventServiceImpl implements EventService {
                 .timestamp(record.getTimestamp())
                 .alertCreated(alertCreated)
                 .build();
+    }
+    private SeverityLevel determineSeverity(String eventType) {
+        if (eventType == null) return SeverityLevel.MEDIUM;
+        String type = eventType.toUpperCase();
+        if (type.contains("CRASH") || type.contains("ROLLOVER")) return SeverityLevel.CRITICAL;
+        if (type.contains("FATIGUE") || type.contains("SOS")) return SeverityLevel.HIGH;
+        return SeverityLevel.MEDIUM;
     }
 }
