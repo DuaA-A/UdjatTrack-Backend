@@ -42,11 +42,11 @@ public class Vehicle {
     private String licenseNumber;
 
     @Builder.Default
-    @Column(name = "idle", nullable = false)
+    @Column(name = "is_idle", nullable = false)
     private Boolean idle = true;
 
     @Builder.Default
-    @Column(name = "working", nullable = false)
+    @Column(name = "is_working", nullable = false)
     private Boolean working = true;
 
     @Builder.Default
