@@ -41,13 +41,16 @@ public class Vehicle {
     @Column(name = "license_number", length = 100)
     private String licenseNumber;
 
-    @Column(name = "is_idle")
+    @Builder.Default
+    @Column(name = "idle", nullable = false)
     private Boolean idle = true;
 
-    @Column(name = "is_working")
+    @Builder.Default
+    @Column(name = "working", nullable = false)
     private Boolean working = true;
 
-    @Column(name = "is_deleted")
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
     @Column(name = "deleted_at")
@@ -57,7 +60,8 @@ public class Vehicle {
     @JoinColumn(name = "fleet_manager_id", nullable = false)
     private FleetManager fleetManager;
 
-    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    @Builder.Default
+    @OneToMany(mappedBy = "vehicle", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Trip> trips = new ArrayList<>();
 
     @CreatedDate

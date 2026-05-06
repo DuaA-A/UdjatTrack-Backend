@@ -2,7 +2,6 @@ package com.udjattrack.controller;
 
 import com.udjattrack.dto.request.CreateDependentRequest;
 import com.udjattrack.dto.request.CreateDriverRequest;
-import com.udjattrack.dto.request.UpdateDriverRequest;
 import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.dto.response.DependentResponse;
 import com.udjattrack.dto.response.DriverResponse;
@@ -15,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

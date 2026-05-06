@@ -14,7 +14,6 @@ public class FleetManagerResponse {
     private String name;
     private String email;
     private String companyName;
-    private String subscriptionPlan;
     private VerificationStatus verificationStatus;
     private LocalDateTime createdAt;
 }

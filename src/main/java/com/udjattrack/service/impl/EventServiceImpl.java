@@ -4,7 +4,6 @@ import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.CreateIncidentRequest;
 import com.udjattrack.dto.request.EventRequest;
 import com.udjattrack.dto.request.OfflineSyncRequest;
-import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.EventResponse;
 import com.udjattrack.entity.*;
 import com.udjattrack.entity.enums.AlertType;
@@ -15,12 +14,10 @@ import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.EventRecordRepository;
 import com.udjattrack.repository.TripRepository;
-import com.udjattrack.repository.TripStateRepository;
 import com.udjattrack.service.AlertService;
 import com.udjattrack.service.EmergencyService;
 import com.udjattrack.service.EventService;
 import com.udjattrack.service.TelemetryService;
-import com.udjattrack.websocket.WebSocketPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,11 +36,9 @@ public class EventServiceImpl implements EventService {
 
     private final EventRecordRepository relationalRepository;
     private final TripRepository tripRepository;
-    private final WebSocketPublisher webSocketPublisher;
     private final AlertService alertService;
     private final EmergencyService emergencyService;
     private final TelemetryService telemetryService;
-    private final TripStateRepository tripStateRepository;
     
     @org.springframework.beans.factory.annotation.Autowired
     @org.springframework.context.annotation.Lazy

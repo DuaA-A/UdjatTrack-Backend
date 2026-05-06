@@ -148,24 +148,28 @@ public class TripController {
     @Operation(summary = "List trips with filters (status, driverId, vehicleId, timeframe, etc.)")
     public ResponseEntity<ApiResponse<List<TripResponse>>> listTrips(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) UUID driverId,
+            @RequestParam(required = false, name = "driverId") UUID driverIdParam,
             @RequestParam(required = false) UUID vehicleId,
             @RequestParam(required = false) String dateFrom,
             @RequestParam(required = false) String dateTo) {
         
         UUID currentUserId = SecurityUtils.getCurrentUserId();
+        boolean isDriver = SecurityUtils.hasRole("ROLE_DRIVER");
+
+        // If it's a driver and they didn't specify a driverId, use their own
+        UUID targetDriverId = (isDriver && driverIdParam == null) ? currentUserId : driverIdParam;
         
-        if (driverId != null) {
-            return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByDriver(driverId, status)));
+        if (targetDriverId != null) {
+            return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", tripService.getTripsByDriver(targetDriverId, status)));
         }
         
-        // If status filter provided, use timeframe-aware filtering
+        // If status filter provided (likely for Fleet Managers), use timeframe-aware filtering
         if (status != null && !status.isBlank()) {
             return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", 
                     tripService.getTripsByFleetManagerWithFilters(currentUserId, status, vehicleId, dateFrom, dateTo)));
         }
         
-        // Default: return all trips the current manager is allowed to see
+        // Default for managers: return all trips the current manager is allowed to see
         return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", 
                 tripService.getTripsByFleetManager(currentUserId)));
     }

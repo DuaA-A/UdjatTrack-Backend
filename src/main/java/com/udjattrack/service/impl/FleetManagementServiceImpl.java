@@ -51,7 +51,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .companyName(request.companyName())
-                .subscriptionPlan(request.subscriptionPlan())
                 .verificationStatus(VerificationStatus.PENDING)
                 .role(UserRole.ROLE_FLEET_MANAGER)
                 .isDeleted(false)
@@ -77,7 +76,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
         FleetManager manager = findManagerOrThrow(managerId);
         if (request.name() != null) manager.setName(request.name());
         if (request.companyName() != null) manager.setCompanyName(request.companyName());
-        if (request.subscriptionPlan() != null) manager.setSubscriptionPlan(request.subscriptionPlan());
         return toResponse(fleetManagerRepository.save(manager));
     }
 
@@ -253,7 +251,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     private FleetManagerResponse toResponse(FleetManager m) {
         return FleetManagerResponse.builder()
                 .userId(m.getUserId()).name(m.getName()).email(m.getEmail())
-                .companyName(m.getCompanyName()).subscriptionPlan(m.getSubscriptionPlan())
+                .companyName(m.getCompanyName())
                 .verificationStatus(m.getVerificationStatus()).createdAt(m.getCreatedAt())
                 .build();
     }

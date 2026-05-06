@@ -7,6 +7,7 @@ import com.udjattrack.entity.FleetManager;
 import com.udjattrack.entity.OtpToken;
 import com.udjattrack.entity.RefreshToken;
 import com.udjattrack.entity.User;
+import com.udjattrack.entity.enums.UserRole;
 import com.udjattrack.entity.enums.VerificationStatus;
 import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.InvalidOtpException;
@@ -27,10 +28,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.udjattrack.entity.enums.UserRole;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import com.udjattrack.entity.FleetManager;
 
 @Service
 @RequiredArgsConstructor
@@ -246,7 +245,6 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .role(UserRole.ROLE_FLEET_MANAGER)
                 .companyName(request.companyName())
-                .subscriptionPlan(request.subscriptionPlan())
                 .verificationStatus(VerificationStatus.PENDING)
                 .isDeleted(false)
                 .build();

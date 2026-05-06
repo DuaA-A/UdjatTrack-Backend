@@ -50,6 +50,7 @@ public class Trip {
     @Column(name = "scheduled_end_time")
     private LocalDateTime scheduledEndTime;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "trip_state", nullable = false, length = 20)
     private TripStatus status = TripStatus.PLANNED;

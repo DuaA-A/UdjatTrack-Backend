@@ -6,8 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.UUID;
-
 /**
  * Incident — reported during or after a trip by the driver or auto-detected.
  * Inherits common fields (trip, payload, triggeredAt) from IssueRequest.
@@ -20,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class Incident extends IssueRequest implements Alertable {
+public class Incident extends IssueRequest {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false, length = 15)

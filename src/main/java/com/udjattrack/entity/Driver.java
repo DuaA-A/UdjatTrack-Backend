@@ -24,6 +24,7 @@ public class Driver extends User {
     @Column(name = "phone_number", length = 20)
     private String phoneNumber;
 
+    @Builder.Default
     @Column(name = "is_idle")
     private Boolean idle = true;
 
@@ -35,10 +36,12 @@ public class Driver extends User {
     @JsonIgnoreProperties({"drivers", "vehicles", "hibernateLazyInitializer", "handler"})
     private FleetManager fleetManager;
 
+    @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"driver", "hibernateLazyInitializer", "handler"})
     private List<Dependent> dependents = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL)
     @JsonIgnoreProperties({"driver", "hibernateLazyInitializer", "handler"})
     private List<Trip> trips = new ArrayList<>();

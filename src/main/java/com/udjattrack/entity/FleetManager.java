@@ -25,6 +25,7 @@ public class FleetManager extends User {
     @Column(name = "subscription_plan", length = 100)
     private String subscriptionPlan;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false, length = 20)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;

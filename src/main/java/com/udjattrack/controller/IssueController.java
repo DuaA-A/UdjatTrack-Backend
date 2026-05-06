@@ -1,8 +1,6 @@
 package com.udjattrack.controller;
 
 import com.udjattrack.dto.response.ApiResponse;
-import com.udjattrack.dto.response.MaintenanceRequestResponse;
-import com.udjattrack.dto.response.SOSRequestResponse;
 import com.udjattrack.service.EmergencyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

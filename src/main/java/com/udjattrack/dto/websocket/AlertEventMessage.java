@@ -1,11 +1,8 @@
 package com.udjattrack.dto.websocket;
 
-import com.udjattrack.entity.enums.AlertType;
-import com.udjattrack.entity.enums.SeverityLevel;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter

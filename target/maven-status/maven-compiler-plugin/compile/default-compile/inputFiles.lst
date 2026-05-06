@@ -61,6 +61,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\serv
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\UdjatTrackApplication.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\entity\Incident.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\repository\VehicleRepository.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\ReportService.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\repository\TripRepository.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\config\OpenApiConfig.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\controller\TelemetryWebSocketController.java
@@ -113,6 +114,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\cont
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\response\VehicleResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\response\DependentResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\dto\response\TripResponse.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\service\impl\ReportServiceImpl.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\util\SecurityUtils.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\controller\FleetController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-API\src\main\java\com\udjattrack\websocket\WebSocketSecurityConfig.java

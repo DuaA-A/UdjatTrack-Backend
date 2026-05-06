@@ -1,7 +1,6 @@
 package com.udjattrack.service.impl;
 
 import com.udjattrack.entity.Alert;
-import com.udjattrack.entity.FleetManager;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
@@ -12,9 +11,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor

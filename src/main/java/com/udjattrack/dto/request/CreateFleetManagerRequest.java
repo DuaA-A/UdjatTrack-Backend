@@ -20,7 +20,5 @@ public record CreateFleetManagerRequest(
 
         @NotBlank(message = "Company name is required")
         @Size(max = 200)
-        String companyName,
-
-        String subscriptionPlan
+        String companyName
 ) {}

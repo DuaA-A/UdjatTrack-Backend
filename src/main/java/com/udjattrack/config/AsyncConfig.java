@@ -34,4 +34,9 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean
+    public org.springframework.scheduling.TaskScheduler taskScheduler() {
+        return new org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler();
+    }
 }

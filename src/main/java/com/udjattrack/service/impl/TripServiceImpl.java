@@ -14,7 +14,6 @@ import com.udjattrack.repository.*;
 import com.udjattrack.service.NotificationService;
 import com.udjattrack.service.TripService;
 import com.udjattrack.service.AlertService;
-import com.udjattrack.websocket.WebSocketPublisher;
 import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.entity.enums.AlertType;
 import com.udjattrack.entity.enums.SeverityLevel;
@@ -42,10 +41,10 @@ public class TripServiceImpl implements TripService {
     private final VehicleRepository vehicleRepository;
     private final NotificationService notificationService;
     private final AlertService alertService;
-    private final WebSocketPublisher webSocketPublisher;
     private final EventRecordRepository eventRecordRepository;
     private final AlertRepository alertRepository;
     private final IncidentRepository incidentRepository;
+    private final org.springframework.scheduling.TaskScheduler taskScheduler;
 
     @Override
     public TripResponse createTrip(CreateTripRequest request) {
@@ -144,7 +143,26 @@ public class TripServiceImpl implements TripService {
         );
         alertService.createAlert(alertReq);
 
+        // Task 1: Automatic Resume after 1 minute (for testing, will be 20 min later)
+        taskScheduler.schedule(() -> {
+            try {
+                // We need a new transaction for the scheduled task
+                selfResumeTrip(tripId);
+            } catch (Exception e) {
+                log.error("Automatic resume failed for trip {}: {}", tripId, e.getMessage());
+            }
+        }, java.time.Instant.now().plusSeconds(60)); // 60 seconds = 1 minute
+
         return toResponse(tripRepository.save(trip));
+    }
+
+    @Transactional
+    public void selfResumeTrip(UUID tripId) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip != null && trip.getStatus() == TripStatus.ON_BREAK) {
+            log.info("Automatically resuming trip {} after break duration", tripId);
+            resumeTrip(tripId, null);
+        }
     }
 
     @Override
@@ -158,7 +176,7 @@ public class TripServiceImpl implements TripService {
 
         CreateAlertRequest alertReq = new CreateAlertRequest(
                 tripId, AlertType.TRIP_STATE, SeverityLevel.LOW,
-                "TripState", trip.getTripId(), "Trip resumed from break"
+                "TripState", trip.getTripId(), "Trip resumed (status: ongoing resumed)"
         );
         alertService.createAlert(alertReq);
 
@@ -230,16 +248,16 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TripResponse> getTripsByDriver(UUID driverId, String status) {
-        if (status == null || status.isBlank()) {
+    public List<TripResponse> getTripsByDriver(UUID driverId, String timeframe) {
+        if (timeframe == null || timeframe.isBlank()) {
             return tripRepository.findAllByDriverUserIdOrderByCreatedAtDesc(driverId)
                     .stream().map(this::toResponse).collect(Collectors.toList());
         }
 
-        List<TripStatus> targetStatuses = mapTimeframeToStatuses(status);
+        List<TripStatus> targetStatuses = mapTimeframeToStatuses(timeframe);
         List<Trip> trips = tripRepository.findAllByDriverUserIdAndStatusInOrderByCreatedAtDesc(driverId, targetStatuses);
 
-        if ("upcoming".equalsIgnoreCase(status)) {
+        if ("upcoming".equalsIgnoreCase(timeframe)) {
             LocalDateTime now = LocalDateTime.now();
             return trips.stream()
                     .filter(t -> t.getScheduledStartTime() != null && t.getScheduledStartTime().isAfter(now))

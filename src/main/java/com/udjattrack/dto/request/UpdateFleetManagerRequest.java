@@ -8,7 +8,5 @@ public record UpdateFleetManagerRequest(
         String name,
 
         @Size(max = 200)
-        String companyName,
-
-        String subscriptionPlan
+        String companyName
 ) {}

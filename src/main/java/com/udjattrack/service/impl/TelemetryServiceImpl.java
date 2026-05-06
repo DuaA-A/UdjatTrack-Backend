@@ -1,6 +1,5 @@
 package com.udjattrack.service.impl;
 
-import com.udjattrack.dto.request.LocationDTO;
 import com.udjattrack.dto.request.TelemetryBatchRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.TelemetryRecordResponse;
@@ -119,6 +118,12 @@ public class TelemetryServiceImpl implements TelemetryService {
                 state.setLongitude(String.valueOf(request.location().lng()));
             }
             state.setCurrentSpeed(request.speed());
+
+            // Task 1: If trip was just resumed, set it back to STARTED state upon first telemetry
+            if (state.getTripProgressState() == TripProgressState.RESUMED) {
+                log.info("Transitioning trip {} from RESUMED back to STARTED state via telemetry", tripId);
+                state.setTripProgressState(TripProgressState.STARTED);
+            }
 
             // Handle Trip State transition from payload if present
             if (request.payload() != null && request.payload().containsKey("tripState")) {
