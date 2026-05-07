@@ -22,6 +22,8 @@ public record CreateDriverRequest(
         @Size(max = 50)
         String licenseNumber,
 
-        @Size(max = 20)
+        @JsonProperty("phoneNumber")
+        @JsonAlias("phone")
+        @Size(max=20)
         String phoneNumber
 ) {}
