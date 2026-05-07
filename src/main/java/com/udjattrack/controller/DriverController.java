@@ -46,6 +46,13 @@ public class DriverController {
         UUID driverId = com.udjattrack.util.SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getDriverById(driverId)));
     }
+        @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get details of a specific driver by ID")
+    public ResponseEntity<ApiResponse<DriverResponse>> getDriverById(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getDriverById(id)));
+    }
+
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
