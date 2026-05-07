@@ -51,7 +51,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .companyName(request.companyName())
-                .verificationStatus(VerificationStatus.PENDING)
+                .verificationStatus(VerificationStatus.VERIFIED)
                 .role(UserRole.ROLE_FLEET_MANAGER)
                 .isDeleted(false)
                 .isRead(false)
