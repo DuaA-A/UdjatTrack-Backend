@@ -118,7 +118,23 @@ public class EmailServiceImpl implements EmailService {
         sendHtmlEmail(to, subject, html);
     }
 
+    @Override
+    @Async("emailExecutor")
+    public void sendRegistrationReceivedEmail(String to, String name) {
+        String subject = "Registration Received — UdjatTrack";
+        String html = """
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
+                    <h2>Registration Received</h2>
+                    <p>Hi %s,</p>
+                    <p>Thank you for registering with UdjatTrack. Your account is currently <strong>awaiting approval</strong> from our administrators.</p>
+                    <p>You will receive another email once your account has been verified.</p>
+                </div>
+                """.formatted(name);
+        sendHtmlEmail(to, subject, html);
+    }
+
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
+
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");

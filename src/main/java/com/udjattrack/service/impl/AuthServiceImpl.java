@@ -250,6 +250,9 @@ public class AuthServiceImpl implements AuthService {
                 .build();
         FleetManager saved = fleetManagerRepository.save(manager);
         log.info("Fleet manager registered: {} — awaiting approval", saved.getEmail());
+        
+        emailService.sendRegistrationReceivedEmail(saved.getEmail(), saved.getName());
+        
         return FleetManagerSignupResponse.builder()
                 .fleetManagerId(saved.getUserId())
                 .status("PENDING_APPROVAL")
