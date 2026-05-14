@@ -1,0 +1,2832 @@
+{
+  "info": {
+    "_postman_id": "6a925c07-0d09-46cf-b319-c3a600b03e54",
+    "name": "Udjat Track",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47718876",
+    "_collection_link": "https://go.postman.co/collection/47718876-6a925c07-0d09-46cf-b319-c3a600b03e54?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login Super manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"hana.abuauf@gmail.com\",\r\n    \"password\":\"hana@123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/auth/login",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"user@example.com\", \"password\": \"password123\", \"deviceInfo\": \"\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Login fleet manager",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n   \"email\": \"duaa.ati.45@gmail.com\",\r\n    \"password\": \"duaa123!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"ali2@test1.com\",\r\n  \"password\": \"Driver123!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/auth/login",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/login\" -H \"Content-Type: application/json\" -d '{\"email\": \"user@example.com\", \"password\": \"password123\", \"deviceInfo\": \"\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"refreshToken\": \"3d4815dc-6305-4ffd-996d-163de540edd1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/logout\" -H \"Content-Type: application/json\" -d '{\"refreshToken\": \"{{refreshToken}}\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"duaa.ati.45@udjattrack.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/forgot-password\" -H \"Content-Type: application/json\" -d '{\"email\": \"user@example.com\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"duaa.ati.45@udjattrack.com\",\r\n  \"otpCode\": \"PASTE_FROM_DB\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/verify-otp\" -H \"Content-Type: application/json\" -d '{\"email\": \"user@example.com\", \"otpCode\": \"123456\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"admin@udjattrack.com\",\r\n  \"otpCode\": \"PASTE_FROM_DB\",\r\n  \"newPassword\": \"NewAdmin1234!\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/reset-password\" -H \"Content-Type: application/json\" -d '{\"email\": \"user@example.com\", \"otpCode\": \"123456\", \"newPassword\": \"newPassword123\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"refreshToken\": \"a77654ee-3bc4-4621-afc0-dfdbce34c446\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/refresh\" -H \"Content-Type: application/json\" -d '{\"refreshToken\": \"{{refreshToken}}\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Signup Fleet Manager",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supermanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Fleet duaa\",\r\n  \"email\": \"duaa.ati.45@gmail.com\",\r\n  \"password\": \"duaa123!\",\r\n  \"companyName\": \"Test Company\",\r\n  \"subscriptionPlan\": \"BASIC\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup/fleet-manager",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "signup",
+                "fleet-manager"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/auth/signup/fleet-manager\" -H \"Content-Type: application/json\" -d '{\"name\": \"John Doe\", \"email\": \"manager@example.com\", \"password\": \"password123\", \"companyName\": \"Fleet Co\", \"subscriptionPlan\": \"\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Dev Hash Password",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/dev/hash?raw=password123",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "dev",
+                "hash"
+              ],
+              "query": [
+                {
+                  "key": "raw",
+                  "value": "password123"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trip Management",
+      "item": [
+        {
+          "name": "Trip State",
+          "item": [
+            {
+              "name": "Get trip State",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{fleetmanager}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "disabled": false
+                  },
+                  {
+                    "key": "status",
+                    "value": "planned",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/trip-states",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "trip-states"
+                  ]
+                },
+                "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+              },
+              "response": []
+            },
+            {
+              "name": "Trip Progress",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{fleetmanager}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "disabled": false
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/trips/{{tripId}}/progress",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "trips",
+                    "{{tripId}}",
+                    "progress"
+                  ]
+                },
+                "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}/progress\" -H \"Authorization: Bearer {{accessToken}}\""
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Vehicles",
+          "item": [
+            {
+              "name": "Register Vehicle",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiMzYwMWMzODctZjEwNS00NDlkLWE4NjYtNzE1MjMzMTJkMjI1Iiwic3ViIjoiZG9kb2F0aTQ1OTlAZ21haWwuY29tIiwiaWF0IjoxNzc3ODE5NzMyLCJleHAiOjE3Nzc5MDYxMzJ9.9loJIQrk1MQkr5dNgcCmmFf0Wh7-lzbdq-mXrNfefIxtMSFHh4HPm6arWzJY-GhW",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"plateNumber\": \"ABC-130\",\r\n  \"model\": \"MAN TGX\",\r\n  \"manufactureYear\": 2021,\r\n  \"licenseNumber\": \"VL-9924\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/vehicles",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "vehicles"
+                  ]
+                },
+                "description": "Register a vehicle in the fleet"
+              },
+              "response": []
+            },
+            {
+              "name": "Get vehicle by ID",
+              "request": {
+                "method": "GET",
+                "header": []
+              },
+              "response": []
+            },
+            {
+              "name": "Maintainence_Log",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9EUklWRVIiLCJ1c2VySWQiOiIzNjA2ZjNjNS0xYWVmLTRlOWMtYjUxNy03NzU2MzQ5ZjQ0Y2UiLCJzdWIiOiJhbGkyQHRlc3QxLmNvbSIsImlhdCI6MTc3Nzk5OTQyNCwiZXhwIjoxNzc4MDg1ODI0fQ.-147EmFgENcVF7SbpfDlWa7IDstgcAtsRD6rgP-Z2Oy8GgCB1eTDl5RunC_wDlZj",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Fleet duaa\",\r\n  \"email\": \"dodoati4599@gmail.com\",\r\n  \"password\": \"duaa123!\",\r\n  \"companyName\": \"Test Company\",\r\n  \"subscriptionPlan\": \"BASIC\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/vehicles/f8ad600b-d3f6-42f9-b118-827d018cfa02/maintenance-logs",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "vehicles",
+                    "f8ad600b-d3f6-42f9-b118-827d018cfa02",
+                    "maintenance-logs"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Drivers",
+          "item": [
+            {
+              "name": "driver me",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{driver}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "me"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Create Driver",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiMzYwMWMzODctZjEwNS00NDlkLWE4NjYtNzE1MjMzMTJkMjI1Iiwic3ViIjoiZG9kb2F0aTQ1OTlAZ21haWwuY29tIiwiaWF0IjoxNzc3ODE5NzMyLCJleHAiOjE3Nzc5MDYxMzJ9.9loJIQrk1MQkr5dNgcCmmFf0Wh7-lzbdq-mXrNfefIxtMSFHh4HPm6arWzJY-GhW",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"ali\",\r\n  \"email\": \"ali@test1.com\",\r\n  \"password\": \"Driver123!\",\r\n  \"phone\": \"0100000000\",\r\n  \"licenseNumber\": \"LIC-EG-4526\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers"
+                  ]
+                },
+                "description": "Create a new driver account and assign to fleet"
+              },
+              "response": []
+            },
+            {
+              "name": "All drivers",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{fleetmanager}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/drivers",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete driver by id",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{fleetmanager}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/{{driverId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "{{driverId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "add emg contact",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{driver}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\":\"anna\",\r\n  \"phoneNumber\": \"0123456789\",\r\n  \"relation\": \"wife\"\r\n}\r\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/{{driverId}}/emergency-contacts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "{{driverId}}",
+                    "emergency-contacts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "New Request",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{driver}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/{{driverId}}/emergency-contacts",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "{{driverId}}",
+                    "emergency-contacts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "driver_dash",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9EUklWRVIiLCJ1c2VySWQiOiIzNjA2ZjNjNS0xYWVmLTRlOWMtYjUxNy03NzU2MzQ5ZjQ0Y2UiLCJzdWIiOiJhbGkyQHRlc3QxLmNvbSIsImlhdCI6MTc3Nzk5OTQyNCwiZXhwIjoxNzc4MDg1ODI0fQ.-147EmFgENcVF7SbpfDlWa7IDstgcAtsRD6rgP-Z2Oy8GgCB1eTDl5RunC_wDlZj",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Fleet duaa\",\r\n  \"email\": \"dodoati4599@gmail.com\",\r\n  \"password\": \"duaa123!\",\r\n  \"companyName\": \"Test Company\",\r\n  \"subscriptionPlan\": \"BASIC\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/trips/driver/dashboard",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "trips",
+                    "driver",
+                    "dashboard"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Driver by Id",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiNGU4OWZiOTAtYjZkMi00YTAzLWIyYjYtNTBlOTdjZjZiMmE5Iiwic3ViIjoibWFyaWFtODczQGdtYWlsLmNvbSIsImlhdCI6MTc3ODE3NDE1MCwiZXhwIjoxNzc4MjYwNTUwfQ.yaSWVyuSfKzwOhBGrxHitlZQhxRHFnPudvo-rfJScOsYToEemHHMbaM1JGzDjq2r",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/drivers/a4719e8a-c824-45b3-b214-02880be9249c",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "drivers",
+                    "a4719e8a-c824-45b3-b214-02880be9249c"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Create Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiMzYwMWMzODctZjEwNS00NDlkLWE4NjYtNzE1MjMzMTJkMjI1Iiwic3ViIjoiZG9kb2F0aTQ1OTlAZ21haWwuY29tIiwiaWF0IjoxNzc3ODE5NzMyLCJleHAiOjE3Nzc5MDYxMzJ9.9loJIQrk1MQkr5dNgcCmmFf0Wh7-lzbdq-mXrNfefIxtMSFHh4HPm6arWzJY-GhW",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"driverId\": \"479b9fb5-d4e5-47cd-bb8a-67248e04adf1\",\r\n \"vehicleId\": \"ad7d5ba4-ff1f-48c7-8dcc-56012afd3e5a\", \r\n \"source\": \"Cairo\",\r\n \"destination\": \"Alex\", \r\n \"scheduledStartTime\": \"2026-05-03T08:00:00Z\", \r\n \"scheduledEndTime\": \"2026-05-03T12:00:00Z\"\r\n }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips"
+              ]
+            },
+            "description": "Create a new trip. Role: FLEET_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "Start Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9EUklWRVIiLCJ1c2VySWQiOiIzNjA2ZjNjNS0xYWVmLTRlOWMtYjUxNy03NzU2MzQ5ZjQ0Y2UiLCJzdWIiOiJhbGkyQHRlc3QxLmNvbSIsImlhdCI6MTc3NzgxNTcyMywiZXhwIjoxNzc3OTAyMTIzfQ.s06_pjWmvZHCuLYAyOAy0uCxfNcRfRjxr-015M399j-SeMo5a18iXvoDvoOOPiF5",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"startLocation\": { \"lat\": 30.0444, \"lng\": 31.2357 }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/a4d1d4c9-ff4f-44ce-b399-a841d972ebb8/start",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "a4d1d4c9-ff4f-44ce-b399-a841d972ebb8",
+                "start"
+              ]
+            },
+            "description": "Generated from cURL: curl -X PATCH \"{{baseUrl}}/trips/{{tripId}}/start\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Resume Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/Resumed",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "Resumed"
+              ]
+            },
+            "description": "Generated from cURL: curl -X PATCH \"{{baseUrl}}/trips/{{tripId}}/resume\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Pause Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/Paused",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "Paused"
+              ]
+            },
+            "description": "Generated from cURL: curl -X PATCH \"{{baseUrl}}/trips/{{tripId}}/resume\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"reason\": \"Trip cancelled due to vehicle issue\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancel a trip. Role: FLEET_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "End Trip",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9EUklWRVIiLCJ1c2VySWQiOiI1YzFjOTViZS1jMTFlLTRjOGMtYjcyMy1iZjQ3YTk2MTZkYWIiLCJzdWIiOiJhaG1lZEB0ZXN0MS5jb20iLCJpYXQiOjE3Nzc2NzM0MzgsImV4cCI6MTc3Nzc1OTgzOH0.45kYYFWEDEjMFPr6dVdw4Dw_mOuN1-Epi-dB1o7q59-nY16bwyeS2u9C6uKUb9F0",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"endLocation\": { \"lat\": 29.9742, \"lng\": 32.5498 }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/v1/trips/9dfe9753-765f-4d4b-a5a1-07a119a5eab0/end",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "trips",
+                "9dfe9753-765f-4d4b-a5a1-07a119a5eab0",
+                "end"
+              ]
+            },
+            "description": "End a trip. Role: DRIVER, FLEET_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Timeline",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/timeline",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "timeline"
+              ]
+            },
+            "description": "Get the full event/state timeline for a trip."
+          },
+          "response": []
+        },
+        {
+          "name": "Trip by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Trips by Driver",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/trips/{{tripId}}?status=active",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "trips",
+                "{{tripId}}"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                }
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/driver/{{driverId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": [
+            {
+              "name": "Trips by Driver",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "disabled": false
+                  }
+                ],
+                "url": {
+                  "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/trips/{{tripId}}?status=ONGOING",
+                  "protocol": "https",
+                  "host": [
+                    "udjattrack-backend-production",
+                    "up",
+                    "railway",
+                    "app"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "trips",
+                    "{{tripId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "ONGOING"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "cache-control",
+                  "value": "no-cache, no-store, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "date",
+                  "value": "Wed, 06 May 2026 01:18:29 GMT"
+                },
+                {
+                  "key": "expires",
+                  "value": "0"
+                },
+                {
+                  "key": "pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "key": "server",
+                  "value": "railway-edge"
+                },
+                {
+                  "key": "vary",
+                  "value": "Origin, Access-Control-Request-Method, Access-Control-Request-Headers"
+                },
+                {
+                  "key": "x-content-type-options",
+                  "value": "nosniff"
+                },
+                {
+                  "key": "x-frame-options",
+                  "value": "DENY"
+                },
+                {
+                  "key": "x-railway-edge",
+                  "value": "railway/europe-west4-drams3a"
+                },
+                {
+                  "key": "x-railway-request-id",
+                  "value": "GwnC-Qg5SWKQ6lf38Hk9cQ"
+                },
+                {
+                  "key": "x-xss-protection",
+                  "value": "0"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n        \"driverId\": \"479b9fb5-d4e5-47cd-bb8a-67248e04adf1\",\n        \"driverName\": \"ali\",\n        \"vehicleId\": \"ad7d5ba4-ff1f-48c7-8dcc-56012afd3e5a\",\n        \"vehiclePlate\": \"ABC-130\",\n        \"source\": \"Cairo\",\n        \"destination\": \"Alex\",\n        \"routeName\": \"Alex Trip\",\n        \"scheduledStartTime\": \"2026-05-30T08:00:00\",\n        \"scheduledEndTime\": \"2026-05-30T12:00:00\",\n        \"status\": \"ONGOING\",\n        \"createdAt\": \"2026-05-03T14:54:29.134865\",\n        \"tripLog\": {\n            \"logId\": \"cde8034e-a19c-4bf0-90f1-9347d301ab67\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n            \"actualEndTime\": null,\n            \"totalDuration\": null,\n            \"totalBreakTime\": null\n        },\n        \"title\": \"Cairo → Alex\",\n        \"expectedDurationHours\": 4,\n        \"estimatedArrivalTime\": \"2026-05-03T19:05:44.785585\",\n        \"progressPct\": 100,\n        \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n        \"actualEndTime\": null,\n        \"tripState\": {\n            \"stateId\": \"13c5485a-c280-4088-a73c-60576c14eaf8\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"driverState\": \"DROWSY\",\n            \"tripProgressState\": \"RESUMED\",\n            \"latitude\": \"30.0444\",\n            \"longitude\": \"33.235\",\n            \"currentSpeed\": 98.5,\n            \"lastUpdatedAt\": \"2026-05-03T22:51:14.854089\"\n        },\n        \"vehicle\": {\n            \"plateNumber\": \"ABC-130\",\n            \"model\": \"MAN TGX\"\n        }\n    },\n    \"timestamp\": \"2026-05-06T01:18:29.710919514\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Trips by Fleet Manager",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/fleet-manager/{{managerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "fleet-manager",
+                "{{managerId}}"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/fleet-manager/{{managerId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telemetry",
+      "item": [
+        {
+          "name": "Sync",
+          "item": [
+            {
+              "name": "Batch Offline Sync",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9EUklWRVIiLCJ1c2VySWQiOiI0NmUxMTYxNy1lZTU2LTQyNGItOTU5MS02NTcyNDk0NWM1NGEiLCJzdWIiOiJhbGlAZW1haWwuY29tIiwiaWF0IjoxNzc3NzcxNDExLCJleHAiOjE3Nzc4NTc4MTF9.noLTB_Luw6CCE-_ey95MqJbZLe5P-A_wH07-0yFYojYi48BN1Xy_O9Fm0JijtaqG",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "disabled": false
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "disabled": false
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"tripId\": \"c6b79ec7-51da-4c34-ba2d-079f136d9286\",\r\n    \"telemetryRecords\": [\r\n        {\r\n            \"tripId\": \"c6b79ec7-51da-4c34-ba2d-079f136d9286\",\r\n            \"timeStamp\": \"2026-05-30T09:10:00Z\",\r\n            \"location\": { \"lat\": 30.15, \"lng\": 33.4 },\r\n            \"speedKmh\": 80.0,\r\n            \"driverState\": \"NORMAL\",\r\n            \"payload\": {}\r\n        }\r\n    ],\r\n    \"events\": []\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:8080/api/v1/sync/offline-data",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "8080",
+                  "path": [
+                    "api",
+                    "v1",
+                    "sync",
+                    "offline-data"
+                  ]
+                },
+                "description": "Batch sync offline telemetry records and events."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Ingest Telemetry",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"timeStamp\": \"2026-05-30T09:30:11Z\",\r\n    \"location\": {\r\n        \"lat\": 30.0444,\r\n        \"lng\": 33.235\r\n    },\r\n    \"speedKmh\": 98.5,\r\n    \"driverState\": \"UNCONSCIOUS\",\r\n    \"payload\": {\r\n        \"tripState\": \"ONGOING\"\r\n    }\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/telemetry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "telemetry"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/telemetry/ingest\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer {{accessToken}}\" -d '{\"tripId\": \"{{tripId}}\", \"speed\": 80, \"location\": {\"lat\": 30.0444, \"lng\": 31.2357}, \"driverState\": \"NORMAL\", \"severity\": \"LOW\", \"eventType\": \"LOCATION_UPDATE\", \"details\": \"\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Telemetry",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/telemetry",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "telemetry"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/telemetry/trips/{{tripId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Alert Management",
+      "item": [
+        {
+          "name": "Create Alert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"tripLogId\": \"{{tripLogId}}\",\r\n    \"alertType\": \"FATIGUE\",\r\n    \"severity\": \"HIGH\",\r\n    \"message\": \"Driver showing signs of fatigue\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Generated from cURL: curl -X POST \"{{baseUrl}}/alerts\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer {{accessToken}}\" -d '{\"tripLogId\": \"{{tripLogId}}\", \"alertType\": \"FATIGUE\", \"severity\": \"HIGH\", \"message\": \"Driver showing signs of fatigue\"}'"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Alert as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}",
+                "read"
+              ]
+            },
+            "description": "Mark an alert as read. Role: FLEET_MANAGER, SUPER_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "Acknowledge Alert",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiZDExMWZiMWItOGVlNS00MDYxLTg5ZjMtMmY5MjBmN2I3OWY4Iiwic3ViIjoibWVtZUBlbWFpbC5jb20iLCJpYXQiOjE3Nzc3NjQ2OTMsImV4cCI6MTc3Nzg1MTA5M30.z2BHYR2wJ7I_ix5mt4icwwgZPN3b2591va78mWItiSmrM37cTZPNJhvrLfyFhstp",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:8080/api/v1/alerts/b4dac4a8-d28e-4a5d-a95a-96223bc902bc/ack",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "v1",
+                "alerts",
+                "b4dac4a8-d28e-4a5d-a95a-96223bc902bc",
+                "ack"
+              ]
+            },
+            "description": "Acknowledge an alert. Role: FLEET_MANAGER, SUPER_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "All Alerts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/alerts/unacknowledged/manager/{{managerId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Alerts by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/{{alertId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "{{alertId}}"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/alerts/trip-log/{{tripLogId}}\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Alerts filtered",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts?status=UNACKNOWLEDGED",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "UNACKNOWLEDGED"
+                }
+              ]
+            },
+            "description": "List all alerts. Query params: status, severity. Role: FLEET_MANAGER, SUPER_MANAGER."
+          },
+          "response": []
+        },
+        {
+          "name": "Total alert counts",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/alerts/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "alerts",
+                "summary"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}/progress\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Event Managment",
+      "item": [
+        {
+          "name": "Send Event",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"eventType\": \"CRASH\",\r\n  \"severity\": \"CRITICAL\",\r\n  \"timeStamp\": \"2026-05-30T08:35:00Z\",\r\n  \"payload\": {\r\n    \"sensor\": \"IMU\",\r\n    \"trigger\": \"AUTOMATIC\"\r\n  }\r\n}\r\n",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/events",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "events"
+              ]
+            },
+            "description": "Report a critical safety event for a trip. eventType: DROWSINESS | CRASH | ROLLOVER etc."
+          },
+          "response": []
+        },
+        {
+          "name": "All Events",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events?tripId={{tripId}}&severity=HIGH",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events"
+              ],
+              "query": [
+                {
+                  "key": "tripId",
+                  "value": "{{tripId}}"
+                },
+                {
+                  "key": "eventType",
+                  "value": "DROWSINESS",
+                  "disabled": true
+                },
+                {
+                  "key": "severity",
+                  "value": "HIGH"
+                }
+              ]
+            },
+            "description": "List all events. Query params: tripId, eventType, severity."
+          },
+          "response": []
+        },
+        {
+          "name": "Event by Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "events",
+                "{{eventId}}"
+              ],
+              "query": [
+                {
+                  "key": "eventType",
+                  "value": "DROWSINESS",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all events. Query params: tripId, eventType, severity."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Issue Requests",
+      "item": [
+        {
+          "name": "Maintanence_Request",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"maintenanceType\": \"TIRE_DAMAGE\",\r\n    \"payload\": {\r\n        \"description\": \"Rear right tire blew out on the highway.\"\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/issues/maintenance",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "issues",
+                "maintenance"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Submit_Sos",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"location\": \"30.0444,31.2357\",\r\n    \"payload\": {\r\n         \"description\": \"Medical emergency, feeling dizzy.\" \r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/issues/sos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "issues",
+                "sos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Report Incident",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"TRAFFIC_COLLISION\",\r\n    \"severity\": \"HIGH\",\r\n    \"location\": \"30.0444,31.2357\",\r\n    \"payload\": {\r\n            \"description\": \"Rear-ended a sedan at the stoplight.\"\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "incidents"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET All Issues",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/issues?status=open",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "issues"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "open"
+                }
+              ]
+            },
+            "description": "List all events. Query params: tripId, eventType, severity."
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiNDM0MTNiN2UtOGMyMS00ODliLWE5MDktM2I4YTc4ODc1NDFjIiwic3ViIjoibWVtZUBlbWFpbC5jb20iLCJpYXQiOjE3Nzc5OTkxODgsImV4cCI6MTc3ODA4NTU4OH0.hqK1qZQfvp9-y5yzzVdZtH3hY7apuT6CF2L6cXDU7cz0Xdsxiagi4-a2f2X4LgDx",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Fleet duaa\",\r\n  \"email\": \"dodoati4599@gmail.com\",\r\n  \"password\": \"duaa123!\",\r\n  \"companyName\": \"Test Company\",\r\n  \"subscriptionPlan\": \"BASIC\"\r\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fleet & Dashboard",
+      "item": [
+        {
+          "name": "Fleet Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fleets/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fleets",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Report",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/trips/{{tripId}}/report",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "trips",
+                "{{tripId}}",
+                "report"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}/report\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Driver Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/drivers-status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "drivers-status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Alerts Summary by fleet id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{fleetmanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "disabled": false
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/{{fleetManagerId}}/alerts-summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "{{fleetManagerId}}",
+                "alerts-summary"
+              ]
+            },
+            "description": "Generated from cURL: curl -X GET \"{{baseUrl}}/trips/{{tripId}}/progress\" -H \"Authorization: Bearer {{accessToken}}\""
+          },
+          "response": []
+        },
+        {
+          "name": "Incidents",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9GTEVFVF9NQU5BR0VSIiwidXNlcklkIjoiMzYwMWMzODctZjEwNS00NDlkLWE4NjYtNzE1MjMzMTJkMjI1Iiwic3ViIjoiZG9kb2F0aTQ1OTlAZ21haWwuY29tIiwiaWF0IjoxNzc4MDAxMDI2LCJleHAiOjE3NzgwODc0MjZ9.VYIHT9wYzVpKjm6wq8rXRKY3ETDI6s9oqainCEohNF1Y8NgqS0903-AMp3UjF6fv",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "disabled": false
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/incidents?managerId=3601c387-f105-449d-a866-71523312d225",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "incidents"
+              ],
+              "query": [
+                {
+                  "key": "managerId",
+                  "value": "3601c387-f105-449d-a866-71523312d225"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Super_Dashboard",
+      "item": [
+        {
+          "name": "All Fleet Managers",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9TVVBFUl9NQU5BR0VSIiwidXNlcklkIjoiOWI4OGE2OGQtNjU5My00ZmJhLTg4NjYtNTQxMDI0ZDUyNDVlIiwic3ViIjoiYWRtaW5EdWFhQHVkamF0dHJhY2suY29tIiwiaWF0IjoxNzc3OTk1Mjc3LCJleHAiOjE3NzgwODE2Nzd9.U1dQXtpYCc-tmaU52Dq8pqoQYPiJVEP1_-OdP5Amax_afSWy_SBjSw_GLBZx1lgT",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/fleet-managers",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fleet-managers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Fleet by Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9TVVBFUl9NQU5BR0VSIiwidXNlcklkIjoiOWI4OGE2OGQtNjU5My00ZmJhLTg4NjYtNTQxMDI0ZDUyNDVlIiwic3ViIjoiYWRtaW5EdWFhQHVkamF0dHJhY2suY29tIiwiaWF0IjoxNzc3OTk3NDM2LCJleHAiOjE3NzgwODM4MzZ9.p-fm5KxSrTw_gtLW944tAZSfgDuwXJYOJFdHnU7rk8gdSHKeVSzRyaCmrVoHqFjk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/fleet-managers/43413b7e-8c21-489b-a909-3b8a7887541c",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fleet-managers",
+                "43413b7e-8c21-489b-a909-3b8a7887541c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Fleet Manager",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9TVVBFUl9NQU5BR0VSIiwidXNlcklkIjoiOWI4OGE2OGQtNjU5My00ZmJhLTg4NjYtNTQxMDI0ZDUyNDVlIiwic3ViIjoiYWRtaW5EdWFhQHVkamF0dHJhY2suY29tIiwiaWF0IjoxNzc3OTk3NDM2LCJleHAiOjE3NzgwODM4MzZ9.p-fm5KxSrTw_gtLW944tAZSfgDuwXJYOJFdHnU7rk8gdSHKeVSzRyaCmrVoHqFjk",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"companyName\": \"Travel Company\",\r\n  \"name\": \"Amgad Ayoub\",\r\n  \"subscriptionPlan\": \"BASIC\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/fleet-managers/43413b7e-8c21-489b-a909-3b8a7887541c",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fleet-managers",
+                "43413b7e-8c21-489b-a909-3b8a7887541c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Fleet Manager",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{supermanager}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "https://udjattrack-backend-production.up.railway.app/api/v1/fleet-managers/2b2ff6c0-6fe6-4dce-9597-985d1bd990fb",
+              "protocol": "https",
+              "host": [
+                "udjattrack-backend-production",
+                "up",
+                "railway",
+                "app"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fleet-managers",
+                "2b2ff6c0-6fe6-4dce-9597-985d1bd990fb"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notification Management",
+      "item": [
+        {
+          "name": "mark as read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Current Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "mark all as read",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{driver}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Report Management",
+      "item": [
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reports/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "summary"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "value": ""
+    },
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "tripId",
+      "value": ""
+    },
+    {
+      "key": "driverId",
+      "value": ""
+    },
+    {
+      "key": "vehicleId",
+      "value": ""
+    },
+    {
+      "key": "managerId",
+      "value": ""
+    },
+    {
+      "key": "alertId",
+      "value": ""
+    },
+    {
+      "key": "tripLogId",
+      "value": ""
+    },
+    {
+      "key": "{{supermanager}}",
+      "value": ""
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "fleet_token",
+      "value": ""
+    },
+    {
+      "key": "{{fleetmanager}}",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "driverToken",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
