@@ -101,7 +101,7 @@ public class AuthController {
         return ResponseEntity.ok(passwordEncoder.encode(raw));
     }
 
-        @PostMapping("/signup/super-manager")
+    @PostMapping("/signup/super-manager")
     @Operation(summary = "Register Super Manager", description = "Register a top-level Super Manager administrator")
     public ResponseEntity<ApiResponse<SuperManagerSignupResponse>> signupSuperManager(
             @Valid @RequestBody CreateSuperManagerRequest request) {
