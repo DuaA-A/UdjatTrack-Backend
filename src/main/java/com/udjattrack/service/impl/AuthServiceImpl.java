@@ -12,6 +12,9 @@ import com.udjattrack.entity.enums.VerificationStatus;
 import com.udjattrack.exception.BusinessException;
 import com.udjattrack.exception.InvalidOtpException;
 import com.udjattrack.exception.ResourceNotFoundException;
+import com.udjattrack.dto.response.SuperManagerSignupResponse;
+import com.udjattrack.entity.SuperManager;
+import com.udjattrack.repository.SuperManagerRepository;
 import com.udjattrack.repository.FleetManagerRepository;
 import com.udjattrack.repository.OtpTokenRepository;
 import com.udjattrack.repository.RefreshTokenRepository;
@@ -37,6 +40,7 @@ import java.util.UUID;
 public class AuthServiceImpl implements AuthService {
 
     private final FleetManagerRepository fleetManagerRepository;
+    private final SuperManagerRepository superManagerRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final OtpTokenRepository otpTokenRepository;
@@ -285,6 +289,37 @@ public class AuthServiceImpl implements AuthService {
         return FleetManagerSignupResponse.builder()
                 .fleetManagerId(manager.getUserId())
                 .status("REJECTED")
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public SuperManagerSignupResponse signupSuperManager(CreateSuperManagerRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Email already registered: " + request.email());
+        }
+
+        String name = request.name();
+        if (name == null || name.isBlank()) {
+            name = request.email().split("@")[0];
+        }
+
+        SuperManager superManager = SuperManager.builder()
+                .name(name)
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .role(UserRole.ROLE_SUPER_MANAGER)
+                .isDeleted(false)
+                .build();
+
+        SuperManager saved = superManagerRepository.save(superManager);
+        log.info("Super manager registered: {}", saved.getEmail());
+
+        return SuperManagerSignupResponse.builder()
+                .superManagerId(saved.getUserId())
+                .email(saved.getEmail())
+                .name(saved.getName())
+                .status("ACTIVE")
                 .build();
     }
 }
