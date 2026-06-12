@@ -99,4 +99,13 @@ public class AuthController {
     public ResponseEntity<String> generateHash(@RequestParam String raw) {
         return ResponseEntity.ok(passwordEncoder.encode(raw));
     }
+
+        @PostMapping("/signup/super-manager")
+    @Operation(summary = "Register Super Manager", description = "Register a top-level Super Manager administrator")
+    public ResponseEntity<ApiResponse<SuperManagerSignupResponse>> signupSuperManager(
+            @Valid @RequestBody CreateSuperManagerRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok("Super manager registered successfully",
+                        authService.signupSuperManager(request)));
+    }
 }
