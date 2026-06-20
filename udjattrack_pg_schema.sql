@@ -132,7 +132,8 @@ CREATE TABLE trips (
 CREATE TABLE trip_states (
     state_id UUID NOT NULL,
     trip_id UUID NOT NULL UNIQUE,
-    driver_state VARCHAR(20) CHECK (driver_state IN ('DROWSY', 'UNCONSCIOUS', 'HIGH_RISK', 'NORMAL')),
+    -- Stores DriverState enum: DROWSY, UNCONSCIOUS, HIGH_RISK, NORMAL
+    driver_state VARCHAR(30),
     trip_progress_state VARCHAR(20),
     latitude VARCHAR(50),
     longitude VARCHAR(50),
@@ -271,7 +272,8 @@ CREATE TABLE telemetry_records (
     trip_id UUID NOT NULL,
     speed DOUBLE PRECISION,
     location VARCHAR(255),
-    driver_state VARCHAR(20) CHECK (driver_state IN ('DROWSY', 'UNCONSCIOUS', 'HIGH_RISK', 'NORMAL')),
+    -- Stores DriverState enum: DROWSY, UNCONSCIOUS, HIGH_RISK, NORMAL
+    driver_state VARCHAR(30),
     details JSONB,
     timestamp TIMESTAMP NOT NULL
 );
@@ -391,5 +393,3 @@ ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
 select * from issue_requests;
 
 select * from trips
-
-

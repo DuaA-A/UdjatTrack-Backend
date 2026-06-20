@@ -35,7 +35,7 @@ public class TripState implements Alertable {
     private Trip trip;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "driver_state", length = 20)
+    @Column(name = "driver_state", length = 30)
     private DriverState driverState;
 
     @Enumerated(EnumType.STRING)

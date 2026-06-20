@@ -40,7 +40,7 @@ public class TelemetryRecord {
     private String location;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "driver_state", length = 20)
+    @Column(name = "driver_state", length = 30)
     private DriverState driverState;
 
     @JdbcTypeCode(SqlTypes.JSON)
