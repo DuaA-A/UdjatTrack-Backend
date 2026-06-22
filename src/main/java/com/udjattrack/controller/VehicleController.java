@@ -27,7 +27,7 @@ public class VehicleController {
     private final FleetManagementService fleetManagementService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Register a vehicle in the fleet")
     public ResponseEntity<ApiResponse<VehicleResponse>> addVehicle(
             @Valid @RequestBody AddVehicleRequest request) {
@@ -38,21 +38,21 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER', 'ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "Get vehicle details")
     public ResponseEntity<ApiResponse<VehicleResponse>> getVehicle(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehicleById(id)));
     }
 
     @GetMapping("/{id}/with-driver")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get vehicle details along with currently assigned driver if any")
     public ResponseEntity<ApiResponse<VehicleWithDriverResponse>> getVehicleWithDriver(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehicleWithDriver(id)));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List all vehicles in the fleet")
     public ResponseEntity<ApiResponse<List<VehicleResponse>>> getAllVehicles(
             @RequestParam(required = false) String plateNumber) {
@@ -61,7 +61,7 @@ public class VehicleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Remove a vehicle from the fleet")
     public ResponseEntity<ApiResponse<Void>> deleteVehicle(@PathVariable UUID id) {
         fleetManagementService.deleteVehicle(id);
@@ -70,7 +70,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{vehicleId}/maintenance-logs")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "Populates the Vehicle Maintenance CheckList widget")
     public ResponseEntity<ApiResponse<List<com.udjattrack.dto.response.MaintenanceLogResponse>>> getMaintenanceLogs(@PathVariable UUID vehicleId) {
         // Returning a mock list as per design doc example for now

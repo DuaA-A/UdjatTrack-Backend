@@ -1,0 +1,80 @@
+
+
+export type Severity = "Critical" | "High" | "Medium" | "Low";
+
+export interface DriverInfo {
+  driverId: string;
+  name: string;
+}
+
+export interface VehicleInfo {
+  plateNumber: string;
+  model: string;
+}
+
+export interface BaseAlert {
+  alertId: string;
+  tripId: string;
+  severity: Severity;
+  timeStamp: string;
+  acknowledged: boolean;
+  message: string;
+  driver: DriverInfo;
+  vehicle: VehicleInfo;
+}
+
+export interface SOSAlert extends BaseAlert {
+  alertType: "SOSReq";
+  alertable: {
+    type: "SOSRequest";
+    id: string;
+    triggeredAt: string;
+    status: string;
+    category: string;
+    reportedAt: string;
+    payload: Record<string, any>;
+  };
+}
+
+export interface MaintenanceAlert extends BaseAlert {
+  alertType: "Maintenance";
+  alertable: {
+    type: "MaintenanceRequest";
+    id: string;
+    triggeredAt: string;
+    status: string;
+    category: string;
+    reportedAt: string;
+    maintenanceType: string;
+    payload: {
+      description: string;
+    };
+  };
+}
+
+export interface IncidentAlert extends BaseAlert {
+  alertType: "Incident";
+  alertable: {
+    type: "Incident";
+    incidentId: string;
+    incidentType: string;
+    severity: string;
+    description: string;
+  };
+}
+
+export interface FatigueAlert extends BaseAlert {
+  alertType: "Fatigue";
+  alertable: {
+    type: "TripState";
+    tripStateId: string;
+    driverState: string;
+    latitude: string;
+    longitude: string;
+    lastUpdatedAt: string;
+  };
+}
+
+export type AlertPayload = SOSAlert | MaintenanceAlert | IncidentAlert | FatigueAlert;
+
+

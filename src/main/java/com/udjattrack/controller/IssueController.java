@@ -41,7 +41,7 @@ public class IssueController {
     }
 
     @PostMapping("/{issueId}/resolve")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Marks an SOS or maintenance ticket as completed")
     public ResponseEntity<ApiResponse<Void>> resolveIssue(
             @PathVariable UUID issueId,

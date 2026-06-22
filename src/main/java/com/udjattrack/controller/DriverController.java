@@ -29,7 +29,7 @@ public class DriverController {
     private final FleetManagementService fleetManagementService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Create a new driver account and assign to fleet")
     public ResponseEntity<ApiResponse<DriverResponse>> createDriver(
             @Valid @RequestBody CreateDriverRequest request) {
@@ -40,14 +40,14 @@ public class DriverController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('ROLE_DRIVER')")
+    @PreAuthorize("hasAuthority('ROLE_DRIVER')")
     @Operation(summary = "Get the authenticated driver's own profile")
     public ResponseEntity<ApiResponse<DriverResponse>> getMe() {
         UUID driverId = com.udjattrack.util.SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getDriverById(driverId)));
     }
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get details of a specific driver by ID")
     public ResponseEntity<ApiResponse<DriverResponse>> getDriverById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getDriverById(id)));
@@ -55,7 +55,7 @@ public class DriverController {
 
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List all drivers in the fleet")
     public ResponseEntity<ApiResponse<List<DriverResponse>>> getAllDrivers() {
         UUID managerId = com.udjattrack.util.SecurityUtils.getCurrentUserId();
@@ -64,7 +64,7 @@ public class DriverController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
     @Operation(summary = "Remove a driver from the fleet")
     public ResponseEntity<ApiResponse<Void>> deleteDriver(@PathVariable UUID id) {
         fleetManagementService.deleteDriver(id);
@@ -75,7 +75,7 @@ public class DriverController {
     // Emergency Contacts (Section 4 in design, mapped to /drivers/{id}/emergency-contacts)
     
     @PostMapping("/{driverId}/emergency-contacts")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
     @Operation(summary = "Adds a new dependent to the driver's profile")
     public ResponseEntity<ApiResponse<DependentResponse>> addEmergencyContact(
             @PathVariable UUID driverId,
@@ -87,7 +87,7 @@ public class DriverController {
     }
 
     @GetMapping("/{driverId}/emergency-contacts")
-    @PreAuthorize("hasAnyRole('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
     @Operation(summary = "Retrieves a list of the driver's emergency contacts")
     public ResponseEntity<ApiResponse<List<DependentResponse>>> getEmergencyContacts(
             @PathVariable UUID driverId) {
@@ -114,7 +114,7 @@ public class DriverController {
             value = "/{id}/photo",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "Upload or replace a driver's profile photo (multipart/form-data)")
     public ResponseEntity<ApiResponse<DriverResponse>> uploadDriverPhoto(
             @PathVariable UUID id,
