@@ -48,7 +48,7 @@ public class ReportServiceImpl implements ReportService {
         List<UUID> tripIds = trips.stream().map(TripResponse::getTripId).collect(Collectors.toList());
 
         List<AlertResponse> alerts = alertService.getAllAlertsByFleetManager(managerId).stream()
-                .filter(a -> (driverId == null && vehicleId == null) || (a.getTrip() != null && tripIds.contains(a.getTrip().getTripId())))
+                .filter(a -> (driverId == null && vehicleId == null) || (a.getTripId() != null && tripIds.contains(a.getTripId())))
                 .collect(Collectors.toList());
 
         List<SOSRequestResponse> sos = emergencyService.getSOSRequestsByFleetManager(managerId).stream()
