@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -32,13 +33,35 @@ public class ReportServiceImpl implements ReportService {
     private final EmergencyService emergencyService;
 
     @Override
-    public ReportSummaryResponse getFleetSummary(UUID managerId) {
+    public ReportSummaryResponse getFleetSummary(UUID managerId, UUID driverId, UUID vehicleId) {
         // 1. Fetch data
-        List<TripResponse> trips = tripService.getTripsByFleetManager(managerId);
-        List<AlertResponse> alerts = alertService.getAllAlertsByFleetManager(managerId);
-        List<SOSRequestResponse> sos = emergencyService.getSOSRequestsByFleetManager(managerId);
-        List<MaintenanceRequestResponse> maintenance = emergencyService.getMaintenanceRequestsByFleetManager(managerId);
-        List<IncidentResponse> incidents = emergencyService.getIncidentsByFleetManager(managerId);
+        List<TripResponse> trips = tripService.getTripsByFleetManager(managerId).stream()
+                .filter(t -> driverId == null || t.getDriverId().equals(driverId))
+                .filter(t -> vehicleId == null || t.getVehicleId().equals(vehicleId))
+                .collect(Collectors.toList());
+
+        // Assuming alerts, sos, and maintenance requests are somewhat related to manager. 
+        // For accurate filtering by driver/vehicle, we might need to filter them if they contain those fields.
+        // For simplicity, we just filter what we can. 
+        // Note: AlertResponse doesn't have driverId/vehicleId in all cases easily accessible here, 
+        // but if they are bound to trips, we could filter by tripId.
+        List<UUID> tripIds = trips.stream().map(TripResponse::getTripId).collect(Collectors.toList());
+
+        List<AlertResponse> alerts = alertService.getAllAlertsByFleetManager(managerId).stream()
+                .filter(a -> (driverId == null && vehicleId == null) || (a.getTrip() != null && tripIds.contains(a.getTrip().getTripId())))
+                .collect(Collectors.toList());
+
+        List<SOSRequestResponse> sos = emergencyService.getSOSRequestsByFleetManager(managerId).stream()
+                .filter(s -> (driverId == null && vehicleId == null) || tripIds.contains(s.getTripId()))
+                .collect(Collectors.toList());
+
+        List<MaintenanceRequestResponse> maintenance = emergencyService.getMaintenanceRequestsByFleetManager(managerId).stream()
+                .filter(m -> (driverId == null && vehicleId == null) || tripIds.contains(m.getTripId()))
+                .collect(Collectors.toList());
+
+        List<IncidentResponse> incidents = emergencyService.getIncidentsByFleetManager(managerId).stream()
+                .filter(i -> (driverId == null && vehicleId == null) || tripIds.contains(i.getTripId()))
+                .collect(Collectors.toList());
 
         // 2. Aggregate
         Map<String, Long> alertCounts = alerts.stream()
@@ -66,8 +89,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ByteArrayInputStream exportFleetSummaryToPdf(UUID managerId) {
-        ReportSummaryResponse data = getFleetSummary(managerId);
+    public ByteArrayInputStream exportFleetSummaryToPdf(UUID managerId, UUID driverId, UUID vehicleId) {
+        ReportSummaryResponse data = getFleetSummary(managerId, driverId, vehicleId);
         Document document = new Document(PageSize.A4);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -87,6 +110,8 @@ public class ReportServiceImpl implements ReportService {
 
             document.add(new Paragraph("Generated on: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), normalFont));
             document.add(new Paragraph("Manager ID: " + managerId.toString(), normalFont));
+            if (driverId != null) document.add(new Paragraph("Filtered by Driver: " + driverId.toString(), normalFont));
+            if (vehicleId != null) document.add(new Paragraph("Filtered by Vehicle: " + vehicleId.toString(), normalFont));
             document.add(Chunk.NEWLINE);
 
             // 1. Trip Statistics Section
@@ -121,7 +146,7 @@ public class ReportServiceImpl implements ReportService {
             document.add(alertTable);
             
             // Sub-table for severity
-            if (!data.getAlertsBySeverity().isEmpty()) {
+            if (data.getAlertsBySeverity() != null && !data.getAlertsBySeverity().isEmpty()) {
                 document.add(new Paragraph("Alerts by Severity:", normalFont));
                 PdfPTable sevTable = new PdfPTable(2);
                 sevTable.setWidthPercentage(60);
@@ -153,6 +178,39 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    @Override
+    public ByteArrayInputStream exportFleetSummaryToCsv(UUID managerId, UUID driverId, UUID vehicleId) {
+        ReportSummaryResponse data = getFleetSummary(managerId, driverId, vehicleId);
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("Metric,Value\n");
+        sb.append("Total Trips,").append(data.getTotalTrips()).append("\n");
+        sb.append("Active Trips,").append(data.getActiveTrips()).append("\n");
+        sb.append("Finished Trips,").append(data.getFinishedTrips()).append("\n");
+        sb.append("Cancelled Trips,").append(data.getCancelledTrips()).append("\n");
+        sb.append("Total Alerts,").append(data.getTotalAlerts()).append("\n");
+        sb.append("Total Incidents,").append(data.getTotalIncidents()).append("\n");
+        sb.append("Open Issues,").append(data.getOpenIssues()).append("\n");
+        sb.append("Resolved Issues,").append(data.getResolvedIssues()).append("\n");
+        
+        if (data.getAlertsBySeverity() != null && !data.getAlertsBySeverity().isEmpty()) {
+            sb.append("\nAlert Severity,Count\n");
+            for (Map.Entry<String, Long> entry : data.getAlertsBySeverity().entrySet()) {
+                sb.append(entry.getKey()).append(",").append(entry.getValue()).append("\n");
+            }
+        }
+
+        return new ByteArrayInputStream(sb.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public List<TripResponse> getFleetSummaryTable(UUID managerId, UUID driverId, UUID vehicleId) {
+        return tripService.getTripsByFleetManager(managerId).stream()
+                .filter(t -> driverId == null || t.getDriverId().equals(driverId))
+                .filter(t -> vehicleId == null || t.getVehicleId().equals(vehicleId))
+                .collect(Collectors.toList());
     }
 
     private void addTableCell(PdfPTable table, String text, Font font) {

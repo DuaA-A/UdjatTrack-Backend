@@ -82,4 +82,30 @@ public class DashboardController {
 
         return ResponseEntity.ok(ApiResponse.ok(data));
     }
+
+    @GetMapping("/active-trips")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get list of active trips (Ongoing or On Break)")
+    public ResponseEntity<ApiResponse<List<TripResponse>>> getActiveTrips(
+            @RequestParam(required = false) UUID tripId) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        List<TripResponse> activeTrips = tripService.getTripsByFleetManagerWithFilters(
+                managerId, "active", null, null, null);
+        
+        if (tripId != null) {
+            activeTrips = activeTrips.stream()
+                    .filter(t -> t.getTripId().equals(tripId))
+                    .toList();
+        }
+        
+        return ResponseEntity.ok(ApiResponse.ok(activeTrips));
+    }
+
+    @GetMapping("/trip-summary-table")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get trip summary table data")
+    public ResponseEntity<ApiResponse<List<TripResponse>>> getTripSummaryTable() {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(tripService.getTripsByFleetManager(managerId)));
+    }
 }

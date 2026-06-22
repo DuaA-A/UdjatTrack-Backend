@@ -38,10 +38,12 @@ public interface FleetManagementService {
      */
     DriverResponse uploadDriverPhoto(UUID driverId, MultipartFile file);
 
+    // Vehicle
     VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request);
     void deleteVehicle(UUID vehicleId);
-    List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId);
+    List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId, String plateNumber);
     VehicleResponse getVehicleById(UUID vehicleId);
+    VehicleWithDriverResponse getVehicleWithDriver(UUID vehicleId);
 
     // Dependent operations
     DependentResponse addDependent(UUID driverId, CreateDependentRequest request);

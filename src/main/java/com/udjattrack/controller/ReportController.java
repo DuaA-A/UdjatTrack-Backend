@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,17 +27,31 @@ public class ReportController {
     @GetMapping("/summary")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get high-level operational summary for the fleet")
-    public ResponseEntity<ApiResponse<ReportSummaryResponse>> getFleetSummary() {
+    public ResponseEntity<ApiResponse<ReportSummaryResponse>> getFleetSummary(
+            @RequestParam(required = false) UUID driverId,
+            @RequestParam(required = false) UUID vehicleId) {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(ApiResponse.ok(reportService.getFleetSummary(managerId)));
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getFleetSummary(managerId, driverId, vehicleId)));
+    }
+
+    @GetMapping("/table")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get detailed report summary table for the fleet")
+    public ResponseEntity<ApiResponse<List<TripResponse>>> getFleetSummaryTable(
+            @RequestParam(required = false) UUID driverId,
+            @RequestParam(required = false) UUID vehicleId) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(reportService.getFleetSummaryTable(managerId, driverId, vehicleId)));
     }
 
     @GetMapping("/export/pdf")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Export fleet operational summary to PDF")
-    public ResponseEntity<org.springframework.core.io.InputStreamResource> exportToPdf() {
+    public ResponseEntity<org.springframework.core.io.InputStreamResource> exportToPdf(
+            @RequestParam(required = false) UUID driverId,
+            @RequestParam(required = false) UUID vehicleId) {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        java.io.ByteArrayInputStream bis = reportService.exportFleetSummaryToPdf(managerId);
+        java.io.ByteArrayInputStream bis = reportService.exportFleetSummaryToPdf(managerId, driverId, vehicleId);
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=fleet-report-" + managerId + ".pdf");
@@ -44,6 +60,25 @@ public class ReportController {
                 .ok()
                 .headers(headers)
                 .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(new org.springframework.core.io.InputStreamResource(bis));
+    }
+
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Export fleet operational summary to CSV")
+    public ResponseEntity<org.springframework.core.io.InputStreamResource> exportToCsv(
+            @RequestParam(required = false) UUID driverId,
+            @RequestParam(required = false) UUID vehicleId) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        java.io.ByteArrayInputStream bis = reportService.exportFleetSummaryToCsv(managerId, driverId, vehicleId);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=fleet-report-" + managerId + ".csv");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv"))
                 .body(new org.springframework.core.io.InputStreamResource(bis));
     }
 }

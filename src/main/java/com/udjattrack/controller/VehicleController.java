@@ -3,6 +3,7 @@ package com.udjattrack.controller;
 import com.udjattrack.dto.request.AddVehicleRequest;
 import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.dto.response.VehicleResponse;
+import com.udjattrack.dto.response.VehicleWithDriverResponse;
 import com.udjattrack.service.FleetManagementService;
 import com.udjattrack.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,12 +44,20 @@ public class VehicleController {
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehicleById(id)));
     }
 
+    @GetMapping("/{id}/with-driver")
+    @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get vehicle details along with currently assigned driver if any")
+    public ResponseEntity<ApiResponse<VehicleWithDriverResponse>> getVehicleWithDriver(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehicleWithDriver(id)));
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "List all vehicles in the fleet")
-    public ResponseEntity<ApiResponse<List<VehicleResponse>>> getAllVehicles() {
+    public ResponseEntity<ApiResponse<List<VehicleResponse>>> getAllVehicles(
+            @RequestParam(required = false) String plateNumber) {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehiclesByManager(managerId)));
+        return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getVehiclesByManager(managerId, plateNumber)));
     }
 
     @DeleteMapping("/{id}")

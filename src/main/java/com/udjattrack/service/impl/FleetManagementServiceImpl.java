@@ -38,6 +38,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
+    private final TripRepository tripRepository;
 
     // ===== Fleet Manager =====
 
@@ -200,9 +201,12 @@ public class FleetManagementServiceImpl implements FleetManagementService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId) {
+    public List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId, String plateNumber) {
         return vehicleRepository.findAllByFleetManagerUserIdAndIsDeletedFalse(fleetManagerId)
-                .stream().map(this::toVehicleResponse).collect(Collectors.toList());
+                .stream()
+                .filter(v -> plateNumber == null || v.getPlateNumber().equalsIgnoreCase(plateNumber))
+                .map(this::toVehicleResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -212,6 +216,37 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .filter(v -> !Boolean.TRUE.equals(v.getIsDeleted()))
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
         return toVehicleResponse(vehicle);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public VehicleWithDriverResponse getVehicleWithDriver(UUID vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .filter(v -> !Boolean.TRUE.equals(v.getIsDeleted()))
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+        
+        VehicleResponse vr = toVehicleResponse(vehicle);
+        DriverResponse dr = null;
+
+        List<com.udjattrack.entity.enums.TripStatus> activeStatuses = List.of(
+            com.udjattrack.entity.enums.TripStatus.ONGOING, 
+            com.udjattrack.entity.enums.TripStatus.ON_BREAK,
+            com.udjattrack.entity.enums.TripStatus.PLANNED
+        );
+
+        Trip activeTrip = tripRepository.findAllByVehicleVehicleIdOrderByCreatedAtDesc(vehicleId).stream()
+                .filter(t -> activeStatuses.contains(t.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        if (activeTrip != null && activeTrip.getDriver() != null) {
+            dr = toDriverResponse(activeTrip.getDriver());
+        }
+
+        return VehicleWithDriverResponse.builder()
+                .vehicle(vr)
+                .currentDriver(dr)
+                .build();
     }
 
     @Override
