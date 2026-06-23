@@ -81,4 +81,21 @@ public class ReportController {
                 .contentType(org.springframework.http.MediaType.parseMediaType("text/csv"))
                 .body(new org.springframework.core.io.InputStreamResource(bis));
     }
+        @GetMapping("/trip/{tripId}/download")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Download trip report as PDF")
+    public ResponseEntity<org.springframework.core.io.InputStreamResource> downloadTripReportPdf(
+            @PathVariable UUID tripId) {
+        java.io.ByteArrayInputStream bis = reportService.generateTripReportPdf(tripId);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=trip-report-" + tripId + ".pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(new org.springframework.core.io.InputStreamResource(bis));
+    }
+
 }
