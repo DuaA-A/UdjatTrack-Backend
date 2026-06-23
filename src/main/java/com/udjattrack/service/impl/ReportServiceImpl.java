@@ -218,4 +218,98 @@ public class ReportServiceImpl implements ReportService {
         cell.setPadding(5);
         table.addCell(cell);
     }
+        @Override
+    public ByteArrayInputStream generateTripReportPdf(UUID tripId) {
+        TripResponse trip = tripService.getTripReport(tripId);
+        
+        Document document = new Document(PageSize.A4);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try {
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // Font styles
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
+            Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.DARK_GRAY);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK);
+
+            // Header
+            Paragraph title = new Paragraph("Trip Safety & Performance Report", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            document.add(new Paragraph("Generated on: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), normalFont));
+            document.add(Chunk.NEWLINE);
+
+            // 1. Trip Overview
+            document.add(new Paragraph("Trip Overview", subTitleFont));
+            PdfPTable overviewTable = new PdfPTable(2);
+            overviewTable.setWidthPercentage(100);
+            overviewTable.setSpacingBefore(10f);
+
+            addTableCell(overviewTable, "Trip ID", normalFont);
+            addTableCell(overviewTable, tripId.toString(), normalFont);
+            addTableCell(overviewTable, "Driver", normalFont);
+            addTableCell(overviewTable, trip.getDriverName() != null ? trip.getDriverName() : "N/A", normalFont);
+            addTableCell(overviewTable, "Vehicle", normalFont);
+            addTableCell(overviewTable, trip.getVehiclePlate() != null ? trip.getVehiclePlate() : "N/A", normalFont);
+            addTableCell(overviewTable, "Route", normalFont);
+            addTableCell(overviewTable, trip.getSource() + " → " + trip.getDestination(), normalFont);
+            addTableCell(overviewTable, "Status", normalFont);
+            addTableCell(overviewTable, trip.getStatus().name(), normalFont);
+
+            document.add(overviewTable);
+            document.add(Chunk.NEWLINE);
+
+            // 2. Time Details
+            document.add(new Paragraph("Trip Timeline", subTitleFont));
+            PdfPTable timeTable = new PdfPTable(2);
+            timeTable.setWidthPercentage(100);
+            timeTable.setSpacingBefore(10f);
+
+            addTableCell(timeTable, "Scheduled Start", normalFont);
+            addTableCell(timeTable, trip.getScheduledStartTime() != null ? trip.getScheduledStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A", normalFont);
+            addTableCell(timeTable, "Actual Start", normalFont);
+            addTableCell(timeTable, trip.getActualStartTime() != null ? trip.getActualStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A", normalFont);
+            addTableCell(timeTable, "Scheduled End", normalFont);
+            addTableCell(timeTable, trip.getScheduledEndTime() != null ? trip.getScheduledEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A", normalFont);
+            addTableCell(timeTable, "Actual End", normalFont);
+            addTableCell(timeTable, trip.getActualEndTime() != null ? trip.getActualEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "N/A", normalFont);
+
+            if (trip.getTripLog() != null) {
+                addTableCell(timeTable, "Total Duration (hours)", normalFont);
+                addTableCell(timeTable, String.format("%.2f", trip.getTripLog().getTotalDuration()), normalFont);
+                addTableCell(timeTable, "Break Time (hours)", normalFont);
+                addTableCell(timeTable, String.format("%.2f", trip.getTripLog().getTotalBreakTime()), normalFont);
+            }
+
+            document.add(timeTable);
+            document.add(Chunk.NEWLINE);
+
+            // 3. Safety & State Information
+            if (trip.getTripState() != null) {
+                document.add(new Paragraph("Safety & State Information", subTitleFont));
+                PdfPTable stateTable = new PdfPTable(2);
+                stateTable.setWidthPercentage(100);
+                stateTable.setSpacingBefore(10f);
+
+                addTableCell(stateTable, "Driver State", normalFont);
+                addTableCell(stateTable, trip.getTripState().getDriverState() != null ? trip.getTripState().getDriverState().name() : "N/A", normalFont);
+                addTableCell(stateTable, "Trip Progress State", normalFont);
+                addTableCell(stateTable, trip.getTripState().getTripProgressState() != null ? trip.getTripState().getTripProgressState().name() : "N/A", normalFont);
+                addTableCell(stateTable, "Current Speed (last known)", normalFont);
+                addTableCell(stateTable, trip.getTripState().getCurrentSpeed() != null ? String.format("%.2f km/h", trip.getTripState().getCurrentSpeed()) : "N/A", normalFont);
+
+                document.add(stateTable);
+                document.add(Chunk.NEWLINE);
+            }
+
+            document.close();
+        } catch (DocumentException e) {
+            log.error("Error generating trip PDF report: {}", e.getMessage());
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
 }
