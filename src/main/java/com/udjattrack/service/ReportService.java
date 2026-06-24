@@ -12,5 +12,6 @@ public interface ReportService {
     ByteArrayInputStream exportFleetSummaryToPdf(UUID managerId, UUID driverId, UUID vehicleId);
     ByteArrayInputStream exportFleetSummaryToCsv(UUID managerId, UUID driverId, UUID vehicleId);
     List<TripResponse> getFleetSummaryTable(UUID managerId, UUID driverId, UUID vehicleId);
+    java.util.Map<String, Long> getKpis(UUID managerId, String dateRange);
     ByteArrayInputStream generateTripReportPdf(UUID tripId);
 }

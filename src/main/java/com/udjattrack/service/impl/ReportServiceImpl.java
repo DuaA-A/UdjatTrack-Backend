@@ -213,12 +213,33 @@ public class ReportServiceImpl implements ReportService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public java.util.Map<String, Long> getKpis(UUID managerId, String dateRange) {
+        ReportSummaryResponse summary = getFleetSummary(managerId, null, null);
+        
+        List<AlertResponse> allAlerts = alertService.getAllAlertsByFleetManager(managerId);
+        long fatigueCount = allAlerts.stream()
+                .filter(a -> "Fatigue".equalsIgnoreCase(a.getAlertType().name()) 
+                          || "DROWSINESS".equalsIgnoreCase(a.getAlertType().name()))
+                .count();
+        
+        List<SOSRequestResponse> sosRequests = emergencyService.getSOSRequestsByFleetManager(managerId);
+        
+        java.util.Map<String, Long> kpis = new java.util.HashMap<>();
+        kpis.put("tripsCompleted", summary.getFinishedTrips());
+        kpis.put("fatigueAlerts", fatigueCount);
+        kpis.put("sosAlerts", (long) sosRequests.size());
+        
+        return kpis;
+    }
+
     private void addTableCell(PdfPTable table, String text, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(5);
         table.addCell(cell);
     }
-        @Override
+    
+    @Override
     public ByteArrayInputStream generateTripReportPdf(UUID tripId) {
         TripResponse trip = tripService.getTripReport(tripId);
         

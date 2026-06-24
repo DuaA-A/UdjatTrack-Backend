@@ -24,6 +24,15 @@ public class ReportController {
 
     private final ReportService reportService;
 
+    @GetMapping("/kpis")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get high-level KPIs for reports dashboard")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Long>>> getKpis(
+            @RequestParam(required = false, defaultValue = "LAST_YEAR") String dateRange) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok("KPIs retrieved", reportService.getKpis(managerId, dateRange)));
+    }
+
     @GetMapping("/summary")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get high-level operational summary for the fleet")
@@ -98,4 +107,22 @@ public class ReportController {
                 .body(new org.springframework.core.io.InputStreamResource(bis));
     }
 
+    @GetMapping("/driver/{driverId}/download")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Download driver safety performance report as PDF")
+    public ResponseEntity<org.springframework.core.io.InputStreamResource> downloadDriverReportPdf(
+            @PathVariable UUID driverId) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        // Uses the fleet summary generator but filtered entirely by this driverId
+        java.io.ByteArrayInputStream bis = reportService.exportFleetSummaryToPdf(managerId, driverId, null);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=driver-report-" + driverId + ".pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(new org.springframework.core.io.InputStreamResource(bis));
+    }
 }

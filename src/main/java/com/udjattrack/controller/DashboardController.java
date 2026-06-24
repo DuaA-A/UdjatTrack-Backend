@@ -66,19 +66,37 @@ public class DashboardController {
 
     @GetMapping("/drivers-status")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Online/offline/idle/driving status of all drivers")
+    @Operation(summary = "Get driver status counts from active trips")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDriversStatus() {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        List<DriverResponse> drivers = fleetManagementService.getDriversByManager(managerId);
         
-        long idleCount = drivers.stream().filter(DriverResponse::getIdle).count();
-        long drivingCount = drivers.size() - idleCount; // Simplified
+        List<TripResponse> activeTrips = tripService.getTripsByFleetManagerWithFilters(
+                managerId, "active", null, null, null);
+        
+        long alertCount = 0;
+        long drowsyCount = 0;
+        long highRiskCount = 0;
+
+        for (TripResponse trip : activeTrips) {
+            if (trip.getTripState() != null && trip.getTripState().getDriverState() != null) {
+                switch (trip.getTripState().getDriverState().name()) {
+                    case "ALERT":
+                        alertCount++;
+                        break;
+                    case "DROWSY":
+                        drowsyCount++;
+                        break;
+                    case "HIGH_RISK":
+                        highRiskCount++;
+                        break;
+                }
+            }
+        }
 
         Map<String, Object> data = new java.util.HashMap<>();
-        data.put("totalDrivers", drivers.size());
-        data.put("driving", drivingCount);
-        data.put("idle", idleCount);
-        data.put("offline", 0);
+        data.put("alert", alertCount);
+        data.put("drowsy", drowsyCount);
+        data.put("highRisk", highRiskCount);
 
         return ResponseEntity.ok(ApiResponse.ok(data));
     }
