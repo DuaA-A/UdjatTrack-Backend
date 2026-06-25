@@ -1,0 +1,142 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: udjattrack-api
+
+  # ===== Unified PostgreSQL DataSources =====
+  # Relational tables & TimescaleDB hypertables run together natively
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:udjattrack}
+    username: ${POSTGRES_USERNAME:postgres}
+    password: ${POSTGRES_PASSWORD:1234}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: UnifiedHikariPool
+      connection-timeout: 20000
+      maximum-pool-size: 25
+      minimum-idle: 5
+
+  # ===== JPA shared defaults (each datasource config overrides dialect) =====
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+
+  # ===== Mail =====
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: UdjatTrack
+    password: ieyi vmdd eohu qnvt
+
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: false
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+        debug: false
+
+
+  # ===== Cache =====
+  cache:
+    type: simple
+
+  # ===== Thread Pool (for @Async) =====
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 20
+        queue-capacity: 100
+      thread-name-prefix: UdjatAsync-
+
+  # ===== File Storage =====
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      expiration: 86400000       # 24 hours in milliseconds
+      refresh-token:
+        expiration: 604800000    # 7 days in milliseconds
+  otp:
+    expiration-minutes: 10
+    length: 6
+  mail:
+    from: ${MAIL_FROM:udjattrack@gmail.com}
+    from-name: ${MAIL_FROM_NAME:UdjatTrack}
+
+  # ===== File Storage =====
+  storage:
+    # Local directory where uploaded files are saved (relative to working dir)
+    upload-dir: ${UPLOAD_DIR:uploads}
+    # Base URL prepended to the stored filename to build the public URL
+    base-url: ${BASE_URL:http://localhost:8080/api/v1}
+
+  # ===== WebSocket =====
+  websocket:
+    # STOMP endpoint — clients connect to ws://host:8080/api/v1/ws
+    endpoint: /ws
+    # Application destination prefix (client → server messages)
+    app-prefix: /app
+    # Broker destination prefix (server → client broadcasts)
+    topic-prefix: /topic
+    # Allowed origins for WebSocket (set to your frontend URL in production)
+    allowed-origins: ${WS_ALLOWED_ORIGINS:*}
+
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+    deserialization:
+      fail-on-unknown-properties: false
+
+# ===== Logging =====
+logging:
+  level:
+    com.udjattrack: DEBUG
+    org.springframework.security: INFO
+    org.springframework.web.socket: DEBUG
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ===== OpenAPI / Swagger =====
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+  show-actuator: false
+
+# ===== Actuator =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: when-authorized

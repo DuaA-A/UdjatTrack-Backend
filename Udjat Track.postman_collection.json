@@ -619,6 +619,61 @@
                 }
               },
               "response": []
+            },
+            {
+              "name": "Filter Vehicle by Plate Number",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/vehicles?plateNumber={{plateNumber}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "vehicles"
+                  ],
+                  "query": [
+                    {
+                      "key": "plateNumber",
+                      "value": "{{plateNumber}}"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Vehicle with Driver Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/vehicles/{{vehicleId}}/with-driver",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "vehicles",
+                    "{{vehicleId}}",
+                    "with-driver"
+                  ],
+                  "query": []
+                }
+              },
+              "response": []
             }
           ]
         },
@@ -1378,7 +1433,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n        \"driverId\": \"479b9fb5-d4e5-47cd-bb8a-67248e04adf1\",\n        \"driverName\": \"ali\",\n        \"vehicleId\": \"ad7d5ba4-ff1f-48c7-8dcc-56012afd3e5a\",\n        \"vehiclePlate\": \"ABC-130\",\n        \"source\": \"Cairo\",\n        \"destination\": \"Alex\",\n        \"routeName\": \"Alex Trip\",\n        \"scheduledStartTime\": \"2026-05-30T08:00:00\",\n        \"scheduledEndTime\": \"2026-05-30T12:00:00\",\n        \"status\": \"ONGOING\",\n        \"createdAt\": \"2026-05-03T14:54:29.134865\",\n        \"tripLog\": {\n            \"logId\": \"cde8034e-a19c-4bf0-90f1-9347d301ab67\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n            \"actualEndTime\": null,\n            \"totalDuration\": null,\n            \"totalBreakTime\": null\n        },\n        \"title\": \"Cairo → Alex\",\n        \"expectedDurationHours\": 4,\n        \"estimatedArrivalTime\": \"2026-05-03T19:05:44.785585\",\n        \"progressPct\": 100,\n        \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n        \"actualEndTime\": null,\n        \"tripState\": {\n            \"stateId\": \"13c5485a-c280-4088-a73c-60576c14eaf8\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"driverState\": \"DROWSY\",\n            \"tripProgressState\": \"RESUMED\",\n            \"latitude\": \"30.0444\",\n            \"longitude\": \"33.235\",\n            \"currentSpeed\": 98.5,\n            \"lastUpdatedAt\": \"2026-05-03T22:51:14.854089\"\n        },\n        \"vehicle\": {\n            \"plateNumber\": \"ABC-130\",\n            \"model\": \"MAN TGX\"\n        }\n    },\n    \"timestamp\": \"2026-05-06T01:18:29.710919514\"\n}"
+              "body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n        \"driverId\": \"479b9fb5-d4e5-47cd-bb8a-67248e04adf1\",\n        \"driverName\": \"ali\",\n        \"vehicleId\": \"ad7d5ba4-ff1f-48c7-8dcc-56012afd3e5a\",\n        \"vehiclePlate\": \"ABC-130\",\n        \"source\": \"Cairo\",\n        \"destination\": \"Alex\",\n        \"routeName\": \"Alex Trip\",\n        \"scheduledStartTime\": \"2026-05-30T08:00:00\",\n        \"scheduledEndTime\": \"2026-05-30T12:00:00\",\n        \"status\": \"ONGOING\",\n        \"createdAt\": \"2026-05-03T14:54:29.134865\",\n        \"tripLog\": {\n            \"logId\": \"cde8034e-a19c-4bf0-90f1-9347d301ab67\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n            \"actualEndTime\": null,\n            \"totalDuration\": null,\n            \"totalBreakTime\": null\n        },\n        \"title\": \"Cairo \u2192 Alex\",\n        \"expectedDurationHours\": 4,\n        \"estimatedArrivalTime\": \"2026-05-03T19:05:44.785585\",\n        \"progressPct\": 100,\n        \"actualStartTime\": \"2026-05-03T15:05:44.785585\",\n        \"actualEndTime\": null,\n        \"tripState\": {\n            \"stateId\": \"13c5485a-c280-4088-a73c-60576c14eaf8\",\n            \"tripId\": \"d2ca3396-7df4-45ca-ab83-bac8772d9d70\",\n            \"driverState\": \"DROWSY\",\n            \"tripProgressState\": \"RESUMED\",\n            \"latitude\": \"30.0444\",\n            \"longitude\": \"33.235\",\n            \"currentSpeed\": 98.5,\n            \"lastUpdatedAt\": \"2026-05-03T22:51:14.854089\"\n        },\n        \"vehicle\": {\n            \"plateNumber\": \"ABC-130\",\n            \"model\": \"MAN TGX\"\n        }\n    },\n    \"timestamp\": \"2026-05-06T01:18:29.710919514\"\n}"
             }
           ]
         },
@@ -2405,6 +2460,86 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Active Trips",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/active-trips",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "active-trips"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Active Trips by Trip ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/active-trips?tripId={{tripId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "active-trips"
+              ],
+              "query": [
+                {
+                  "key": "tripId",
+                  "value": "{{tripId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Summary Table",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/trip-summary-table",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "trip-summary-table"
+              ],
+              "query": []
+            }
+          },
+          "response": []
         }
       ],
       "event": [
@@ -2734,6 +2869,117 @@
               "path": [
                 "reports",
                 "summary"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Export Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export/pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "export",
+                "pdf"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Export Report CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/export/csv",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "export",
+                "csv"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Report Summary Table",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/table",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "table"
+              ],
+              "query": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Report by Driver and Vehicle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/summary?driverId={{driverId}}&vehicleId={{vehicleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reports",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "driverId",
+                  "value": "{{driverId}}"
+                },
+                {
+                  "key": "vehicleId",
+                  "value": "{{vehicleId}}"
+                }
               ]
             }
           },
