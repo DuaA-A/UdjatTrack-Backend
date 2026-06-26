@@ -25,6 +25,15 @@ public class EmailServiceImpl implements EmailService {
     @Value("${application.mail.from-name}")
     private String fromName;
 
+    @Value("${spring.mail.host:Not Configured}")
+    private String smtpHost;
+
+    @Value("${spring.mail.port:Not Configured}")
+    private String smtpPort;
+
+    @Value("${spring.mail.username:Not Configured}")
+    private String smtpUsername;
+
     @Override
     @Async("emailExecutor")
     public void sendOtpEmail(String to, String otp, String name) {
@@ -134,6 +143,13 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
+        System.out.println("[EMAIL TRACE] Attempting to send email...");
+        System.out.println("[EMAIL TRACE] SMTP Host: " + smtpHost);
+        System.out.println("[EMAIL TRACE] SMTP Port: " + smtpPort);
+        System.out.println("[EMAIL TRACE] SMTP Username: " + smtpUsername);
+        System.out.println("[EMAIL TRACE] Mail From: " + fromEmail + " (" + fromName + ")");
+        System.out.println("[EMAIL TRACE] Mail To: " + to);
+        System.out.println("[EMAIL TRACE] Subject: " + subject);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -143,8 +159,12 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             mailSender.send(message);
+            System.out.println("[EMAIL TRACE] SUCCESS: Email sent successfully to " + to);
             log.info("Email sent to: {} | Subject: {}", to, subject);
         } catch (Exception e) {
+            System.err.println("[EMAIL TRACE] ERROR: Failed to send email to " + to);
+            System.err.println("[EMAIL TRACE] ERROR Exception Message: " + e.getMessage());
+            e.printStackTrace();
             log.error("CRITICAL: Failed to send email to {}. Reason: {}", to, e.getMessage(), e);
         }
     }

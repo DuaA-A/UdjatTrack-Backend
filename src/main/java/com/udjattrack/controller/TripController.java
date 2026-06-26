@@ -79,8 +79,11 @@ public class TripController {
     @GetMapping("/{tripId}/timeline")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get the trip event timeline for the Trip Log screen")
-    public ResponseEntity<ApiResponse<TripTimelineResponse>> getTimeline(@PathVariable UUID tripId) {
-        return ResponseEntity.ok(ApiResponse.ok("Trip timeline retrieved successfully", tripService.getTripTimeline(tripId)));
+    public ResponseEntity<ApiResponse<TripTimelineResponse>> getTimeline(
+            @PathVariable UUID tripId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip timeline retrieved successfully", tripService.getTripTimeline(tripId, from, to)));
     }
 
     @GetMapping("/{tripId}/progress")
@@ -125,6 +128,21 @@ public class TripController {
         
         return ResponseEntity.ok(ApiResponse.ok("SOS alert triggered", 
                 emergencyService.sendManualSOS(finalRequest)));
+    }
+
+    @GetMapping("/reports")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
+    @Operation(summary = "Get all trip reports containing trip logs for the logged-in Fleet Manager")
+    public ResponseEntity<ApiResponse<List<TripResponse>>> getAllTripReports() {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok("All trip reports retrieved successfully", tripService.getTripsByFleetManager(managerId)));
+    }
+
+    @GetMapping("/{tripId}/report")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get trip report containing trip log and other details of a single trip")
+    public ResponseEntity<ApiResponse<TripResponse>> getTripReport(@PathVariable UUID tripId) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip report retrieved successfully", tripService.getTripReport(tripId)));
     }
 
     @GetMapping("/{tripId}")

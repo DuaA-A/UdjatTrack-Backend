@@ -328,8 +328,25 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional(readOnly = true)
-    public TripTimelineResponse getTripTimeline(UUID tripId) {
+    public TripTimelineResponse getTripTimeline(UUID tripId, String from, String to) {
         Trip trip = findTripOrThrow(tripId);
+
+        // Parse optional filters
+        LocalDateTime fromTime = null;
+        LocalDateTime toTime = null;
+        try {
+            if (from != null && !from.isBlank()) {
+                fromTime = LocalDateTime.parse(from);
+            }
+            if (to != null && !to.isBlank()) {
+                toTime = LocalDateTime.parse(to);
+            }
+        } catch (DateTimeParseException e) {
+            log.warn("Invalid date format for timeline filter from: {}, to: {}", from, to);
+        }
+
+        final LocalDateTime filterFrom = fromTime;
+        final LocalDateTime filterTo = toTime;
 
         // Get trip log for start/end times
         TripLog tripLog = tripLogRepository.findByTripTripId(tripId).orElse(null);
@@ -410,6 +427,22 @@ public class TripServiceImpl implements TripService {
                     .alertDetails(alertDetails)
                     .details(details)
                     .build());
+        }
+
+        // Filter timeline items by date range if specified
+        if (filterFrom != null || filterTo != null) {
+            timeline = timeline.stream()
+                    .filter(item -> {
+                        if (item.getTimestamp() == null) return false;
+                        if (filterFrom != null && item.getTimestamp().isBefore(filterFrom)) {
+                            return false;
+                        }
+                        if (filterTo != null && item.getTimestamp().isAfter(filterTo)) {
+                            return false;
+                        }
+                        return true;
+                    })
+                    .collect(Collectors.toList());
         }
 
         // Sort all timeline items by timestamp ascending

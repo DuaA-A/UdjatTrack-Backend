@@ -27,7 +27,7 @@ public interface TripService {
     List<TripResponse> getTripsByFleetManager(UUID managerId);
     List<TripResponse> getTripsByFleetManagerWithFilters(UUID managerId, String status, UUID vehicleId, String dateFrom, String dateTo);
     List<TripStateResponse> getActiveTripStates(UUID managerId);
-    TripTimelineResponse getTripTimeline(UUID tripId);
+    TripTimelineResponse getTripTimeline(UUID tripId, String from, String to);
     TripResponse getTripReport(UUID tripId);
     com.udjattrack.dto.response.DriverDashboardResponse getDriverDashboard(UUID driverId);
 }
