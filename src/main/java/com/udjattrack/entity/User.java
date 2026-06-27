@@ -48,12 +48,6 @@ public abstract class User {
     @Column(name = "is_read")
     private Boolean isRead = false;
 
-    @Column(name = "is_deleted")
-    private Boolean isDeleted = false;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
