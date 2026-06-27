@@ -16,8 +16,6 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(30) NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    deleted_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (user_id)
 );
@@ -89,8 +87,6 @@ CREATE TABLE vehicles (
     license_number VARCHAR(100), --Natively included for API parity
     is_idle BOOLEAN DEFAULT TRUE,
     is_working BOOLEAN DEFAULT TRUE,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    deleted_at TIMESTAMP,
     fleet_manager_id UUID NOT NULL,
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (vehicle_id),
