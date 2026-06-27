@@ -35,7 +35,7 @@ public class SuperManagementController {
 
     @DeleteMapping("/{managerId}")
     @PreAuthorize("hasAuthority('ROLE_SUPER_MANAGER')")
-    @Operation(summary = "Soft-delete a fleet manager")
+    @Operation(summary = "Delete a fleet manager")
     public ResponseEntity<ApiResponse<Void>> deleteFleetManager(@PathVariable UUID managerId) {
         fleetManagementService.deleteFleetManager(managerId);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
