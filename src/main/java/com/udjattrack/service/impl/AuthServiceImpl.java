@@ -250,7 +250,6 @@ public class AuthServiceImpl implements AuthService {
                 .role(UserRole.ROLE_FLEET_MANAGER)
                 .companyName(request.companyName())
                 .verificationStatus(VerificationStatus.PENDING)
-                .isDeleted(false)
                 .build();
         FleetManager saved = fleetManagerRepository.save(manager);
         log.info("Fleet manager registered: {} — awaiting approval", saved.getEmail());
@@ -309,7 +308,6 @@ public class AuthServiceImpl implements AuthService {
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
                 .role(UserRole.ROLE_SUPER_MANAGER)
-                .isDeleted(false)
                 .build();
 
         SuperManager saved = superManagerRepository.save(superManager);
