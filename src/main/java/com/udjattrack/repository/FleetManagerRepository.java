@@ -15,12 +15,12 @@ public interface FleetManagerRepository extends JpaRepository<FleetManager, UUID
 
     Optional<FleetManager> findByEmail(String email);
 
-    List<FleetManager> findAllByVerificationStatus(VerificationStatus status);
+    List<FleetManager> findByVerificationStatus(VerificationStatus status);
 
-    List<FleetManager> findAllByIsDeletedFalse();
+    List<FleetManager> findAll();
 
-    @Query("SELECT fm FROM FleetManager fm WHERE fm.isDeleted = false AND fm.verificationStatus = :status")
+    @Query("SELECT fm FROM FleetManager fm WHERE fm.verificationStatus = :status")
     List<FleetManager> findActiveByVerificationStatus(VerificationStatus status);
 
-    boolean existsByEmailAndIsDeletedFalse(String email);
+    boolean existsByEmail(String email);
 }
