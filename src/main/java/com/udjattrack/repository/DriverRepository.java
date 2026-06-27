@@ -13,14 +13,15 @@ import java.util.UUID;
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, UUID> {
 
-    Optional<Driver> findByEmailAndIsDeletedFalse(String email);
+    Optional<Driver> findByEmail(String email);
 
-    List<Driver> findAllByFleetManagerUserIdAndIsDeletedFalse(UUID fleetManagerId);
+    List<Driver> findAllByFleetManagerUserId(UUID fleetManagerId);
 
     List<Driver> findAllByFleetManagerUserIdAndIdleTrue(UUID fleetManagerId);
 
-    @Query("SELECT d FROM Driver d WHERE d.fleetManager.userId = :managerId AND d.isDeleted = false")
+    @Query("SELECT d FROM Driver d WHERE d.fleetManager.userId = :managerId")
     List<Driver> findActiveDriversByManager(@Param("managerId") UUID managerId);
 
-    boolean existsByLicenseNumberAndIsDeletedFalse(String licenseNumber);
+    boolean existsByLicenseNumber(String licenseNumber);
+
 }
