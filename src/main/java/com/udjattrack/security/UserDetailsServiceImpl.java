@@ -29,9 +29,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found with email: " + email));
 
-        if (Boolean.TRUE.equals(user.getIsDeleted())) {
-            throw new UsernameNotFoundException("Account is disabled");
-        }
 
         return new SecurityUser(
                 user.getEmail(),
