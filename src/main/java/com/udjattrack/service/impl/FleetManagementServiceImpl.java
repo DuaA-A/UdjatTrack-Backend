@@ -263,14 +263,12 @@ public class FleetManagementServiceImpl implements FleetManagementService {
 
     private FleetManager findManagerOrThrow(UUID id) {
         return fleetManagerRepository.findById(id)
-                .filter(m -> !Boolean.TRUE.equals(m.getIsDeleted()))
-                .orElseThrow(() -> new ResourceNotFoundException("FleetManager", "id", id));
+            .orElseThrow(() -> new ResourceNotFoundException("FleetManager", "id", id));
     }
 
     private Driver findDriverOrThrow(UUID id) {
         return driverRepository.findById(id)
-                .filter(d -> !Boolean.TRUE.equals(d.getIsDeleted()))
-                .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", id));
+            .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", id));
     }
 
     private FleetManagerResponse toResponse(FleetManager m) {
