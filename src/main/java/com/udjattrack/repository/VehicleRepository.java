@@ -13,14 +13,14 @@ import java.util.UUID;
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
 
-    Optional<Vehicle> findByPlateNumberAndIsDeletedFalse(String plateNumber);
+    Optional<Vehicle> findByPlateNumber(String plateNumber);
 
-    List<Vehicle> findAllByFleetManagerUserIdAndIsDeletedFalse(UUID fleetManagerId);
+    List<Vehicle> findAllByFleetManagerUserId(UUID fleetManagerId);
 
     List<Vehicle> findAllByFleetManagerUserIdAndIdleTrue(UUID fleetManagerId);
 
-    @Query("SELECT v FROM Vehicle v WHERE v.fleetManager.userId = :managerId AND v.isDeleted = false AND v.working = true")
+    @Query("SELECT v FROM Vehicle v WHERE v.fleetManager.userId = :managerId AND v.working = true")
     List<Vehicle> findWorkingVehiclesForManager(@Param("managerId") UUID managerId);
 
-    boolean existsByPlateNumberAndIsDeletedFalse(String plateNumber);
+    boolean existsByPlateNumber(String plateNumber);
 }
