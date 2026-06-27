@@ -35,6 +35,8 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     private final VehicleRepository vehicleRepository;
     private final DependentRepository dependentRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final NotificationRepository notificationRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
