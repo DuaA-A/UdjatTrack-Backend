@@ -54,7 +54,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .companyName(request.companyName())
                 .verificationStatus(VerificationStatus.VERIFIED)
                 .role(UserRole.ROLE_FLEET_MANAGER)
-                .isDeleted(false)
                 .isRead(false)
                 .build();
         FleetManager saved = fleetManagerRepository.save(manager);
@@ -82,16 +81,14 @@ public class FleetManagementServiceImpl implements FleetManagementService {
 
     @Override
     public void deleteFleetManager(UUID managerId) {
-        FleetManager manager = findManagerOrThrow(managerId);
-        manager.setIsDeleted(true);
-        manager.setDeletedAt(LocalDateTime.now());
-        fleetManagerRepository.save(manager);
-    }
+    FleetManager manager = findManagerOrThrow(managerId);
+    fleetManagerRepository.deleteById(managerId);
+}
 
     @Override
     @Transactional(readOnly = true)
     public List<FleetManagerResponse> getAllFleetManagers() {
-        return fleetManagerRepository.findAllByIsDeletedFalse()
+        return fleetManagerRepository.findAll()
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -109,7 +106,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("Driver", "email", request.email());
         }
-        if (driverRepository.existsByLicenseNumberAndIsDeletedFalse(request.licenseNumber())) {
+        if (driverRepository.existsByLicenseNumber(request.licenseNumber())) {
             throw new DuplicateResourceException("Driver", "licenseNumber", request.licenseNumber());
         }
         Driver driver = Driver.builder()
@@ -121,7 +118,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .idle(true)
                 .fleetManager(manager)
                 .role(UserRole.ROLE_DRIVER)
-                .isDeleted(false)
                 .isRead(false)
                 .build();
         Driver saved = driverRepository.save(driver);
@@ -140,10 +136,10 @@ public class FleetManagementServiceImpl implements FleetManagementService {
 
     @Override
     public void deleteDriver(UUID driverId) {
-        Driver driver = findDriverOrThrow(driverId);
-        driver.setIsDeleted(true);
-        driver.setDeletedAt(LocalDateTime.now());
-        driverRepository.save(driver);
+        if (!driverRepository.existsById(driverId)) {
+        throw new ResourceNotFoundException("Driver", "id", driverId);
+        }
+        driverRepository.deleteById(driverId);
     }
 
     @Override
@@ -162,7 +158,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     @Override
     public DriverResponse uploadDriverPhoto(UUID driverId, MultipartFile file) {
         Driver driver = findDriverOrThrow(driverId);
-        // Delete old photo from storage if it exists
         if (driver.getPhotoUrl() != null) {
             fileStorageService.deleteFile(driver.getPhotoUrl());
         }
@@ -175,7 +170,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     @Override
     public VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request) {
         FleetManager manager = findManagerOrThrow(fleetManagerId);
-        if (vehicleRepository.existsByPlateNumberAndIsDeletedFalse(request.plateNumber())) {
+        if (vehicleRepository.existsByPlateNumber(request.plateNumber())) {
             throw new DuplicateResourceException("Vehicle", "plateNumber", request.plateNumber());
         }
         Vehicle vehicle = Vehicle.builder()
@@ -184,7 +179,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
                 .manufactureYear(request.manufactureYear())
                 .idle(true)
                 .working(true)
-                .isDeleted(false)
                 .fleetManager(manager)
                 .build();
         return toVehicleResponse(vehicleRepository.save(vehicle));
@@ -192,17 +186,15 @@ public class FleetManagementServiceImpl implements FleetManagementService {
 
     @Override
     public void deleteVehicle(UUID vehicleId) {
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
-        vehicle.setIsDeleted(true);
-        vehicle.setDeletedAt(LocalDateTime.now());
-        vehicleRepository.save(vehicle);
+            vehicleRepository.findById(vehicleId)
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+            vehicleRepository.deleteById(vehicleId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId, String plateNumber) {
-        return vehicleRepository.findAllByFleetManagerUserIdAndIsDeletedFalse(fleetManagerId)
+        return vehicleRepository.findAllByFleetManagerUserId(fleetManagerId)
                 .stream()
                 .filter(v -> plateNumber == null || v.getPlateNumber().equalsIgnoreCase(plateNumber))
                 .map(this::toVehicleResponse)
@@ -213,8 +205,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     @Transactional(readOnly = true)
     public VehicleResponse getVehicleById(UUID vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .filter(v -> !Boolean.TRUE.equals(v.getIsDeleted()))
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
         return toVehicleResponse(vehicle);
     }
 
@@ -222,8 +213,7 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     @Transactional(readOnly = true)
     public VehicleWithDriverResponse getVehicleWithDriver(UUID vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .filter(v -> !Boolean.TRUE.equals(v.getIsDeleted()))
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", vehicleId));
         
         VehicleResponse vr = toVehicleResponse(vehicle);
         DriverResponse dr = null;
