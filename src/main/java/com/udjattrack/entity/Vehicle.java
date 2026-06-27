@@ -49,13 +49,6 @@ public class Vehicle {
     @Column(name = "is_working", nullable = false)
     private Boolean working = true;
 
-    @Builder.Default
-    @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false;
-
-    @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fleet_manager_id", nullable = false)
     private FleetManager fleetManager;
