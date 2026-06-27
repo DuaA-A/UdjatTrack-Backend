@@ -389,3 +389,18 @@ ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
 select * from issue_requests;
 
 select * from trips
+
+
+ALTER TABLE refresh_tokens DROP CONSTRAINT fk_refresh_tokens_user;
+ALTER TABLE refresh_tokens
+  ADD CONSTRAINT fk_refresh_tokens_user
+  FOREIGN KEY (user_id)
+  REFERENCES users(user_id)
+  ON DELETE CASCADE;
+
+ALTER TABLE notifications DROP CONSTRAINT fk_notifications_user;
+ALTER TABLE notifications
+  ADD CONSTRAINT fk_notifications_user
+  FOREIGN KEY (user_id)
+  REFERENCES users(user_id)
+  ON DELETE CASCADE;
