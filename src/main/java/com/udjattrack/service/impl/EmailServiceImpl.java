@@ -3,6 +3,7 @@ package com.udjattrack.service.impl;
 import com.udjattrack.entity.Alert;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,24 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${spring.mail.username:Not Configured}")
     private String smtpUsername;
+
+    @Value("${spring.mail.password:Not Configured}")
+    private String smtpPassword;
+
+    @PostConstruct
+    private void validateMailConfiguration() {
+        log.info("Mail configuration loaded: host={}, port={}, username={}, from={}, fromName={}",
+                smtpHost, smtpPort, smtpUsername, fromEmail, fromName);
+
+        if (!StringUtils.hasText(smtpHost)
+                || !StringUtils.hasText(smtpPort)
+                || !StringUtils.hasText(smtpUsername)
+                || !StringUtils.hasText(smtpPassword)
+                || !StringUtils.hasText(fromEmail)
+                || !StringUtils.hasText(fromName)) {
+            log.error("Mail configuration incomplete. Set MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_FROM_NAME in Railway environment variables.");
+        }
+    }
 
     @Override
     @Async("emailExecutor")
@@ -143,13 +163,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        System.out.println("[EMAIL TRACE] Attempting to send email...");
-        System.out.println("[EMAIL TRACE] SMTP Host: " + smtpHost);
-        System.out.println("[EMAIL TRACE] SMTP Port: " + smtpPort);
-        System.out.println("[EMAIL TRACE] SMTP Username: " + smtpUsername);
-        System.out.println("[EMAIL TRACE] Mail From: " + fromEmail + " (" + fromName + ")");
-        System.out.println("[EMAIL TRACE] Mail To: " + to);
-        System.out.println("[EMAIL TRACE] Subject: " + subject);
+        log.info("[EMAIL TRACE] Sending email to={} via {}:{} from={}", to, smtpHost, smtpPort, fromEmail);
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -159,13 +173,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true);
             mailSender.send(message);
-            System.out.println("[EMAIL TRACE] SUCCESS: Email sent successfully to " + to);
-            log.info("Email sent to: {} | Subject: {}", to, subject);
+            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {}", to, subject);
         } catch (Exception e) {
-            System.err.println("[EMAIL TRACE] ERROR: Failed to send email to " + to);
-            System.err.println("[EMAIL TRACE] ERROR Exception Message: " + e.getMessage());
-            e.printStackTrace();
-            log.error("CRITICAL: Failed to send email to {}. Reason: {}", to, e.getMessage(), e);
+            log.error("[EMAIL TRACE] ERROR: Failed to send email to {}. Reason: {}", to, e.getMessage(), e);
         }
     }
 }

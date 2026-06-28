@@ -36,7 +36,8 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:udjattrack@gmail.com}
-    password: ${MAIL_PASSWORD:ieyi vmdd eohu qnvt}
+    password: ${MAIL_PASSWORD:bqgl ktmq bhpn xdau}
+    test-connection: true
 
     properties:
       mail:
@@ -44,8 +45,11 @@ spring:
           auth: true
           ssl:
             enable: false
+            trust: ${MAIL_HOST:smtp.gmail.com}
+            protocols: TLSv1.2
           starttls:
             enable: true
+            required: true
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
