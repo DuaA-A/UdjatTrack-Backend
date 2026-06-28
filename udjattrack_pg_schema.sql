@@ -330,6 +330,5 @@ CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
 TRUNCATE TABLE alerts CASCADE;
 ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
 
-DROP CONSTRAINT fk1lih5y2npsf8u5o3vhdb9y0os;
   REFERENCES users(user_id)
   ON DELETE CASCADE;
