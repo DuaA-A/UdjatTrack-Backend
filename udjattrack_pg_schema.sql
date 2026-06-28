@@ -64,7 +64,7 @@ CREATE TABLE refresh_tokens (
     created_at TIMESTAMP NOT NULL,
     PRIMARY KEY (token_id),
     CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id)
-        REFERENCES users (user_id)
+        REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE otp_tokens (
