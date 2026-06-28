@@ -238,7 +238,7 @@ CREATE TABLE notifications (
     details JSONB, --  ADDED: Natively supports dynamic API payload data
     PRIMARY KEY (notification_id),
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id)
-        REFERENCES users (user_id)
+        REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE alert_triggered_notifications (
