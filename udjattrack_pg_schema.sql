@@ -290,7 +290,6 @@ INSERT INTO users (
     email,
     password,
     role,
-    is_deleted,
     created_at
 )
 VALUES (
@@ -356,7 +355,7 @@ ALTER TABLE issue_requests DROP COLUMN IF EXISTS reported_at;
 
 -- 4. Verification:
 -- The 'alerts' table already has 'timestamp', no action needed.
--- The 'users' table already has 'is_read', 'is_deleted', etc.
+-- The 'users' table already has 'is_read', etc.
 
 -- 1. Remove deprecated 'description' fields from Issue tracking tables
 -- Since IssueRequest uses the JOINED inheritance strategy, we check the child tables.
