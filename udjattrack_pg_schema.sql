@@ -329,13 +329,7 @@ CREATE INDEX IF NOT EXISTS idx_trip_states_trip_id ON trip_states(trip_id);
 -- 6. Add Audit Columns if missing (required by JpaAuditing)
 TRUNCATE TABLE alerts CASCADE;
 ALTER TABLE alerts DROP COLUMN IF EXISTS acked_at;
-select * from issue_requests;
 
-select * from trips
-
-ALTER TABLE notifications DROP CONSTRAINT fk_notifications_user;
-ALTER TABLE notifications
-  ADD CONSTRAINT fk_notifications_user
-  FOREIGN KEY (user_id)
+DROP CONSTRAINT fk1lih5y2npsf8u5o3vhdb9y0os;
   REFERENCES users(user_id)
   ON DELETE CASCADE;
