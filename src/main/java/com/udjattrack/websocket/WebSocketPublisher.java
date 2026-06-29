@@ -44,4 +44,14 @@ public class WebSocketPublisher {
         messagingTemplate.convertAndSend(destination, statusUpdate);
         log.debug("Published status update to driver {}", driverId);
     }
+
+    /**
+     * Section 13.4: Trip Monitoring Page updates
+     * Pushes active trips count and latest trips list for a fleet.
+     */
+    public void publishTripMonitoring(UUID fleetId, com.udjattrack.dto.websocket.TripMonitoringMessage message) {
+        String destination = "/topic/fleet/" + fleetId + "/trip-monitoring";
+        messagingTemplate.convertAndSend(destination, message);
+        log.info("Published trip-monitoring update to {}", destination);
+    }
 }

@@ -45,6 +45,7 @@ public class TripServiceImpl implements TripService {
     private final AlertRepository alertRepository;
     private final IncidentRepository incidentRepository;
     private final org.springframework.scheduling.TaskScheduler taskScheduler;
+    private final com.udjattrack.websocket.WebSocketPublisher webSocketPublisher;
 
     @Override
     public TripResponse createTrip(CreateTripRequest request) {
@@ -75,6 +76,7 @@ public class TripServiceImpl implements TripService {
         notificationService.sendTripAssignedNotification(driver, saved);
 
         log.info("Trip created: {} for driver: {}", saved.getTripId(), driver.getUserId());
+        triggerMonitoringUpdate(saved);
         return toResponse(saved);
     }
 
@@ -88,7 +90,9 @@ public class TripServiceImpl implements TripService {
         
         trip.setDriver(driver);
         notificationService.sendTripAssignedNotification(driver, trip);
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -102,6 +106,7 @@ public class TripServiceImpl implements TripService {
         trip.setVehicle(vehicle);
         Trip saved = tripRepository.save(trip);
         notificationService.sendTripAssignedNotification(saved.getDriver(), saved);
+        triggerMonitoringUpdate(saved);
         return toResponse(saved);
     }
 
@@ -125,7 +130,9 @@ public class TripServiceImpl implements TripService {
         driverRepository.save(trip.getDriver());
         vehicleRepository.save(trip.getVehicle());
 
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -153,7 +160,9 @@ public class TripServiceImpl implements TripService {
             }
         }, java.time.Instant.now().plusSeconds(60)); // 60 seconds = 1 minute
 
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
     }
 
     @Transactional
@@ -180,7 +189,9 @@ public class TripServiceImpl implements TripService {
         );
         alertService.createAlert(alertReq);
 
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -214,7 +225,9 @@ public class TripServiceImpl implements TripService {
             notificationService.sendTripFinishedNotification(trip.getDriver().getFleetManager(), trip);
         }
 
-        return toResponse(tripRepository.save(trip));
+        Trip saved = tripRepository.save(trip);
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -228,7 +241,7 @@ public class TripServiceImpl implements TripService {
         
         Trip saved = tripRepository.save(trip);
         notificationService.sendTripCancelledNotification(saved.getDriver(), saved);
-        
+        triggerMonitoringUpdate(saved);
         return toResponse(saved);
     }
 
@@ -639,5 +652,38 @@ public class TripServiceImpl implements TripService {
                 .currentSpeed(state.getCurrentSpeed())
                 .lastUpdatedAt(state.getLastUpdatedAt())
                 .build();
+    }
+
+    @Override
+    public void publishTripMonitoringUpdate(UUID fleetId) {
+        List<TripResponse> allTrips = getTripsByFleetManager(fleetId);
+        long activeTripsCount = allTrips.stream()
+                .filter(t -> t.getStatus() != TripStatus.FINISHED && t.getStatus() != TripStatus.CANCELLED)
+                .count();
+
+        com.udjattrack.dto.websocket.TripMonitoringMessage msg = com.udjattrack.dto.websocket.TripMonitoringMessage.builder()
+                .activeTripsCount(activeTripsCount)
+                .latestTrips(allTrips)
+                .build();
+
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                new org.springframework.transaction.support.TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        webSocketPublisher.publishTripMonitoring(fleetId, msg);
+                    }
+                }
+            );
+        } else {
+            webSocketPublisher.publishTripMonitoring(fleetId, msg);
+        }
+    }
+
+    private void triggerMonitoringUpdate(Trip trip) {
+        if (trip != null && trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
+            UUID fleetId = trip.getDriver().getFleetManager().getUserId();
+            publishTripMonitoringUpdate(fleetId);
+        }
     }
 }

@@ -30,4 +30,5 @@ public interface TripService {
     TripTimelineResponse getTripTimeline(UUID tripId, String from, String to);
     TripResponse getTripReport(UUID tripId);
     com.udjattrack.dto.response.DriverDashboardResponse getDriverDashboard(UUID driverId);
+    void publishTripMonitoringUpdate(UUID fleetId);
 }

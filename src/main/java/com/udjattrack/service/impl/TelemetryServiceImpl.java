@@ -43,6 +43,7 @@ public class TelemetryServiceImpl implements TelemetryService {
     private final WebSocketPublisher webSocketPublisher;
     private final EventRecordRepository eventRecordRepository;
     private final TripLogRepository tripLogRepository;
+    private final com.udjattrack.service.TripService tripService;
 
     @Override
     @Transactional
@@ -222,11 +223,13 @@ public class TelemetryServiceImpl implements TelemetryService {
                         @Override
                         public void afterCommit() {
                             webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
+                            tripService.publishTripMonitoringUpdate(fleetId);
                         }
                     }
                 );
             } else {
                 webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
+                tripService.publishTripMonitoringUpdate(fleetId);
             }
         }
 

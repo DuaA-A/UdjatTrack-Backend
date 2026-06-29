@@ -29,6 +29,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\TripTimelineResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\controller\VehicleController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\service\impl\TripServiceImpl.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\websocket\TripMonitoringMessage.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\entity\AlertTriggeredNotification.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\VehicleResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\service\EmailService.java
