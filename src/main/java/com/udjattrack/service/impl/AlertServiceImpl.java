@@ -138,7 +138,7 @@ public class AlertServiceImpl implements AlertService {
                     .driverId(trip.getDriver().getUserId())
                     .name(trip.getDriver().getName())
                     .phone(trip.getDriver().getPhoneNumber()) // Adjust getter name based on your User entity
-                    .currentState(trip.getDriver().getState() != null ? trip.getDriver().getState().name() : null) 
+                    .currentState(Boolean.TRUE.equals(trip.getDriver().getIdle()) ? "IDLE" : "ACTIVE") 
                     .build();
         }
         AlertResponse.VehicleInfo vehicleInfo = null;
