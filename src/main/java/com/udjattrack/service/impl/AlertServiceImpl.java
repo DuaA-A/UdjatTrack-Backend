@@ -130,7 +130,46 @@ public class AlertServiceImpl implements AlertService {
         log.info("Fleet manager notified for alert: {}", alertId);
     }
 
-    private AlertResponse toResponse(Alert a) {
+        private AlertResponse toResponse(Alert a) {
+        Trip trip = a.getTrip();
+        AlertResponse.DriverInfo driverInfo = null;
+        if (trip.getDriver() != null) {
+            driverInfo = AlertResponse.DriverInfo.builder()
+                    .driverId(trip.getDriver().getUserId())
+                    .name(trip.getDriver().getName())
+                    .phone(trip.getDriver().getPhoneNumber()) // Adjust getter name based on your User entity
+                    .currentState(trip.getDriver().getState() != null ? trip.getDriver().getState().name() : null) 
+                    .build();
+        }
+        AlertResponse.VehicleInfo vehicleInfo = null;
+        if (trip.getVehicle() != null) {
+            vehicleInfo = AlertResponse.VehicleInfo.builder()
+                    .vehicleId(trip.getVehicle().getVehicleId())
+                    .plateNumber(trip.getVehicle().getPlateNumber())
+                    .model(trip.getVehicle().getModel())
+                    .build();
+        }
+
+        AlertResponse.TripInfo tripInfo = null;
+        if (trip != null) {
+            tripInfo = AlertResponse.TripInfo.builder()
+                    .tripId(trip.getTripId())
+                    .status(trip.getStatus() != null ? trip.getStatus().name() : null)
+                    .scheduledStartTime(trip.getScheduledStartTime())
+                    .scheduledEndTime(trip.getScheduledEndTime())
+                    .source(trip.getSource())
+                    .destination(trip.getDestination())
+                    .build();
+        }
+
+        java.util.Map<String, Object> eventDetails = new java.util.HashMap<>();
+        if ("TripState".equalsIgnoreCase(a.getAlertableType())) {
+             tripStateRepository.findById(a.getAlertableId()).ifPresent(s -> {
+                 eventDetails.put("eventId", s.getStateId());
+                 eventDetails.put("eventType", a.getAlertType());
+                 eventDetails.put("timestamp", s.getLastUpdatedAt());
+             });
+        }
         return AlertResponse.builder()
                 .alertId(a.getAlertId())
                 .tripId(a.getTrip().getTripId())
@@ -142,6 +181,10 @@ public class AlertServiceImpl implements AlertService {
                 .alertableType(a.getAlertableType())
                 .alertableId(a.getAlertableId())
                 .timestamp(a.getTimestamp())
+                .trip(tripInfo)
+                .driver(driverInfo)
+                .vehicle(vehicleInfo)
+                .event(eventDetails.isEmpty() ? null : eventDetails)
                 .build();
     }
     private AlertEventMessage toMessage(Alert a) {
