@@ -229,4 +229,58 @@ class DriverControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
                 .andExpect(status().isForbidden());
     }
+
+
+
+
+
+    @Test
+    void getDriverById_shouldReturnDriver() throws Exception {
+        UUID driverId = UUID.randomUUID();
+        DriverResponse response = DriverResponse.builder()
+                .userId(driverId).email("driver@example.com").build();
+        Mockito.when(fleetManagementService.getDriverById(eq(driverId))).thenReturn(response);
+
+        mockMvc.perform(get("/drivers/" + driverId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.email").value("driver@example.com"));
+    }
+
+    @Test
+    void createDriverMissingLicense_shouldReturn400() throws Exception {
+        UUID managerId = UUID.randomUUID();
+        CreateDriverRequest request = new CreateDriverRequest(
+                "Driver One", "driver@example.com", "Password123", null, "01000000000");
+
+        mockMvc.perform(post("/drivers")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void getMeAsFleetManager_shouldReturn403() throws Exception {
+        mockMvc.perform(get("/drivers/me")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deleteDriverNotFound_shouldReturn404() throws Exception {
+        UUID driverId = UUID.randomUUID();
+        Mockito.doThrow(new com.udjattrack.exception.ResourceNotFoundException("Driver", "id", driverId.toString()))
+                .when(fleetManagementService).deleteDriver(eq(driverId));
+
+        mockMvc.perform(delete("/drivers/" + driverId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
 }

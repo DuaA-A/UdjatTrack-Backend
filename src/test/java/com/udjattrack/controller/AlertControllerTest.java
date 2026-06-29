@@ -130,4 +130,16 @@ class AlertControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }
+    @Test
+    void getAlertById_notFound_shouldReturn404() throws Exception {
+        UUID alertId = UUID.randomUUID();
+        Mockito.when(alertService.getAlertById(eq(alertId)))
+                .thenThrow(new com.udjattrack.exception.ResourceNotFoundException("Alert", "id", alertId.toString()));
+
+        mockMvc.perform(get("/alerts/" + alertId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
 }

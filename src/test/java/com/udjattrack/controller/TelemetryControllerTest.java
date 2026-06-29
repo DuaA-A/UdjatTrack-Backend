@@ -1,5 +1,6 @@
 package com.udjattrack.controller;
 
+import com.udjattrack.dto.request.OfflineSyncRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.request.TelemetryBatchRequest;
 import com.udjattrack.dto.response.TelemetryRecordResponse;
@@ -118,5 +119,42 @@ class TelemetryControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+
+    @Test
+    void ingestTelemetry_onFinishedTrip_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.doThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"))
+                .when(telemetryService).ingestTelemetry(eq(tripId), any(TelemetryRequest.class));
+
+        TelemetryRequest request = new TelemetryRequest(
+                java.time.OffsetDateTime.now(),
+                new com.udjattrack.dto.request.LocationDTO(12.34, 56.78),
+                60.5, com.udjattrack.entity.enums.DriverState.NORMAL, null);
+
+        mockMvc.perform(post("/trips/" + tripId + "/telemetry")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void ingestTelemetry_asFleetManager_shouldReturn403() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TelemetryRequest request = new TelemetryRequest(
+                java.time.OffsetDateTime.now(),
+                new com.udjattrack.dto.request.LocationDTO(12.34, 56.78),
+                60.5, com.udjattrack.entity.enums.DriverState.NORMAL, null);
+
+        mockMvc.perform(post("/trips/" + tripId + "/telemetry")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isForbidden());
     }
 }

@@ -1,8 +1,4 @@
 package com.udjattrack.controller;
-
-import com.udjattrack.dto.response.ApiResponse;
-import com.udjattrack.dto.response.TripResponse;
-import com.udjattrack.dto.response.AlertResponse;
 import com.udjattrack.security.JwtUtil;
 import com.udjattrack.security.UserDetailsServiceImpl;
 import com.udjattrack.service.AlertService;
@@ -18,16 +14,12 @@ import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfig
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import com.udjattrack.config.SecurityConfig;
 import com.udjattrack.security.JwtAuthFilter;
-
 import java.util.List;
 import java.util.UUID;
-
-import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -111,5 +103,26 @@ class DashboardControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void getDashboard_asDriver_shouldReturn403() throws Exception {
+        UUID fleetId = UUID.randomUUID();
+        mockMvc.perform(get("/dashboard/" + fleetId + "/fleet-status")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAlertsSummary_noAlertsToday_shouldReturnZeros() throws Exception {
+        UUID fleetId = UUID.randomUUID();
+        Mockito.when(alertService.getAllAlertsByFleetManager(eq(fleetId))).thenReturn(List.of());
+
+        mockMvc.perform(get("/dashboard/" + fleetId + "/alerts-summary")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(jsonPath("$.data.critical").value(0))
+                .andExpect(jsonPath("$.data.unacknowledged").value(0));
     }
 }

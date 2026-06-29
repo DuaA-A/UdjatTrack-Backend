@@ -11,7 +11,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-// Removed reference to JpaAuditingAutoConfiguration (not present on classpath)
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.udjattrack.config.SecurityConfig;
 import com.udjattrack.security.JwtAuthFilter;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -200,5 +200,33 @@ class VehicleControllerTest {
         mockMvc.perform(delete("/vehicles/" + vehicleId)
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listVehicles_shouldReturnVehicleList() throws Exception {
+        UUID managerId = UUID.randomUUID();
+        VehicleResponse v = VehicleResponse.builder().plateNumber("ABC123").build();
+        Mockito.when(fleetManagementService.getVehiclesByManager(eq(managerId), any())).thenReturn(List.of(v));
+
+        mockMvc.perform(get("/vehicles")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].plateNumber").value("ABC123"));
+    }
+
+    @Test
+    void addVehicleMissingModel_shouldReturn400() throws Exception {
+        UUID managerId = UUID.randomUUID();
+        AddVehicleRequest request = new AddVehicleRequest("ABC123", null, 2024);
+
+        mockMvc.perform(post("/vehicles")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }
