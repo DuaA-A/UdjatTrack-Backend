@@ -42,10 +42,6 @@ spring:
       mail:
         smtp:
           auth: true
-          ssl:
-            enable: false
-            trust: ${MAIL_HOST:smtp.gmail.com}
-            protocols: TLSv1.2
           starttls:
             enable: true
             required: true
@@ -54,6 +50,11 @@ spring:
           writetimeout: 5000
         debug: false
 
+  # Disable mail validation on startup (Railway can't reach external SMTP)
+  boot:
+    autoconfigure:
+      mail:
+        MailSenderValidatorAutoConfiguration: false
 
   # ===== Cache =====
   cache:
@@ -143,3 +144,4 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
