@@ -1,0 +1,573 @@
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+.wrap { padding: 16px 0; font-size: 14px; color: var(--text-primary); }
+.section { margin-bottom: 28px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+  background: var(--surface-1); border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+.section-header:hover { background: var(--surface-0); }
+.section-badge {
+  font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px;
+  background: var(--bg-accent); color: var(--text-accent); margin-left: auto;
+}
+.section-title { font-weight: 500; font-size: 15px; }
+.section-icon { font-size: 18px; }
+.chevron { margin-left: 4px; transition: transform 0.2s; color: var(--text-muted); font-size: 12px; }
+.chevron.open { transform: rotate(180deg); }
+.scenarios { display: none; }
+.scenarios.open { display: block; }
+.scenario {
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px 10px 44px;
+}
+.scenario:last-child { border-bottom: none; }
+.sc-name { font-weight: 500; font-size: 13px; color: var(--text-primary); margin-bottom: 4px; }
+.sc-cases { list-style: none; padding: 0; margin: 0; }
+.sc-cases li {
+  font-size: 12px; color: var(--text-secondary); padding: 2px 0;
+  display: flex; align-items: flex-start; gap: 6px; line-height: 1.5;
+}
+.tag {
+  font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 10px;
+  white-space: nowrap; margin-top: 2px; flex-shrink: 0;
+}
+.tag-happy { background: var(--bg-success); color: var(--text-success); }
+.tag-error { background: var(--bg-danger); color: var(--text-danger); }
+.tag-edge  { background: var(--bg-warning); color: var(--text-warning); }
+.tag-security { background: #EEEDFE; color: #3C3489; }
+.summary-bar {
+  display: flex; gap: 16px; padding: 12px 16px;
+  background: var(--surface-1); border-bottom: 1px solid var(--border);
+  font-size: 12px; flex-wrap: wrap;
+}
+.sum-item { display: flex; align-items: center; gap: 5px; }
+.sum-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+<div class="wrap">
+<h2 class="sr-only">Unit test scenarios for Udjat Track API</h2>
+
+<div class="summary-bar">
+  <span style="font-weight:500;color:var(--text-primary);margin-right:4px">Legend:</span>
+  <span class="sum-item"><span class="sum-dot" style="background:#3B6D11"></span><span class="tag tag-happy">happy path</span></span>
+  <span class="sum-item"><span class="sum-dot" style="background:#A32D2D"></span><span class="tag tag-error">error / rejection</span></span>
+  <span class="sum-item"><span class="sum-dot" style="background:#854F0B"></span><span class="tag tag-edge">edge case</span></span>
+  <span class="sum-item"><span class="sum-dot" style="background:#3C3489"></span><span class="tag tag-security">security / auth</span></span>
+</div>
+
+<div id="modules"></div>
+</div>
+
+<script>
+const modules = [
+  {
+    icon: "🔐",
+    title: "Authentication",
+    scenarios: [
+      {
+        name: "POST /auth/login",
+        cases: [
+          { tag: "happy", text: "Valid credentials return accessToken, refreshToken, role, userId" },
+          { tag: "error", text: "Wrong password returns 401 with no tokens" },
+          { tag: "error", text: "Non-existent email returns 401 (no user enumeration)" },
+          { tag: "error", text: "FLEET_MANAGER with ACCOUNT_PENDING_APPROVAL status is rejected" },
+          { tag: "edge",  text: "Empty email or password fields return 400 validation error" },
+          { tag: "edge",  text: "Password with only spaces returns validation error" },
+          { tag: "security", text: "Response never includes raw password in any field" },
+        ]
+      },
+      {
+        name: "POST /auth/refresh",
+        cases: [
+          { tag: "happy", text: "Valid refresh token returns new accessToken" },
+          { tag: "happy", text: "Refresh token is rotated — old token is invalidated after use" },
+          { tag: "error", text: "Expired refresh token returns 401" },
+          { tag: "error", text: "Blacklisted (already used) refresh token is rejected" },
+          { tag: "edge",  text: "Malformed JWT string returns 400" },
+        ]
+      },
+      {
+        name: "POST /auth/logout",
+        cases: [
+          { tag: "happy", text: "Valid refresh token is blacklisted, subsequent refresh fails" },
+          { tag: "error", text: "Already-blacklisted token returns error or idempotent 200" },
+          { tag: "security", text: "Logging out without Authorization header is rejected" },
+        ]
+      },
+      {
+        name: "POST /auth/forgot-password",
+        cases: [
+          { tag: "happy", text: "Registered email triggers OTP send, response is generic success message" },
+          { tag: "edge",  text: "Unregistered email returns same generic message (no user enumeration)" },
+          { tag: "edge",  text: "Repeated calls for same email invalidate the previous OTP" },
+        ]
+      },
+      {
+        name: "POST /auth/reset-password",
+        cases: [
+          { tag: "happy", text: "Correct OTP + valid new password resets successfully" },
+          { tag: "error", text: "Wrong OTP returns INVALID_OTP error" },
+          { tag: "error", text: "Expired OTP (>10 min) returns OTP_EXPIRED error" },
+          { tag: "error", text: "OTP reuse after successful reset is rejected" },
+          { tag: "edge",  text: "Password failing complexity rules returns 400 validation error" },
+          { tag: "security", text: "OTP from one email cannot reset another email's password" },
+        ]
+      },
+      {
+        name: "POST /auth/signup/fleet-manager (SUPER_MANAGER only)",
+        cases: [
+          { tag: "happy", text: "Valid payload creates fleet manager with ACTIVE status" },
+          { tag: "error", text: "Duplicate email returns 409 conflict" },
+          { tag: "error", text: "FLEET_MANAGER or DRIVER role calling this endpoint returns UNAUTHORIZED_ROLE" },
+          { tag: "edge",  text: "Missing required fields (businessLicense, companyName) returns 400" },
+          { tag: "security", text: "Unauthenticated request is rejected with 401" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "👤",
+    title: "Driver Management",
+    scenarios: [
+      {
+        name: "POST /drivers",
+        cases: [
+          { tag: "happy", text: "FLEET_MANAGER creates driver — returns driverId and email" },
+          { tag: "error", text: "Duplicate email returns 409" },
+          { tag: "error", text: "DRIVER role attempting to create driver returns UNAUTHORIZED_ROLE" },
+          { tag: "edge",  text: "Missing licenseNumber or phone returns 400" },
+          { tag: "edge",  text: "Photo field accepts valid image format without error" },
+        ]
+      },
+      {
+        name: "GET /drivers",
+        cases: [
+          { tag: "happy", text: "Returns paginated list of fleet's drivers with vehicle info" },
+          { tag: "happy", text: "?status filter returns only drivers matching that status" },
+          { tag: "happy", text: "?idle filter returns only idle (UNASSIGNED) drivers" },
+          { tag: "error", text: "DRIVER role is rejected with UNAUTHORIZED_ROLE" },
+          { tag: "edge",  text: "Empty fleet returns empty data array, not null" },
+          { tag: "edge",  text: "Pagination params page=0&size=5 correctly limit and offset results" },
+        ]
+      },
+      {
+        name: "GET /drivers/{id}",
+        cases: [
+          { tag: "happy", text: "Returns full driver profile including fatigueAlerts, totalTrips" },
+          { tag: "error", text: "Non-existent driverId returns RESOURCE_NOT_FOUND" },
+          { tag: "security", text: "FLEET_MANAGER can only view drivers in their own fleet" },
+        ]
+      },
+      {
+        name: "GET /drivers/me",
+        cases: [
+          { tag: "happy", text: "Authenticated driver receives their own profile with stats" },
+          { tag: "security", text: "FLEET_MANAGER calling /me endpoint is rejected" },
+        ]
+      },
+      {
+        name: "DELETE /drivers/{id}",
+        cases: [
+          { tag: "happy", text: "Driver with no active trip is deleted successfully" },
+          { tag: "error", text: "Deleting driver with ONGOING trip is rejected" },
+          { tag: "error", text: "Non-existent driverId returns RESOURCE_NOT_FOUND" },
+          { tag: "security", text: "DRIVER role cannot delete any driver" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🚛",
+    title: "Vehicle Management",
+    scenarios: [
+      {
+        name: "POST /vehicles",
+        cases: [
+          { tag: "happy", text: "Valid payload creates vehicle and returns vehicleId" },
+          { tag: "error", text: "Duplicate plateNumber returns 409 conflict" },
+          { tag: "edge",  text: "Missing model or manufactureYear returns 400" },
+          { tag: "security", text: "DRIVER role cannot create vehicles" },
+        ]
+      },
+      {
+        name: "GET /vehicles & GET /vehicles/{id}",
+        cases: [
+          { tag: "happy", text: "List returns all vehicles with assignmentStatus and driver info" },
+          { tag: "happy", text: "?idle filter returns only UNASSIGNED vehicles" },
+          { tag: "happy", text: "Single vehicle shows working, idle, assignmentStatus correctly" },
+          { tag: "error", text: "Unknown vehicleId returns RESOURCE_NOT_FOUND" },
+          { tag: "edge",  text: "Pagination params work correctly on large fleet" },
+        ]
+      },
+      {
+        name: "DELETE /vehicles/{id}",
+        cases: [
+          { tag: "happy", text: "Idle/unassigned vehicle is deleted successfully" },
+          { tag: "error", text: "Vehicle on an active trip is rejected (cannot delete)" },
+          { tag: "security", text: "DRIVER role is rejected" },
+        ]
+      },
+      {
+        name: "GET /vehicles/{vehicleId}/maintenance-logs",
+        cases: [
+          { tag: "happy", text: "Returns maintenance log array with date, mileage, details, status" },
+          { tag: "edge",  text: "Vehicle with no logs returns empty array" },
+          { tag: "error", text: "Unknown vehicleId returns RESOURCE_NOT_FOUND" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🗺️",
+    title: "Trip Management",
+    scenarios: [
+      {
+        name: "POST /trips (create)",
+        cases: [
+          { tag: "happy", text: "Valid driverId + vehicleId creates PLANNED trip" },
+          { tag: "error", text: "Driver already on active trip returns DRIVER_ALREADY_ON_TRIP" },
+          { tag: "error", text: "Vehicle already on trip returns VEHICLE_ALREADY_ON_TRIP" },
+          { tag: "error", text: "Non-existent driverId or vehicleId returns RESOURCE_NOT_FOUND" },
+          { tag: "edge",  text: "scheduledEndTime before scheduledStartTime returns 400" },
+          { tag: "security", text: "DRIVER role cannot create trips" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/start",
+        cases: [
+          { tag: "happy", text: "PLANNED trip transitions to ONGOING, returns startedAt timestamp" },
+          { tag: "error", text: "Starting an already ONGOING trip returns INVALID_STATE_TRANSITION" },
+          { tag: "error", text: "Starting a FINISHED or CANCELLED trip returns INVALID_STATE_TRANSITION" },
+          { tag: "error", text: "Driver with no vehicle assigned returns DRIVER_NOT_ASSIGNED" },
+          { tag: "security", text: "FLEET_MANAGER cannot call start on behalf of driver" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/Paused & /Resumed",
+        cases: [
+          { tag: "happy", text: "ONGOING → ON_BREAK → ONGOING state transitions work" },
+          { tag: "error", text: "Pausing an ON_BREAK trip returns INVALID_STATE_TRANSITION" },
+          { tag: "error", text: "Resuming an ONGOING trip returns INVALID_STATE_TRANSITION" },
+          { tag: "edge",  text: "Break duration seconds is correctly calculated on resume" },
+          { tag: "edge",  text: "Multiple pause/resume cycles are all logged in timeline" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/end",
+        cases: [
+          { tag: "happy", text: "ONGOING trip transitions to FINISHED, triggers summary generation" },
+          { tag: "error", text: "Ending ON_BREAK trip without resume first returns INVALID_STATE_TRANSITION" },
+          { tag: "error", text: "Ending PLANNED trip is rejected" },
+          { tag: "security", text: "FLEET_MANAGER cannot end trip on behalf of driver" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/cancel",
+        cases: [
+          { tag: "happy", text: "FLEET_MANAGER cancels ONGOING trip successfully" },
+          { tag: "error", text: "Cancelling a FINISHED trip returns INVALID_STATE_TRANSITION" },
+          { tag: "security", text: "DRIVER cannot cancel their own trip via this endpoint" },
+        ]
+      },
+      {
+        name: "GET /trips & GET /trips/{tripId}",
+        cases: [
+          { tag: "happy", text: "?status=ONGOING returns only active trips with tripState and coordinates" },
+          { tag: "happy", text: "timeframe=UPCOMING maps correctly to status=PLANNED" },
+          { tag: "happy", text: "timeframe=ACTIVE maps to ONGOING or ON_BREAK" },
+          { tag: "happy", text: "timeframe=PAST maps to FINISHED or CANCELLED" },
+          { tag: "happy", text: "Single trip returns progressPct, estimatedArrivalTime, route coords" },
+          { tag: "edge",  text: "DRIVER can only see their own trips, not fleet-wide" },
+          { tag: "edge",  text: "Filtering by dateFrom+dateTo returns only trips in that range" },
+          { tag: "error", text: "Unknown tripId returns TRIP_NOT_FOUND" },
+        ]
+      },
+      {
+        name: "GET /trips/{tripId}/timeline",
+        cases: [
+          { tag: "happy", text: "Returns ordered list of TRIP_STATE, EVENT, and INCIDENT items" },
+          { tag: "happy", text: "Alert items have isAlert=true with alertDetails populated" },
+          { tag: "edge",  text: "Trip with no events returns only TRIP_STATE items" },
+          { tag: "error", text: "DRIVER viewing another driver's trip timeline is rejected" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "📡",
+    title: "Telemetry & Events",
+    scenarios: [
+      {
+        name: "POST /trips/{tripId}/telemetry",
+        cases: [
+          { tag: "happy", text: "Valid heartbeat payload returns 202 Accepted" },
+          { tag: "error", text: "Posting telemetry to a FINISHED trip returns INVALID_STATE_TRANSITION" },
+          { tag: "error", text: "Missing location or timestamp returns TELEMETRY_INVALID" },
+          { tag: "error", text: "Speed value out of range (negative) returns TELEMETRY_INVALID" },
+          { tag: "edge",  text: "driverState values outside enum (ALERT|DROWSY|HIGH_RISK|UNCONSCIOUS) are rejected" },
+          { tag: "edge",  text: "Offline-synced timestamps older than trip start are accepted and logged correctly" },
+        ]
+      },
+      {
+        name: "POST /sync/offline-data",
+        cases: [
+          { tag: "happy", text: "Batch of telemetry + events are all persisted, returns 202" },
+          { tag: "edge",  text: "Duplicate timestamps in batch are handled without duplication" },
+          { tag: "edge",  text: "Batch containing records for a FINISHED trip are rejected gracefully" },
+          { tag: "error", text: "Empty batch arrays return 400" },
+        ]
+      },
+      {
+        name: "POST /trips/{tripId}/events",
+        cases: [
+          { tag: "happy", text: "CRASH event creates event, sets alertCreated=true in response" },
+          { tag: "happy", text: "DROWSINESS event is stored with correct payload (blinkRate, yawnCount)" },
+          { tag: "happy", text: "Each critical eventType auto-creates an Alert linked to the event" },
+          { tag: "error", text: "Invalid eventType value returns 400" },
+          { tag: "edge",  text: "Event posted to non-ONGOING trip is rejected" },
+          { tag: "edge",  text: "Severity enum outside LOW|MEDIUM|HIGH|CRITICAL returns 400" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🚨",
+    title: "Alerts & Issues",
+    scenarios: [
+      {
+        name: "GET /alerts",
+        cases: [
+          { tag: "happy", text: "Returns paginated alert list with driverName, alertType, severity" },
+          { tag: "happy", text: "?status=UNACKNOWLEDGED returns only unread alerts" },
+          { tag: "happy", text: "Filter by severity=CRITICAL returns only critical alerts" },
+          { tag: "happy", text: "Filter by driverId scopes to that driver's alerts" },
+          { tag: "security", text: "DRIVER role cannot access fleet-wide alert list" },
+        ]
+      },
+      {
+        name: "GET /alerts/{alertId}",
+        cases: [
+          { tag: "happy", text: "Returns full alert with trip, driver, vehicle, and event details" },
+          { tag: "happy", text: "alertable field reflects correct type: TripState, Incident, SOSRequest, etc." },
+          { tag: "error", text: "Unknown alertId returns RESOURCE_NOT_FOUND" },
+        ]
+      },
+      {
+        name: "POST /alerts/{alertId}/ack",
+        cases: [
+          { tag: "happy", text: "Unacknowledged alert is marked acknowledged with ackedAt timestamp" },
+          { tag: "edge",  text: "Acknowledging an already-acknowledged alert returns success (idempotent)" },
+          { tag: "error", text: "Unknown alertId returns RESOURCE_NOT_FOUND" },
+          { tag: "security", text: "DRIVER role attempting to ack is rejected" },
+        ]
+      },
+      {
+        name: "GET /issues & POST /issues/{id}/resolve",
+        cases: [
+          { tag: "happy", text: "?status=OPEN returns only unresolved SOS and maintenance tickets" },
+          { tag: "happy", text: "Filter ?category=SOS returns only SOS issues" },
+          { tag: "happy", text: "Resolve with resolutionNote marks issue as RESOLVED" },
+          { tag: "edge",  text: "Resolving already-resolved issue is idempotent or returns appropriate error" },
+          { tag: "error", text: "Unknown issueId returns RESOURCE_NOT_FOUND" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/issues/sos",
+        cases: [
+          { tag: "happy", text: "SOS submitted creates open issue and triggers WebSocket alert to fleet" },
+          { tag: "error", text: "SOS_ALREADY_ACTIVE if one is already open for this trip" },
+          { tag: "error", text: "Submitting SOS on FINISHED trip is rejected" },
+          { tag: "security", text: "Only the driver on that trip can submit SOS" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/issues/maintenance",
+        cases: [
+          { tag: "happy", text: "Valid maintenanceType creates open maintenance issue" },
+          { tag: "error", text: "Invalid maintenanceType value returns 400" },
+          { tag: "error", text: "Submitting on FINISHED trip is rejected" },
+        ]
+      },
+      {
+        name: "POST /trips/{id}/incidents",
+        cases: [
+          { tag: "happy", text: "Manual incident creates incident and generates alert to dashboard" },
+          { tag: "error", text: "Invalid incidentType returns 400" },
+          { tag: "edge",  text: "Auto-generated incidents from CRASH event have correct incidentType=TRAFFIC_COLLISION" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "📊",
+    title: "Dashboard & Reports",
+    scenarios: [
+      {
+        name: "GET /dashboard/{fleetId}/fleet-status",
+        cases: [
+          { tag: "happy", text: "Returns activeVehicles, activeTrips with change percentages" },
+          { tag: "edge",  text: "Fleet with no active trips returns 0 for active counts" },
+          { tag: "security", text: "FLEET_MANAGER can only view their own fleetId, not another's" },
+        ]
+      },
+      {
+        name: "GET /dashboard/{fleetId}/alerts-summary",
+        cases: [
+          { tag: "happy", text: "Returns totalToday, critical, unacknowledged counts and byType breakdown" },
+          { tag: "edge",  text: "Day rollover: totalToday resets at midnight" },
+        ]
+      },
+      {
+        name: "GET /dashboard/drivers-status",
+        cases: [
+          { tag: "happy", text: "Returns alert, drowsy, highRisk counts reflecting live driverState values" },
+          { tag: "edge",  text: "All drivers normal returns 0 for all risk counts" },
+        ]
+      },
+      {
+        name: "GET /reports/trip/{tripId} & /driver/{driverId}",
+        cases: [
+          { tag: "happy", text: "Returns 200 with Content-Type: application/pdf binary" },
+          { tag: "error", text: "Unknown tripId or driverId returns RESOURCE_NOT_FOUND" },
+          { tag: "edge",  text: "Trip report for PLANNED (not started) trip returns appropriate error or empty sections" },
+        ]
+      },
+      {
+        name: "GET /reports/kpis",
+        cases: [
+          { tag: "happy", text: "?dateRange=LAST_YEAR returns tripsCompleted, fatigueAlerts, sosAlerts" },
+          { tag: "edge",  text: "?dateRange=LAST_MONTH returns counts scoped to that range only" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🔔",
+    title: "Emergency Contacts & Notifications",
+    scenarios: [
+      {
+        name: "POST /drivers/{driverId}/emergency-contacts",
+        cases: [
+          { tag: "happy", text: "Valid contact created with name, phoneNumber, relation" },
+          { tag: "error", text: "Missing phoneNumber returns 400" },
+          { tag: "security", text: "DRIVER can only add contacts to their own profile" },
+        ]
+      },
+      {
+        name: "GET /drivers/{driverId}/emergency-contacts",
+        cases: [
+          { tag: "happy", text: "Returns all contacts for the driver" },
+          { tag: "edge",  text: "Driver with no contacts returns empty array" },
+          { tag: "security", text: "Driver cannot view another driver's emergency contacts" },
+        ]
+      },
+      {
+        name: "GET /drivers/{driverId}/notifications",
+        cases: [
+          { tag: "happy", text: "Returns TRIP_ASSIGNED, SAFETY_ALERT, SYSTEM_BROADCAST notifications" },
+          { tag: "happy", text: "isRead=true/false reflects read state correctly" },
+          { tag: "edge",  text: "Driver with no notifications returns empty array" },
+          { tag: "security", text: "Driver can only view their own notifications" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🌐",
+    title: "WebSocket / STOMP",
+    scenarios: [
+      {
+        name: "SUBSCRIBE /topic/fleet/{fleetId}/telemetry",
+        cases: [
+          { tag: "happy", text: "Telemetry POST triggers push to fleet topic with correct tripId and location" },
+          { tag: "happy", text: "driverState and progressPct are updated in the live payload" },
+          { tag: "security", text: "JWT in connection header is validated; invalid token refuses connection" },
+          { tag: "edge",  text: "Disconnected client does not receive missed messages on reconnect (no durable subscription)" },
+        ]
+      },
+      {
+        name: "SUBSCRIBE /topic/fleet/{fleetId}/alerts",
+        cases: [
+          { tag: "happy", text: "SOS issue creates SOSReq alert payload pushed to topic" },
+          { tag: "happy", text: "Maintenance issue pushes Maintenance alertType payload" },
+          { tag: "happy", text: "Crash event auto-generates Incident alert (TRAFFIC_COLLISION) pushed live" },
+          { tag: "happy", text: "AI fatigue event pushes Fatigue alert with alertable.type=TripState" },
+          { tag: "happy", text: "Manual incident pushes Incident alert with correct incidentType" },
+          { tag: "edge",  text: "Multiple concurrent alerts are all pushed independently, not batched" },
+        ]
+      },
+    ]
+  },
+  {
+    icon: "🛡️",
+    title: "Cross-Cutting: Security & Auth Guards",
+    scenarios: [
+      {
+        name: "Role-based access control",
+        cases: [
+          { tag: "security", text: "All protected endpoints return 401 when no Authorization header is present" },
+          { tag: "security", text: "Expired access token returns 401 on any protected call" },
+          { tag: "security", text: "DRIVER cannot access any /vehicles, /drivers (fleet list), or /dashboard endpoints" },
+          { tag: "security", text: "FLEET_MANAGER cannot access SUPER_MANAGER-only endpoints" },
+          { tag: "security", text: "FLEET_MANAGER cannot access another fleet's drivers, vehicles, or trips" },
+          { tag: "security", text: "DRIVER cannot start, pause, or end another driver's trip" },
+        ]
+      },
+      {
+        name: "Standard response envelope",
+        cases: [
+          { tag: "edge", text: "Every response (success and error) includes success, data, message fields" },
+          { tag: "edge", text: "400 validation errors include errors array with field-level details" },
+          { tag: "edge", text: "Error codes from the standard list (TRIP_NOT_FOUND, INVALID_STATE_TRANSITION, etc.) are used consistently" },
+        ]
+      },
+    ]
+  },
+];
+
+const container = document.getElementById('modules');
+
+modules.forEach((mod, i) => {
+  const div = document.createElement('div');
+  div.className = 'section';
+  const totalCases = mod.scenarios.reduce((acc, s) => acc + s.cases.length, 0);
+
+  div.innerHTML = `
+    <div class="section-header" onclick="toggle(${i})">
+      <span class="section-icon">${mod.icon}</span>
+      <span class="section-title">${mod.title}</span>
+      <span class="section-badge">${totalCases} scenarios</span>
+      <i class="ti ti-chevron-down chevron" id="chev-${i}"></i>
+    </div>
+    <div class="scenarios" id="sc-${i}">
+      ${mod.scenarios.map(sc => `
+        <div class="scenario">
+          <div class="sc-name">${sc.name}</div>
+          <ul class="sc-cases">
+            ${sc.cases.map(c => `
+              <li>
+                <span class="tag tag-${c.tag}">${c.tag === 'security' ? 'security' : c.tag === 'happy' ? 'happy path' : c.tag === 'error' ? 'error' : 'edge case'}</span>
+                <span>${c.text}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  container.appendChild(div);
+});
+
+function toggle(i) {
+  const sc = document.getElementById('sc-' + i);
+  const chev = document.getElementById('chev-' + i);
+  const open = sc.classList.toggle('open');
+  chev.classList.toggle('open', open);
+}
+
+toggle(0);
+</script>

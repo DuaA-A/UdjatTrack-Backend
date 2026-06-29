@@ -14,10 +14,13 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import com.udjattrack.config.SecurityConfig;
+import com.udjattrack.security.JwtAuthFilter;
 
 import java.util.UUID;
 
@@ -32,10 +35,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 HibernateJpaAutoConfiguration.class,
                 JpaRepositoriesAutoConfiguration.class
         })
+@Import(SecurityConfig.class)
 class DriverControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
 
     @MockBean
     private FleetManagementService fleetManagementService;
@@ -47,6 +54,18 @@ class DriverControllerTest {
     @SuppressWarnings("unused")
     @MockBean
     private UserDetailsServiceImpl userDetailsService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        Mockito.doAnswer(invocation -> {
+            ((jakarta.servlet.FilterChain) invocation.getArgument(2))
+                    .doFilter(
+                            (jakarta.servlet.ServletRequest) invocation.getArgument(0),
+                            (jakarta.servlet.ServletResponse) invocation.getArgument(1)
+                    );
+            return null;
+        }).when(jwtAuthFilter).doFilter(any(), any(), any());
+    }
 
     @Test
     void createDriverAsFleetManager_shouldReturnCreated() throws Exception {

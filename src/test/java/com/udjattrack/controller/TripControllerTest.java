@@ -17,9 +17,12 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import com.udjattrack.config.SecurityConfig;
+import com.udjattrack.security.JwtAuthFilter;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,10 +40,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
                 HibernateJpaAutoConfiguration.class,
                 JpaRepositoriesAutoConfiguration.class
         })
+@Import(SecurityConfig.class)
 class TripControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private JwtAuthFilter jwtAuthFilter;
 
     @MockBean
     private TripService tripService;
@@ -60,6 +67,18 @@ class TripControllerTest {
     @SuppressWarnings("unused")
     @MockBean
     private UserDetailsServiceImpl userDetailsService;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws Exception {
+        Mockito.doAnswer(invocation -> {
+            ((jakarta.servlet.FilterChain) invocation.getArgument(2))
+                    .doFilter(
+                            (jakarta.servlet.ServletRequest) invocation.getArgument(0),
+                            (jakarta.servlet.ServletResponse) invocation.getArgument(1)
+                    );
+            return null;
+        }).when(jwtAuthFilter).doFilter(any(), any(), any());
+    }
 
     @Test
     void createTripAsFleetManager_shouldReturnCreated() throws Exception {
@@ -121,7 +140,7 @@ class TripControllerTest {
         TripResponse response = TripResponse.builder()
                 .tripId(UUID.randomUUID())
                 .build();
-        Mockito.when(tripService.getTripsByDriver(eq(driverId), any(String.class))).thenReturn(List.of(response));
+        Mockito.when(tripService.getTripsByDriver(eq(driverId), org.mockito.ArgumentMatchers.nullable(String.class))).thenReturn(List.of(response));
 
         mockMvc.perform(get("/trips")
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(driverId, "driver@example.com", "ROLE_DRIVER"))))
