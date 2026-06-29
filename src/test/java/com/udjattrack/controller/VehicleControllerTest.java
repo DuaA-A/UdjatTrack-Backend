@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
@@ -41,9 +40,7 @@ class VehicleControllerTest {
         AddVehicleRequest request = new AddVehicleRequest(
                 "ABC123",
                 "Model X",
-                "Truck",
-                2024,
-                "VIN123456789"
+                2024
         );
 
         mockMvc.perform(post("/vehicles")

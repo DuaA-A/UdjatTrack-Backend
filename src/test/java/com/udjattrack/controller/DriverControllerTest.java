@@ -1,9 +1,7 @@
 package com.udjattrack.controller;
 
 import com.udjattrack.dto.request.CreateDriverRequest;
-import com.udjattrack.dto.request.CreateDependentRequest;
 import com.udjattrack.dto.response.DriverResponse;
-import com.udjattrack.dto.response.DependentResponse;
 import com.udjattrack.service.FleetManagementService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,10 +13,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

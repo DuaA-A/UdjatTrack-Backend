@@ -1,10 +1,8 @@
 package com.udjattrack.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udjattrack.dto.request.LoginRequest;
 import com.udjattrack.dto.request.ForgotPasswordRequest;
 import com.udjattrack.dto.request.CreateSuperManagerRequest;
-import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.dto.response.AuthResponse;
 import com.udjattrack.dto.response.SuperManagerSignupResponse;
 import com.udjattrack.service.AuthService;
@@ -14,14 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,14 +27,12 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private AuthService authService;
 
+    @SuppressWarnings("unused")
     @MockBean
-    private PasswordEncoder passwordEncoder;
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Test
     void loginSuccess_shouldReturnAuthResponse() throws Exception {
