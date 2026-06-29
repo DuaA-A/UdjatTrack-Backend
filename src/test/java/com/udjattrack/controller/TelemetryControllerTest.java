@@ -73,7 +73,11 @@ class TelemetryControllerTest {
     void ingestTelemetry_shouldReturn202() throws Exception {
         UUID tripId = UUID.randomUUID();
         TelemetryRequest request = new TelemetryRequest(
-                12.34, 56.78, 60.5, "ALERT", null
+                java.time.OffsetDateTime.now(),
+                new com.udjattrack.dto.request.LocationDTO(12.34, 56.78),
+                60.5,
+                com.udjattrack.entity.enums.DriverState.NORMAL,
+                null
         );
 
         mockMvc.perform(post("/trips/" + tripId + "/telemetry")

@@ -31,6 +31,7 @@ import com.udjattrack.security.JwtAuthFilter;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -222,8 +223,7 @@ class AuthControllerTest {
                 "Fleet Manager",
                 "manager@example.com",
                 "Password123!",
-                "Company A",
-                "License-123"
+                "Company A"
         );
 
         mockMvc.perform(post("/auth/signup/fleet-manager")
@@ -241,8 +241,7 @@ class AuthControllerTest {
                 "Fleet Manager",
                 "manager@example.com",
                 "Password123!",
-                "Company A",
-                "License-123"
+                "Company A"
         );
 
         mockMvc.perform(post("/auth/signup/fleet-manager")

@@ -74,7 +74,7 @@ class AlertControllerTest {
         UUID managerId = UUID.randomUUID();
         AlertResponse alert = AlertResponse.builder()
                 .alertId(UUID.randomUUID())
-                .severity("CRITICAL")
+                .severity(com.udjattrack.entity.enums.SeverityLevel.CRITICAL)
                 .build();
         Mockito.when(alertService.getAllAlertsByFleetManager(eq(managerId))).thenReturn(List.of(alert));
 
@@ -90,7 +90,7 @@ class AlertControllerTest {
         UUID managerId = UUID.randomUUID();
         AlertResponse alert = AlertResponse.builder()
                 .alertId(UUID.randomUUID())
-                .status("UNACKNOWLEDGED")
+                .acknowledged(false)
                 .build();
         Mockito.when(alertService.getUnacknowledgedAlerts(eq(managerId))).thenReturn(List.of(alert));
 
@@ -98,7 +98,7 @@ class AlertControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data[0].status").value("UNACKNOWLEDGED"));
+                .andExpect(jsonPath("$.data[0].acknowledged").value(false));
     }
 
     @Test
@@ -106,7 +106,7 @@ class AlertControllerTest {
         UUID alertId = UUID.randomUUID();
         AlertResponse alert = AlertResponse.builder()
                 .alertId(alertId)
-                .status("ACKNOWLEDGED")
+                .acknowledged(true)
                 .build();
         Mockito.when(alertService.acknowledgeAlert(eq(alertId))).thenReturn(alert);
 
@@ -114,7 +114,7 @@ class AlertControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.status").value("ACKNOWLEDGED"));
+                .andExpect(jsonPath("$.data.acknowledged").value(true));
     }
 
     @Test

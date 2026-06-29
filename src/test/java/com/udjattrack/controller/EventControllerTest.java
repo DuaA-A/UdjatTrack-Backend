@@ -78,7 +78,7 @@ class EventControllerTest {
                 .build();
         Mockito.when(eventService.reportEvent(eq(tripId), any())).thenReturn(response);
 
-        EventRequest request = new EventRequest("CRASH", "HIGH", 12.34, 56.78, null, null);
+        EventRequest request = new EventRequest(java.time.OffsetDateTime.now(), "CRASH", null);
 
         mockMvc.perform(post("/trips/" + tripId + "/events")
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
@@ -91,7 +91,7 @@ class EventControllerTest {
 
     @Test
     void syncOfflineData_shouldReturn202() throws Exception {
-        OfflineSyncRequest request = new OfflineSyncRequest(List.of(), List.of());
+        OfflineSyncRequest request = new OfflineSyncRequest(UUID.randomUUID(), List.of(), List.of());
 
         mockMvc.perform(post("/sync/offline-data")
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))

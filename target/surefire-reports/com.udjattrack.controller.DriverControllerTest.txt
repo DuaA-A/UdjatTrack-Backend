@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.udjattrack.controller.DriverControllerTest
 -------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.205 s -- in com.udjattrack.controller.DriverControllerTest
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.257 s -- in com.udjattrack.controller.DriverControllerTest

@@ -23,6 +23,7 @@ import com.udjattrack.config.SecurityConfig;
 import com.udjattrack.security.JwtAuthFilter;
 
 import java.util.UUID;
+import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -142,7 +143,7 @@ class DriverControllerTest {
     void createDriverDuplicateEmail_shouldReturn409() throws Exception {
         UUID managerId = UUID.randomUUID();
         Mockito.when(fleetManagementService.createDriver(eq(managerId), any(CreateDriverRequest.class)))
-                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("Email already exists"));
+                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("Driver", "email", "driver@example.com"));
 
         CreateDriverRequest request = new CreateDriverRequest(
                 "Driver One",

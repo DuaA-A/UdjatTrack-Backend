@@ -326,7 +326,7 @@ class TripControllerTest {
     @Test
     void getTripTimeline_shouldReturnTimeline() throws Exception {
         UUID tripId = UUID.randomUUID();
-        TripTimelineResponse timeline = TripTimelineResponse.builder()
+        com.udjattrack.dto.response.TripTimelineResponse timeline = com.udjattrack.dto.response.TripTimelineResponse.builder()
                 .timeline(List.of())
                 .build();
         Mockito.when(tripService.getTripTimeline(eq(tripId), any(), any())).thenReturn(timeline);

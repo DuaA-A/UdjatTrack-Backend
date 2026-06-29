@@ -121,7 +121,7 @@ class VehicleControllerTest {
     void addVehicleDuplicatePlate_shouldReturn409() throws Exception {
         UUID managerId = UUID.randomUUID();
         Mockito.when(fleetManagementService.addVehicle(eq(managerId), any(AddVehicleRequest.class)))
-                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("Plate number already registered"));
+                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("Vehicle", "plateNumber", "ABC123"));
 
         AddVehicleRequest request = new AddVehicleRequest("ABC123", "Model X", 2024);
 
