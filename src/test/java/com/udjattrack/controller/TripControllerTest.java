@@ -45,7 +45,7 @@ class TripControllerTest {
     void createTripAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
         TripResponse response = Mockito.mock(TripResponse.class);
-        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.PLANNEDenums.TripStatus.PLANNED);
+        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.PLANNED);
 
         Mockito.when(tripService.createTrip(any(CreateTripRequest.class))).thenReturn(response);
 
@@ -71,8 +71,9 @@ class TripControllerTest {
     @Test
     void startTripAsDriver_shouldReturnOk() throws Exception {
         UUID tripId = UUID.randomUUID();
-        TripResponse response = Mockito.mock(TripResponse.class);
-        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.ONGOING);
+        TripResponse response = new TripResponse() {
+            public com.udjattrack.entity.enums.TripStatus getStatus() { return com.udjattrack.entity.enums.TripStatus.ONGOING; }
+        };
         Mockito.when(tripService.startTrip(eq(tripId))).thenReturn(response);
 
         mockMvc.perform(post("/trips/" + tripId + "/start")
@@ -96,8 +97,9 @@ class TripControllerTest {
     @Test
     void listTripsAsDriver_withoutDriverId_shouldUseCurrentUserId() throws Exception {
         UUID driverId = UUID.randomUUID();
-        TripResponse response = Mockito.mock(TripResponse.class);
-        Mockito.when(response.getTripId()).thenReturn(UUID.randomUUID());
+        TripResponse response = new TripResponse() {
+            public UUID getTripId() { return UUID.randomUUID(); }
+        };
         Mockito.when(tripService.getTripsByDriver(eq(driverId), any(String.class))).thenReturn(List.of(response));
 
         mockMvc.perform(get("/trips")

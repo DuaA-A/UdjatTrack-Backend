@@ -36,14 +36,23 @@ class AuthControllerTest {
 
     @Test
     void loginSuccess_shouldReturnAuthResponse() throws Exception {
-        AuthResponse authResponse = Mockito.mock(AuthResponse.class);
-        Mockito.when(authResponse.getAccessToken()).thenReturn("access-token");
-        Mockito.when(authResponse.getRefreshToken()).thenReturn("refresh-token");
-        Mockito.when(authResponse.getTokenType()).thenReturn("Bearer");
-        Mockito.when(authResponse.getExpiresIn()).thenReturn(900L);
-        Mockito.when(authResponse.getUserId()).thenReturn(UUID.randomUUID().toString());
-        Mockito.when(authResponse.getEmail()).thenReturn("user@example.com");
-        Mockito.when(authResponse.getName()).thenReturn("Test User");
+        AuthResponse authResponse = new AuthResponse() {
+            private final String accessToken = "access-token";
+            private final String refreshToken = "refresh-token";
+            private final String tokenType = "Bearer";
+            private final Long expiresIn = 900L;
+            private final String userId = UUID.randomUUID().toString();
+            private final String email = "user@example.com";
+            private final String name = "Test User";
+
+            public String getAccessToken() { return accessToken; }
+            public String getRefreshToken() { return refreshToken; }
+            public String getTokenType() { return tokenType; }
+            public Long getExpiresIn() { return expiresIn; }
+            public String getUserId() { return userId; }
+            public String getEmail() { return email; }
+            public String getName() { return name; }
+        };
 
         Mockito.when(authService.login(any(LoginRequest.class))).thenReturn(authResponse);
 
@@ -81,9 +90,13 @@ class AuthControllerTest {
 
     @Test
     void signupSuperManager_shouldReturnCreated() throws Exception {
-        SuperManagerSignupResponse response = Mockito.mock(SuperManagerSignupResponse.class);
-        Mockito.when(response.getEmail()).thenReturn("super@example.com");
-        Mockito.when(response.getStatus()).thenReturn("ACTIVE");
+        SuperManagerSignupResponse response = new SuperManagerSignupResponse() {
+            private final String email = "super@example.com";
+            private final String status = "ACTIVE";
+
+            public String getEmail() { return email; }
+            public String getStatus() { return status; }
+        };
 
         Mockito.when(authService.signupSuperManager(any(CreateSuperManagerRequest.class))).thenReturn(response);
 

@@ -33,8 +33,9 @@ class VehicleControllerTest {
     @Test
     void addVehicleAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
-        VehicleResponse response = Mockito.mock(VehicleResponse.class);
-        Mockito.when(response.getPlateNumber()).thenReturn("ABC123");
+        VehicleResponse response = new VehicleResponse() {
+            public String getPlateNumber() { return "ABC123"; }
+        };
         Mockito.when(fleetManagementService.addVehicle(eq(managerId), any(AddVehicleRequest.class))).thenReturn(response);
 
         AddVehicleRequest request = new AddVehicleRequest(
@@ -54,14 +55,18 @@ class VehicleControllerTest {
     @Test
     void getVehicleWithDriver_shouldReturnVehicleWithDriver() throws Exception {
         UUID vehicleId = UUID.randomUUID();
-        VehicleWithDriverResponse response = Mockito.mock(VehicleWithDriverResponse.class);
-        Mockito.when(response.getVehicle()).thenReturn(Mockito.mock(com.udjattrack.dto.response.VehicleResponse.class));
+        com.udjattrack.dto.response.VehicleResponse vehicleResponse = new com.udjattrack.dto.response.VehicleResponse() {
+            public UUID getVehicleId() { return vehicleId; }
+        };
+        VehicleWithDriverResponse response = new VehicleWithDriverResponse() {
+            public com.udjattrack.dto.response.VehicleResponse getVehicle() { return vehicleResponse; }
+        };
         Mockito.when(fleetManagementService.getVehicleWithDriver(eq(vehicleId))).thenReturn(response);
 
         mockMvc.perform(get("/vehicles/" + vehicleId + "/with-driver")
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.vehicleId").value(vehicleId.toString()));
+                .andExpect(jsonPath("$.data.vehicle.vehicleId").value(vehicleId.toString()));
     }
 
     @Test
