@@ -2,6 +2,7 @@ package com.udjattrack.controller;
 
 import com.udjattrack.dto.request.CreateTripRequest;
 import com.udjattrack.dto.response.TripResponse;
+import com.udjattrack.entity.enums.TripStatus;
 import com.udjattrack.service.EmergencyService;
 import com.udjattrack.service.EventService;
 import com.udjattrack.service.TripService;
@@ -44,8 +45,9 @@ class TripControllerTest {
     @Test
     void createTripAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
-        TripResponse response = Mockito.mock(TripResponse.class);
-        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.PLANNED);
+        TripResponse response = TripResponse.builder()
+                .status(TripStatus.PLANNED)
+                .build();
 
         Mockito.when(tripService.createTrip(any(CreateTripRequest.class))).thenReturn(response);
 
@@ -71,9 +73,9 @@ class TripControllerTest {
     @Test
     void startTripAsDriver_shouldReturnOk() throws Exception {
         UUID tripId = UUID.randomUUID();
-        TripResponse response = new TripResponse() {
-            public com.udjattrack.entity.enums.TripStatus getStatus() { return com.udjattrack.entity.enums.TripStatus.ONGOING; }
-        };
+        TripResponse response = TripResponse.builder()
+                .status(TripStatus.ONGOING)
+                .build();
         Mockito.when(tripService.startTrip(eq(tripId))).thenReturn(response);
 
         mockMvc.perform(post("/trips/" + tripId + "/start")
@@ -97,9 +99,9 @@ class TripControllerTest {
     @Test
     void listTripsAsDriver_withoutDriverId_shouldUseCurrentUserId() throws Exception {
         UUID driverId = UUID.randomUUID();
-        TripResponse response = new TripResponse() {
-            public UUID getTripId() { return UUID.randomUUID(); }
-        };
+        TripResponse response = TripResponse.builder()
+                .tripId(UUID.randomUUID())
+                .build();
         Mockito.when(tripService.getTripsByDriver(eq(driverId), any(String.class))).thenReturn(List.of(response));
 
         mockMvc.perform(get("/trips")

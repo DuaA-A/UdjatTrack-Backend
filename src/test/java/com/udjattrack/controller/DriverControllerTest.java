@@ -32,10 +32,10 @@ class DriverControllerTest {
     @Test
     void createDriverAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
-        DriverResponse response = new DriverResponse() {
-            public String getEmail() { return "driver@example.com"; }
-            public UUID getUserId() { return UUID.randomUUID(); }
-        };
+        DriverResponse response = DriverResponse.builder()
+                .email("driver@example.com")
+                .userId(UUID.randomUUID())
+                .build();
         Mockito.when(fleetManagementService.createDriver(eq(managerId), any(CreateDriverRequest.class))).thenReturn(response);
 
         CreateDriverRequest request = new CreateDriverRequest(
@@ -57,10 +57,10 @@ class DriverControllerTest {
     @Test
     void getMeAsDriver_shouldReturnProfile() throws Exception {
         UUID driverId = UUID.randomUUID();
-        DriverResponse response = new DriverResponse() {
-            public UUID getUserId() { return driverId; }
-            public String getEmail() { return "driver@example.com"; }
-        };
+        DriverResponse response = DriverResponse.builder()
+                .userId(driverId)
+                .email("driver@example.com")
+                .build();
         Mockito.when(fleetManagementService.getDriverById(eq(driverId))).thenReturn(response);
 
         mockMvc.perform(get("/drivers/me")
@@ -72,10 +72,10 @@ class DriverControllerTest {
     @Test
     void uploadDriverPhoto_shouldReturnUpdatedDriver() throws Exception {
         UUID driverId = UUID.randomUUID();
-        DriverResponse response = new DriverResponse() {
-            public UUID getUserId() { return driverId; }
-            public String getEmail() { return "driver@example.com"; }
-        };
+        DriverResponse response = DriverResponse.builder()
+                .userId(driverId)
+                .email("driver@example.com")
+                .build();
         Mockito.when(fleetManagementService.uploadDriverPhoto(eq(driverId), any())).thenReturn(response);
 
         MockMultipartFile file = new MockMultipartFile("file", "photo.jpg", "image/jpeg", "fake-image-content".getBytes());

@@ -33,9 +33,9 @@ class VehicleControllerTest {
     @Test
     void addVehicleAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
-        VehicleResponse response = new VehicleResponse() {
-            public String getPlateNumber() { return "ABC123"; }
-        };
+        VehicleResponse response = VehicleResponse.builder()
+                .plateNumber("ABC123")
+                .build();
         Mockito.when(fleetManagementService.addVehicle(eq(managerId), any(AddVehicleRequest.class))).thenReturn(response);
 
         AddVehicleRequest request = new AddVehicleRequest(
@@ -55,12 +55,12 @@ class VehicleControllerTest {
     @Test
     void getVehicleWithDriver_shouldReturnVehicleWithDriver() throws Exception {
         UUID vehicleId = UUID.randomUUID();
-        com.udjattrack.dto.response.VehicleResponse vehicleResponse = new com.udjattrack.dto.response.VehicleResponse() {
-            public UUID getVehicleId() { return vehicleId; }
-        };
-        VehicleWithDriverResponse response = new VehicleWithDriverResponse() {
-            public com.udjattrack.dto.response.VehicleResponse getVehicle() { return vehicleResponse; }
-        };
+        com.udjattrack.dto.response.VehicleResponse vehicleResponse = com.udjattrack.dto.response.VehicleResponse.builder()
+                .vehicleId(vehicleId)
+                .build();
+        VehicleWithDriverResponse response = VehicleWithDriverResponse.builder()
+                .vehicle(vehicleResponse)
+                .build();
         Mockito.when(fleetManagementService.getVehicleWithDriver(eq(vehicleId))).thenReturn(response);
 
         mockMvc.perform(get("/vehicles/" + vehicleId + "/with-driver")
