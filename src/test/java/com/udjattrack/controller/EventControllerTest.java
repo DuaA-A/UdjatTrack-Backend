@@ -101,4 +101,52 @@ class EventControllerTest {
 
         Mockito.verify(eventService).syncOfflineData(any(OfflineSyncRequest.class));
     }
+
+
+    @Test
+    void reportEvent_invalidEventType_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(eventService.reportEvent(eq(tripId), any()))
+                .thenThrow(new com.udjattrack.exception.BusinessException("Invalid event type"));
+
+        EventRequest request = new EventRequest(java.time.OffsetDateTime.now(), "INVALID_TYPE", null);
+
+        mockMvc.perform(post("/trips/" + tripId + "/events")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isUnprocessableEntity())  // 422
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Invalid event type"));
+    }
+
+    @Test
+    void reportEvent_onFinishedTrip_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(eventService.reportEvent(eq(tripId), any()))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        EventRequest request = new EventRequest(java.time.OffsetDateTime.now(), "CRASH", null);
+
+        mockMvc.perform(post("/trips/" + tripId + "/events")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void reportEvent_asFleetManager_shouldReturn403() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        EventRequest request = new EventRequest(java.time.OffsetDateTime.now(), "CRASH", null);
+
+        mockMvc.perform(post("/trips/" + tripId + "/events")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isForbidden());
+    }
 }
