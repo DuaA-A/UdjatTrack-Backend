@@ -35,18 +35,12 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:udjattrack@gmail.com}
-    password: ${MAIL_PASSWORD:bqgl ktmq bhpn xdau}
-    test-connection: true
-
+    username: ${SPRING_MAIL_USERNAME:udjattrack@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
-            enable: false
-            trust: ${MAIL_HOST:smtp.gmail.com}
-            protocols: TLSv1.2
           starttls:
             enable: true
             required: true
@@ -55,6 +49,11 @@ spring:
           writetimeout: 5000
         debug: false
 
+  # Disable mail validation on startup (Railway can't reach external SMTP)
+  boot:
+    autoconfigure:
+      mail:
+        MailSenderValidatorAutoConfiguration: false
 
   # ===== Cache =====
   cache:
@@ -144,3 +143,4 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
