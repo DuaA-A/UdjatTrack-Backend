@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
@@ -37,7 +37,6 @@ spring:
     port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:udjattrack@gmail.com}
     password: ${MAIL_PASSWORD:bqgl ktmq bhpn xdau}
-    test-connection: true
 
     properties:
       mail:
