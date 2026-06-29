@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
@@ -35,8 +35,9 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${SPRING_MAIL_USERNAME:udjattrack@gmail.com}
-    password: ${SPRING_MAIL_PASSWORD:}
+    username: ${MAIL_USERNAME:udjattrack@gmail.com}
+    password: ${MAIL_PASSWORD:bqgl ktmq bhpn xdau}
+
     properties:
       mail:
         smtp:
