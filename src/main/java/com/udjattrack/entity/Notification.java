@@ -45,6 +45,7 @@ public abstract class Notification {
     @Column(name = "message", columnDefinition = "TEXT")
     private String message;
 
+    @Builder.Default
     @Column(name = "is_read")
     private Boolean isRead = false;
 

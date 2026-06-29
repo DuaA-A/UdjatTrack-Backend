@@ -43,6 +43,7 @@ com\udjattrack\dto\response\ReportSummaryResponse$ReportSummaryResponseBuilder.c
 com\udjattrack\entity\timeseries\TelemetryRecord$TelemetryRecordBuilder.class
 com\udjattrack\dto\response\TripStateResponse$TripStateResponseBuilder.class
 com\udjattrack\controller\EventController.class
+com\udjattrack\dto\websocket\TripMonitoringMessage$TripMonitoringMessageBuilder.class
 com\udjattrack\entity\enums\UserRole.class
 com\udjattrack\entity\enums\IssueStatus.class
 com\udjattrack\entity\SOSRequest$SOSRequestBuilder.class
@@ -147,6 +148,7 @@ com\udjattrack\repository\timeseries\TelemetryRecordRepository.class
 com\udjattrack\controller\IncidentController.class
 com\udjattrack\websocket\WebSocketConfig.class
 com\udjattrack\entity\enums\SeverityLevel.class
+com\udjattrack\dto\websocket\TripMonitoringMessage.class
 com\udjattrack\controller\LocationController$NearestHelpResponse.class
 com\udjattrack\entity\IssueRequest.class
 com\udjattrack\dto\response\ApiResponse$ApiResponseBuilder.class
@@ -207,6 +209,7 @@ com\udjattrack\dto\response\AuthResponse.class
 com\udjattrack\dto\request\UpdateFleetManagerRequest.class
 com\udjattrack\dto\response\TripTimelineResponse$AlertDetails.class
 com\udjattrack\entity\TripState$TripStateBuilder.class
+com\udjattrack\service\impl\TripServiceImpl$1.class
 com\udjattrack\dto\response\DependentResponse$DependentResponseBuilder.class
 com\udjattrack\entity\Dependent$DependentBuilder.class
 com\udjattrack\entity\timeseries\TelemetryRecord.class

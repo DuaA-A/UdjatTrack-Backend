@@ -45,6 +45,7 @@ public class Alert {
     @Column(name = "severity", nullable = false, length = 15)
     private SeverityLevel severity;
 
+    @Builder.Default
     @Column(name = "acknowledged")
     private Boolean acknowledged = false;
 

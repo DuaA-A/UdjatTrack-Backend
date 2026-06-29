@@ -34,6 +34,7 @@ public abstract class IssueRequest implements Alertable {
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private IssueStatus status = IssueStatus.OPEN;

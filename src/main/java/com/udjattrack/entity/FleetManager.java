@@ -30,10 +30,12 @@ public class FleetManager extends User {
     @Column(name = "verification_status", nullable = false, length = 20)
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
+    @Builder.Default
     @OneToMany(mappedBy = "fleetManager", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"fleetManager", "hibernateLazyInitializer", "handler"})
     private List<Driver> drivers = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "fleetManager", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"fleetManager", "hibernateLazyInitializer", "handler"})
     private List<Vehicle> vehicles = new ArrayList<>();

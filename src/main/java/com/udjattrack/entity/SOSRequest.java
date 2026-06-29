@@ -21,6 +21,7 @@ public class SOSRequest extends IssueRequest {
     @Column(name = "location", length = 255)
     private String location;
 
+    @Builder.Default
     @Column(name = "is_auto_triggered")
     private Boolean autoTriggered = false;
 }

@@ -39,6 +39,7 @@ public abstract class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 30)
     private UserRole role;
+    @Builder.Default
     @Column(name = "is_read")
     private Boolean isRead = false;
     @CreatedDate

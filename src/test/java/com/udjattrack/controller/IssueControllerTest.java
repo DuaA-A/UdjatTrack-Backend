@@ -1,4 +1,5 @@
 package com.udjattrack.controller;
+
 import com.udjattrack.security.JwtUtil;
 import com.udjattrack.security.UserDetailsServiceImpl;
 import com.udjattrack.service.EmergencyService;
@@ -26,89 +27,103 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(value = IssueController.class,
-        excludeAutoConfiguration = {
+@WebMvcTest(value = IssueController.class, excludeAutoConfiguration = {
                 DataSourceAutoConfiguration.class,
                 HibernateJpaAutoConfiguration.class,
                 JpaRepositoriesAutoConfiguration.class
-        })
+})
 @Import(SecurityConfig.class)
 class IssueControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private JwtAuthFilter jwtAuthFilter;
+        @MockBean
+        private JwtAuthFilter jwtAuthFilter;
 
-    @MockBean
-    private EmergencyService emergencyService;
+        @MockBean
+        private EmergencyService emergencyService;
 
-    @SuppressWarnings("unused")
-    @MockBean
-    private JwtUtil jwtUtil;
+        @SuppressWarnings("unused")
+        @MockBean
+        private JwtUtil jwtUtil;
 
-    @SuppressWarnings("unused")
-    @MockBean
-    private UserDetailsServiceImpl userDetailsService;
+        @SuppressWarnings("unused")
+        @MockBean
+        private UserDetailsServiceImpl userDetailsService;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        Mockito.doAnswer(invocation -> {
-            ((jakarta.servlet.FilterChain) invocation.getArgument(2))
-                    .doFilter(
-                            (jakarta.servlet.ServletRequest) invocation.getArgument(0),
-                            (jakarta.servlet.ServletResponse) invocation.getArgument(1)
-                    );
-            return null;
-        }).when(jwtAuthFilter).doFilter(any(), any(), any());
-    }
+        @BeforeEach
+        void setUp() throws Exception {
+                Mockito.doAnswer(invocation -> {
+                        ((jakarta.servlet.FilterChain) invocation.getArgument(2))
+                                        .doFilter(
+                                                        (jakarta.servlet.ServletRequest) invocation.getArgument(0),
+                                                        (jakarta.servlet.ServletResponse) invocation.getArgument(1));
+                        return null;
+                }).when(jwtAuthFilter).doFilter(any(), any(), any());
+        }
 
-    @Test
-    void listIssues_shouldReturnEmptyListByDefault() throws Exception {
-        UUID managerId = UUID.randomUUID();
-        Mockito.when(emergencyService.getSOSRequestsByFleetManager(eq(managerId))).thenReturn(List.of());
-        Mockito.when(emergencyService.getMaintenanceRequestsByFleetManager(eq(managerId))).thenReturn(List.of());
+        @Test
+        void listIssues_shouldReturnEmptyListByDefault() throws Exception {
+                UUID managerId = UUID.randomUUID();
+                Mockito.when(emergencyService.getSOSRequestsByFleetManager(eq(managerId))).thenReturn(List.of());
+                Mockito.when(emergencyService.getMaintenanceRequestsByFleetManager(eq(managerId)))
+                                .thenReturn(List.of());
 
-        mockMvc.perform(get("/issues")
-                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data", hasSize(0)));
-    }
+                mockMvc.perform(get("/issues")
+                                .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils
+                                                .securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.data", hasSize(0)));
+        }
 
-    @Test
-    void resolveIssue_shouldReturnSuccess() throws Exception {
-        UUID issueId = UUID.randomUUID();
+        @Test
+        void resolveIssue_shouldReturnSuccess() throws Exception {
+                UUID issueId = UUID.randomUUID();
 
-        mockMvc.perform(post("/issues/" + issueId + "/resolve")
-                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
-                        .content("Resolved successfully"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Issue resolved successfully"));
+                mockMvc.perform(post("/issues/" + issueId + "/resolve")
+                                .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(
+                                                UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                                .content("Resolved successfully"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.success").value(true))
+                                .andExpect(jsonPath("$.message").value("Issue resolved successfully"));
 
-        Mockito.verify(emergencyService).resolveIssue(eq(issueId), any());
-    }
+                Mockito.verify(emergencyService).resolveIssue(eq(issueId), any());
+        }
 
-    @Test
-    void resolveIssue_notFound_shouldReturn404() throws Exception {
-        UUID issueId = UUID.randomUUID();
-        Mockito.doThrow(new com.udjattrack.exception.ResourceNotFoundException("Issue", "id", issueId.toString()))
-                .when(emergencyService).resolveIssue(eq(issueId), any());
+        @Test
+        void resolveIssue_notFound_shouldReturn404() throws Exception {
+                UUID issueId = UUID.randomUUID();
+                Mockito.doThrow(new com.udjattrack.exception.ResourceNotFoundException("Issue", "id",
+                                issueId.toString()))
+                                .when(emergencyService).resolveIssue(eq(issueId), any());
 
-        mockMvc.perform(post("/issues/" + issueId + "/resolve")
-                        .with(SecurityMockMvcRequestPostProcessors.user(
-                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
-                        .content("Resolution note"))
-                .andExpect(status().isNotFound());
-    }
+                mockMvc.perform(post("/issues/" + issueId + "/resolve")
+                                .with(SecurityMockMvcRequestPostProcessors.user(
+                                                ControllerTestUtils.securityUser(UUID.randomUUID(),
+                                                                "manager@example.com", "ROLE_FLEET_MANAGER")))
+                                .content("Resolution note"))
+                                .andExpect(status().isNotFound());
+        }
 
-    @Test
-    void listIssues_asDriver_shouldReturn403() throws Exception {
-        mockMvc.perform(get("/issues")
-                        .with(SecurityMockMvcRequestPostProcessors.user(
-                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
-                .andExpect(status().isForbidden());
-    }
+        @Test
+        void listIssues_asDriver_shouldReturn403() throws Exception {
+                mockMvc.perform(get("/issues")
+                                .with(SecurityMockMvcRequestPostProcessors.user(
+                                                ControllerTestUtils.securityUser(UUID.randomUUID(),
+                                                                "driver@example.com", "ROLE_DRIVER"))))
+                                .andExpect(status().isForbidden());
+        }
+
 }
+
+        
+        
+                
+                                
+                                                
+                                                                
+                                
+        
