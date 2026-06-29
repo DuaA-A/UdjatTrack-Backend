@@ -38,6 +38,7 @@ class DriverControllerTest {
         UUID managerId = UUID.randomUUID();
         DriverResponse response = Mockito.mock(DriverResponse.class);
         Mockito.when(response.getEmail()).thenReturn("driver@example.com");
+        Mockito.when(response.getUserId()).thenReturn(UUID.randomUUID()@example.com");
         Mockito.when(response.getUserId()).thenReturn(UUID.randomUUID());
         Mockito.when(fleetManagementService.createDriver(eq(managerId), any(CreateDriverRequest.class))).thenReturn(response);
 

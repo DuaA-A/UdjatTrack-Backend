@@ -46,7 +46,7 @@ class TripControllerTest {
     void createTripAsFleetManager_shouldReturnCreated() throws Exception {
         UUID managerId = UUID.randomUUID();
         TripResponse response = Mockito.mock(TripResponse.class);
-        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.PLANNED);
+        Mockito.when(response.getStatus()).thenReturn(com.udjattrack.entity.enums.TripStatus.PLANNEDenums.TripStatus.PLANNED);
 
         Mockito.when(tripService.createTrip(any(CreateTripRequest.class))).thenReturn(response);
 
