@@ -18,6 +18,8 @@ import com.udjattrack.dto.response.TripResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/dashboard")
@@ -33,17 +35,30 @@ public class DashboardController {
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Aggregated alert statistics for the fleet manager")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAlertsSummary(@PathVariable UUID fleetId) {
-        List<AlertResponse> unacknowledged = alertService.getUnacknowledgedAlerts(fleetId);
-        
-        long criticalCount = unacknowledged.stream()
-                .filter(a -> "CRITICAL".equalsIgnoreCase(a.getSeverity().name()))
-                .count();
+        // Fetch all alerts for the fleet manager and compute today's aggregates
+        List<AlertResponse> allAlerts = alertService.getAllAlertsByFleetManager(fleetId);
+
+        LocalDateTime startOfToday = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfToday.plusDays(1);
+
+        List<AlertResponse> todays = allAlerts.stream()
+            .filter(a -> a.getTimestamp() != null &&
+                (a.getTimestamp().isEqual(startOfToday) || (a.getTimestamp().isAfter(startOfToday) && a.getTimestamp().isBefore(startOfTomorrow)) || a.getTimestamp().isEqual(startOfTomorrow)))
+            .toList();
+
+        long criticalCount = todays.stream()
+            .filter(a -> a.getSeverity() != null && a.getSeverity().name().equalsIgnoreCase("CRITICAL"))
+            .count();
+
+        long unacknowledgedCount = todays.stream()
+            .filter(a -> !Boolean.TRUE.equals(a.getAcknowledged()))
+            .count();
 
         Map<String, Object> data = new java.util.HashMap<>();
-        data.put("totalToday", unacknowledged.size());
+        data.put("totalToday", todays.size());
         data.put("critical", criticalCount);
-        data.put("unacknowledged", unacknowledged.size());
-        data.put("byType", unacknowledged.stream()
+        data.put("unacknowledged", unacknowledgedCount);
+        data.put("byType", todays.stream()
             .collect(java.util.stream.Collectors.groupingBy(a -> a.getAlertType().name(), java.util.stream.Collectors.counting())));
         return ResponseEntity.ok(ApiResponse.ok(data));
     }

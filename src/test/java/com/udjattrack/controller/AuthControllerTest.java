@@ -5,10 +5,16 @@ import com.udjattrack.dto.request.ForgotPasswordRequest;
 import com.udjattrack.dto.request.CreateSuperManagerRequest;
 import com.udjattrack.dto.response.AuthResponse;
 import com.udjattrack.dto.response.SuperManagerSignupResponse;
+import com.udjattrack.security.JwtUtil;
+import com.udjattrack.security.UserDetailsServiceImpl;
 import com.udjattrack.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaAuditingAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -21,7 +27,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AuthController.class)
+@WebMvcTest(value = AuthController.class,
+        excludeAutoConfiguration = {
+                DataSourceAutoConfiguration.class,
+                HibernateJpaAutoConfiguration.class,
+                JpaRepositoriesAutoConfiguration.class,
+                JpaAuditingAutoConfiguration.class
+        })
 class AuthControllerTest {
 
     @Autowired
@@ -33,6 +45,14 @@ class AuthControllerTest {
     @SuppressWarnings("unused")
     @MockBean
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @SuppressWarnings("unused")
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @SuppressWarnings("unused")
+    @MockBean
+    private UserDetailsServiceImpl userDetailsService;
 
     @Test
     void loginSuccess_shouldReturnAuthResponse() throws Exception {

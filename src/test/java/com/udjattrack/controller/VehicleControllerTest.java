@@ -3,10 +3,16 @@ package com.udjattrack.controller;
 import com.udjattrack.dto.request.AddVehicleRequest;
 import com.udjattrack.dto.response.VehicleResponse;
 import com.udjattrack.dto.response.VehicleWithDriverResponse;
+import com.udjattrack.security.JwtUtil;
+import com.udjattrack.security.UserDetailsServiceImpl;
 import com.udjattrack.service.FleetManagementService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaAuditingAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -21,7 +27,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(VehicleController.class)
+@WebMvcTest(value = VehicleController.class,
+        excludeAutoConfiguration = {
+                DataSourceAutoConfiguration.class,
+                HibernateJpaAutoConfiguration.class,
+                JpaRepositoriesAutoConfiguration.class,
+                JpaAuditingAutoConfiguration.class
+        })
 class VehicleControllerTest {
 
     @Autowired
@@ -29,6 +41,14 @@ class VehicleControllerTest {
 
     @MockBean
     private FleetManagementService fleetManagementService;
+
+    @SuppressWarnings("unused")
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    @SuppressWarnings("unused")
+    @MockBean
+    private UserDetailsServiceImpl userDetailsService;
 
     @Test
     void addVehicleAsFleetManager_shouldReturnCreated() throws Exception {
