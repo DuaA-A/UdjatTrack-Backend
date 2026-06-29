@@ -90,6 +90,26 @@ class TelemetryControllerTest {
     }
 
     @Test
+    void ingestTelemetryUnknownDriverState_shouldReturn202() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TelemetryRequest request = new TelemetryRequest(
+                java.time.OffsetDateTime.now(),
+                new com.udjattrack.dto.request.LocationDTO(12.34, 56.78),
+                60.5,
+                com.udjattrack.entity.enums.DriverState.UNKNOWN,
+                null
+        );
+
+        mockMvc.perform(post("/trips/" + tripId + "/telemetry")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isAccepted());
+
+        Mockito.verify(telemetryService).ingestTelemetry(eq(tripId), any(TelemetryRequest.class));
+    }
+
+    @Test
     void getTelemetryByTrip_shouldReturnHistory() throws Exception {
         UUID tripId = UUID.randomUUID();
         Mockito.when(telemetryService.getTelemetryByTrip(eq(tripId))).thenReturn(List.of());

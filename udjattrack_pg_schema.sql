@@ -128,7 +128,7 @@ CREATE TABLE trips (
 CREATE TABLE trip_states (
     state_id UUID NOT NULL,
     trip_id UUID NOT NULL UNIQUE,
-    -- Stores DriverState enum: DROWSY, UNCONSCIOUS, HIGH_RISK, NORMAL
+    -- Stores DriverState enum: DROWSY, UNCONSCIOUS, HIGH_RISK, NORMAL, UNKNOWN
     driver_state VARCHAR(30),
     trip_progress_state VARCHAR(20),
     latitude VARCHAR(50),

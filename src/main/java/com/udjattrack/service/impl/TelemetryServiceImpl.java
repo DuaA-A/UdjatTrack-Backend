@@ -104,14 +104,20 @@ public class TelemetryServiceImpl implements TelemetryService {
                 DriverState oldState = state.getDriverState();
                 state.setDriverState(request.driverState());
                 
+                SeverityLevel severity = SeverityLevel.MEDIUM;
+                String msg = "Driver State Changed: " + oldState + " -> " + request.driverState();
+                if (request.driverState() == DriverState.UNKNOWN) {
+                    msg = "Driver is not visible/detected (UNKNOWN state)";
+                }
+                
                 // Trigger Alert for Driver State Change
                 alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
                         trip.getTripId(),
                         com.udjattrack.entity.enums.AlertType.TRIP_STATE,
-                        SeverityLevel.MEDIUM,
+                        severity,
                         "TripState",
                         state.getStateId(),
-                        "Driver State Changed: " + oldState + " -> " + request.driverState()
+                        msg
                 ));
             }
             if (request.location() != null) {
