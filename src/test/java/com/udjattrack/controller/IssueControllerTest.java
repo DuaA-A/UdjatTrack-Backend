@@ -1,6 +1,4 @@
 package com.udjattrack.controller;
-
-import com.udjattrack.dto.response.ApiResponse;
 import com.udjattrack.security.JwtUtil;
 import com.udjattrack.security.UserDetailsServiceImpl;
 import com.udjattrack.service.EmergencyService;
@@ -14,7 +12,6 @@ import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfig
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 import com.udjattrack.config.SecurityConfig;
@@ -92,5 +89,26 @@ class IssueControllerTest {
                 .andExpect(jsonPath("$.message").value("Issue resolved successfully"));
 
         Mockito.verify(emergencyService).resolveIssue(eq(issueId), any());
+    }
+
+    @Test
+    void resolveIssue_notFound_shouldReturn404() throws Exception {
+        UUID issueId = UUID.randomUUID();
+        Mockito.doThrow(new com.udjattrack.exception.ResourceNotFoundException("Issue", "id", issueId.toString()))
+                .when(emergencyService).resolveIssue(eq(issueId), any());
+
+        mockMvc.perform(post("/issues/" + issueId + "/resolve")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .content("Resolution note"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listIssues_asDriver_shouldReturn403() throws Exception {
+        mockMvc.perform(get("/issues")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isForbidden());
     }
 }
