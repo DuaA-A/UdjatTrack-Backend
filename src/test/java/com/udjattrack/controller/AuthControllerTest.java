@@ -6,7 +6,6 @@ import com.udjattrack.dto.request.CreateSuperManagerRequest;
 import com.udjattrack.dto.request.CreateFleetManagerRequest;
 import com.udjattrack.dto.request.RefreshTokenRequest;
 import com.udjattrack.dto.request.ResetPasswordRequest;
-import com.udjattrack.dto.request.VerifyOtpRequest;
 import com.udjattrack.dto.response.AuthResponse;
 import com.udjattrack.dto.response.SuperManagerSignupResponse;
 import com.udjattrack.dto.response.FleetManagerSignupResponse;
@@ -272,5 +271,27 @@ class AuthControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.email").value("super@example.com"));
+    }
+    @Test
+    void loginMissingEmail_shouldReturn400() throws Exception {
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"pass123\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+    @Test
+    void signupFleetManagerDuplicateEmail_shouldReturn409() throws Exception {
+        Mockito.when(authService.signupFleetManager(any(CreateFleetManagerRequest.class)))
+                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("User", "email", "manager@example.com"));
+
+        mockMvc.perform(post("/auth/signup/fleet-manager")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(
+                                UUID.randomUUID(), "super@example.com", "ROLE_SUPER_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(new CreateFleetManagerRequest(
+                                "Fleet Manager", "manager@example.com", "Password123!", "Company A"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false));
     }
 }
