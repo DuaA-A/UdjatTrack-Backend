@@ -71,7 +71,7 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.email()));
 
         String accessToken = jwtUtil.generateToken(
-                user.getEmail(), user.getRole().name(), user.getUserId().toString());
+                user.getEmail(), user.getRole().name(), user.getUserId().toString(), user.getName());
 
         String refreshTokenValue = UUID.randomUUID().toString();
         saveRefreshToken(user, refreshTokenValue, request.deviceInfo());
@@ -201,7 +201,7 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.save(storedToken);
 
         String newAccessToken = jwtUtil.generateToken(
-                user.getEmail(), user.getRole().name(), user.getUserId().toString());
+                user.getEmail(), user.getRole().name(), user.getUserId().toString(), user.getName());
         String newRefreshToken = UUID.randomUUID().toString();
         saveRefreshToken(user, newRefreshToken, storedToken.getDeviceInfo());
 
