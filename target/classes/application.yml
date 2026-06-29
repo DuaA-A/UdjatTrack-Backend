@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
@@ -36,21 +36,25 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:udjattrack@gmail.com}
-    password: ${MAIL_PASSWORD:ieyi vmdd eohu qnvt}
+    password: ${MAIL_PASSWORD:bqgl ktmq bhpn xdau}
 
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
-            enable: false
           starttls:
             enable: true
+            required: true
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
         debug: false
 
+  # Disable mail validation on startup (Railway can't reach external SMTP)
+  boot:
+    autoconfigure:
+      mail:
+        MailSenderValidatorAutoConfiguration: false
 
   # ===== Cache =====
   cache:
@@ -140,3 +144,4 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+

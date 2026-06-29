@@ -49,6 +49,7 @@ com\udjattrack\entity\SOSRequest$SOSRequestBuilder.class
 com\udjattrack\service\impl\TelemetryServiceImpl$2.class
 com\udjattrack\dto\request\CreateDriverRequest.class
 com\udjattrack\entity\RefreshToken$RefreshTokenBuilder.class
+com\udjattrack\dto\response\AlertResponse$VehicleInfo.class
 com\udjattrack\dto\response\VehicleResponse.class
 com\udjattrack\dto\response\MaintenanceLogResponse.class
 com\udjattrack\entity\enums\MaintenanceType.class
@@ -116,6 +117,7 @@ com\udjattrack\controller\VehicleController.class
 com\udjattrack\controller\LocationController.class
 com\udjattrack\dto\response\FleetManagerSignupResponse$FleetManagerSignupResponseBuilder.class
 com\udjattrack\entity\Alert$AlertBuilder.class
+com\udjattrack\dto\response\AlertResponse$VehicleInfo$VehicleInfoBuilder.class
 com\udjattrack\entity\GeneralNotification$GeneralNotificationBuilderImpl.class
 com\udjattrack\repository\EventRecordRepository.class
 com\udjattrack\dto\request\EventRequest.class
@@ -134,6 +136,7 @@ com\udjattrack\entity\EventRecord.class
 com\udjattrack\dto\response\TripTimelineResponse$TripTimelineResponseBuilder.class
 com\udjattrack\exception\GlobalExceptionHandler.class
 com\udjattrack\controller\TelemetryController.class
+com\udjattrack\dto\response\AlertResponse$TripInfo$TripInfoBuilder.class
 com\udjattrack\dto\response\TripResponse.class
 com\udjattrack\dto\response\DriverResponse.class
 com\udjattrack\dto\response\TelemetryRecordResponse.class
@@ -165,6 +168,7 @@ com\udjattrack\entity\enums\IssueCategory.class
 com\udjattrack\service\impl\TripServiceImpl.class
 com\udjattrack\entity\Dependent.class
 com\udjattrack\util\OtpUtil.class
+com\udjattrack\dto\response\AlertResponse$DriverInfo.class
 com\udjattrack\repository\AlertRepository.class
 com\udjattrack\dto\response\DriverDashboardResponse.class
 com\udjattrack\entity\FleetManager.class
@@ -220,9 +224,11 @@ com\udjattrack\repository\TripRepository.class
 com\udjattrack\dto\response\AuthResponse$AuthResponseBuilder.class
 com\udjattrack\dto\request\TelemetryBatchRequest.class
 com\udjattrack\entity\FleetManager$FleetManagerBuilder.class
+com\udjattrack\dto\response\AlertResponse$TripInfo.class
 com\udjattrack\config\SecurityConfig.class
 com\udjattrack\dto\request\CreateMaintenanceRequest.class
 com\udjattrack\entity\TripAssignedNotification$TripAssignedNotificationBuilder.class
+com\udjattrack\dto\response\AlertResponse$DriverInfo$DriverInfoBuilder.class
 com\udjattrack\service\FleetManagementService.class
 com\udjattrack\controller\TripController.class
 com\udjattrack\dto\request\RefreshTokenRequest.class
