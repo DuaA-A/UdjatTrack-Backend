@@ -147,4 +147,193 @@ class TripControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(1)));
     }
+
+    @Test
+    void createTripDriverAlreadyOnTrip_shouldReturn422() throws Exception {
+        Mockito.when(tripService.createTrip(any(CreateTripRequest.class)))
+                .thenThrow(new com.udjattrack.exception.BusinessException("DRIVER_ALREADY_ON_TRIP"));
+
+        CreateTripRequest request = new CreateTripRequest(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Cairo",
+                "Alexandria",
+                "Route 1",
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(1).plusHours(5)
+        );
+
+        mockMvc.perform(post("/trips")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void createTripAsDriver_shouldReturn403() throws Exception {
+        CreateTripRequest request = new CreateTripRequest(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                "Cairo",
+                "Alexandria",
+                "Route 1",
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(1).plusHours(5)
+        );
+
+        mockMvc.perform(post("/trips")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void startTripAlreadyOngoing_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.startTrip(eq(tripId)))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        mockMvc.perform(post("/trips/" + tripId + "/start")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void startTripAsFleetManager_shouldReturn403() throws Exception {
+        UUID tripId = UUID.randomUUID();
+
+        mockMvc.perform(post("/trips/" + tripId + "/start")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void pauseTripSuccess_shouldReturnOk() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripResponse response = TripResponse.builder().status(TripStatus.ON_BREAK).build();
+        Mockito.when(tripService.stopTrip(eq(tripId), any())).thenReturn(response);
+
+        mockMvc.perform(post("/trips/" + tripId + "/Paused")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ON_BREAK"));
+    }
+
+    @Test
+    void pauseTripInvalidState_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.stopTrip(eq(tripId), any()))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        mockMvc.perform(post("/trips/" + tripId + "/Paused")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void resumeTripSuccess_shouldReturnOk() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripResponse response = TripResponse.builder().status(TripStatus.ONGOING).build();
+        Mockito.when(tripService.resumeTrip(eq(tripId), any())).thenReturn(response);
+
+        mockMvc.perform(post("/trips/" + tripId + "/Resumed")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONGOING"));
+    }
+
+    @Test
+    void resumeTripInvalidState_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.resumeTrip(eq(tripId), any()))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        mockMvc.perform(post("/trips/" + tripId + "/Resumed")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void endTripSuccess_shouldReturnOk() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripResponse response = TripResponse.builder().status(TripStatus.FINISHED).build();
+        Mockito.when(tripService.completeTrip(eq(tripId))).thenReturn(response);
+
+        mockMvc.perform(post("/trips/" + tripId + "/end")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("FINISHED"));
+    }
+
+    @Test
+    void endTripPlanned_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.completeTrip(eq(tripId)))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        mockMvc.perform(post("/trips/" + tripId + "/end")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void cancelTripSuccess_shouldReturnOk() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripResponse response = TripResponse.builder().status(TripStatus.CANCELLED).build();
+        Mockito.when(tripService.cancelTrip(eq(tripId))).thenReturn(response);
+
+        mockMvc.perform(post("/trips/" + tripId + "/cancel")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CANCELLED"));
+    }
+
+    @Test
+    void cancelTripFinished_shouldReturn422() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.cancelTrip(eq(tripId)))
+                .thenThrow(new com.udjattrack.exception.BusinessException("INVALID_STATE_TRANSITION"));
+
+        mockMvc.perform(post("/trips/" + tripId + "/cancel")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void cancelTripAsDriver_shouldReturn403() throws Exception {
+        UUID tripId = UUID.randomUUID();
+
+        mockMvc.perform(post("/trips/" + tripId + "/cancel")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getTripByIdNotFound_shouldReturn404() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.getTripById(eq(tripId)))
+                .thenThrow(new com.udjattrack.exception.ResourceNotFoundException("Trip", "id", tripId.toString()));
+
+        mockMvc.perform(get("/trips/" + tripId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getTripTimeline_shouldReturnTimeline() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripTimelineResponse timeline = TripTimelineResponse.builder()
+                .timeline(List.of())
+                .build();
+        Mockito.when(tripService.getTripTimeline(eq(tripId), any(), any())).thenReturn(timeline);
+
+        mockMvc.perform(get("/trips/" + tripId + "/timeline")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
 }

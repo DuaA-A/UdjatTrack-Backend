@@ -116,4 +116,89 @@ class VehicleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(1))));
     }
+
+    @Test
+    void addVehicleDuplicatePlate_shouldReturn409() throws Exception {
+        UUID managerId = UUID.randomUUID();
+        Mockito.when(fleetManagementService.addVehicle(eq(managerId), any(AddVehicleRequest.class)))
+                .thenThrow(new com.udjattrack.exception.DuplicateResourceException("Plate number already registered"));
+
+        AddVehicleRequest request = new AddVehicleRequest("ABC123", "Model X", 2024);
+
+        mockMvc.perform(post("/vehicles")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void addVehicleAsDriver_shouldReturn403() throws Exception {
+        AddVehicleRequest request = new AddVehicleRequest("ABC123", "Model X", 2024);
+
+        mockMvc.perform(post("/vehicles")
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getVehicleById_shouldReturnVehicle() throws Exception {
+        UUID vehicleId = UUID.randomUUID();
+        VehicleResponse response = VehicleResponse.builder().vehicleId(vehicleId).plateNumber("ABC123").build();
+        Mockito.when(fleetManagementService.getVehicleById(eq(vehicleId))).thenReturn(response);
+
+        mockMvc.perform(get("/vehicles/" + vehicleId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.plateNumber").value("ABC123"));
+    }
+
+    @Test
+    void getVehicleByIdNotFound_shouldReturn404() throws Exception {
+        UUID vehicleId = UUID.randomUUID();
+        Mockito.when(fleetManagementService.getVehicleById(eq(vehicleId)))
+                .thenThrow(new com.udjattrack.exception.ResourceNotFoundException("Vehicle", "id", vehicleId.toString()));
+
+        mockMvc.perform(get("/vehicles/" + vehicleId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void deleteVehicleSuccess_shouldReturnOk() throws Exception {
+        UUID vehicleId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/vehicles/" + vehicleId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        Mockito.verify(fleetManagementService).deleteVehicle(eq(vehicleId));
+    }
+
+    @Test
+    void deleteVehicleOnActiveTrip_shouldReturn422() throws Exception {
+        UUID vehicleId = UUID.randomUUID();
+        Mockito.doThrow(new com.udjattrack.exception.BusinessException("Vehicle is on an active trip"))
+                .when(fleetManagementService).deleteVehicle(eq(vehicleId));
+
+        mockMvc.perform(delete("/vehicles/" + vehicleId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void deleteVehicleAsDriver_shouldReturn403() throws Exception {
+        UUID vehicleId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/vehicles/" + vehicleId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "driver@example.com", "ROLE_DRIVER"))))
+                .andExpect(status().isForbidden());
+    }
 }
