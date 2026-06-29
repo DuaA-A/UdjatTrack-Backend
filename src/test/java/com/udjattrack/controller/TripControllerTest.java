@@ -1,6 +1,10 @@
 package com.udjattrack.controller;
 
+import com.udjattrack.dto.request.CreateMaintenanceRequest;
+import com.udjattrack.dto.request.CreateSOSRequest;
 import com.udjattrack.dto.request.CreateTripRequest;
+import com.udjattrack.dto.response.MaintenanceRequestResponse;
+import com.udjattrack.dto.response.SOSRequestResponse;
 import com.udjattrack.dto.response.TripResponse;
 import com.udjattrack.entity.enums.TripStatus;
 import com.udjattrack.security.JwtUtil;
@@ -335,5 +339,101 @@ class TripControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.user(ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    void getTripById_shouldReturnTripDetails() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        TripResponse response = TripResponse.builder()
+                .tripId(tripId).status(TripStatus.ONGOING).build();
+        Mockito.when(tripService.getTripById(eq(tripId))).thenReturn(response);
+
+        mockMvc.perform(get("/trips/" + tripId)
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("ONGOING"));
+    }
+
+    @Test
+    void createTripMissingDriverId_shouldReturn400() throws Exception {
+        String badJson = """
+            {"vehicleId":"%s","source":"Cairo","destination":"Suez",
+             "scheduledStartTime":"%s","scheduledEndTime":"%s"}
+            """.formatted(UUID.randomUUID(),
+                LocalDateTime.now().plusDays(1),
+                LocalDateTime.now().plusDays(1).plusHours(5));
+
+        mockMvc.perform(post("/trips")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(badJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    @Test
+    void createTripVehicleAlreadyOnTrip_shouldReturn422() throws Exception {
+        Mockito.when(tripService.createTrip(any(CreateTripRequest.class)))
+                .thenThrow(new com.udjattrack.exception.BusinessException("VEHICLE_ALREADY_ON_TRIP"));
+
+        CreateTripRequest request = new CreateTripRequest(
+                UUID.randomUUID(), UUID.randomUUID(), "Cairo", "Alexandria", "Route 1",
+                LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1).plusHours(5));
+
+        mockMvc.perform(post("/trips")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(ControllerTestUtils.toJson(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value(containsString("VEHICLE_ALREADY_ON_TRIP")));
+    }
+
+    @Test
+    void endTripAsFleetManager_shouldReturn403() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        mockMvc.perform(post("/trips/" + tripId + "/end")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cancelTripNotFound_shouldReturn404() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.cancelTrip(eq(tripId)))
+                .thenThrow(new com.udjattrack.exception.ResourceNotFoundException("Trip", "id", tripId.toString()));
+
+        mockMvc.perform(post("/trips/" + tripId + "/cancel")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listTripsAsFleetManager_shouldReturnAllTrips() throws Exception {
+        UUID managerId = UUID.randomUUID();
+        TripResponse r = TripResponse.builder().tripId(UUID.randomUUID()).build();
+        Mockito.when(tripService.getTripsByFleetManager(eq(managerId))).thenReturn(List.of(r));
+
+        mockMvc.perform(get("/trips")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(managerId, "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)));
+    }
+
+    @Test
+    void getTripTimeline_notFound_shouldReturn404() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        Mockito.when(tripService.getTripTimeline(eq(tripId), any(), any()))
+                .thenThrow(new com.udjattrack.exception.ResourceNotFoundException("Trip", "id", tripId.toString()));
+
+        mockMvc.perform(get("/trips/" + tripId + "/timeline")
+                        .with(SecurityMockMvcRequestPostProcessors.user(
+                                ControllerTestUtils.securityUser(UUID.randomUUID(), "manager@example.com", "ROLE_FLEET_MANAGER"))))
+                .andExpect(status().isNotFound());
     }
 }
