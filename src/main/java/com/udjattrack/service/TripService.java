@@ -14,6 +14,7 @@ import java.util.UUID;
 public interface TripService {
 
     TripResponse createTrip(CreateTripRequest request);
+    TripResponse updateTrip(UUID tripId, com.udjattrack.dto.request.UpdateTripRequest request);
     TripResponse assignDriver(UUID tripId, UUID driverId);
     TripResponse assignVehicle(UUID tripId, UUID vehicleId);
     TripResponse startTrip(UUID tripId);

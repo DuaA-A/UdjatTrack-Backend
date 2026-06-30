@@ -41,6 +41,15 @@ public class TripController {
                 .body(ApiResponse.created("Trip created in PLANNED state", trip));
     }
 
+    @PatchMapping("/{tripId}")
+    @PreAuthorize("hasAuthority('ROLE_FLEET_MANAGER')")
+    @Operation(summary = "Update an existing PLANNED trip")
+    public ResponseEntity<ApiResponse<TripResponse>> updateTrip(
+            @PathVariable UUID tripId,
+            @RequestBody com.udjattrack.dto.request.UpdateTripRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok("Trip updated successfully", tripService.updateTrip(tripId, request)));
+    }
+
     @PostMapping("/{tripId}/start")
     @PreAuthorize("hasAnyAuthority('ROLE_DRIVER')")
     @Operation(summary = "Driver starts a PLANNED trip")

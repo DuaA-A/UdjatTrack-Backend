@@ -39,11 +39,19 @@ public class TripResponse {
     private LocalDateTime actualEndTime;
     private TripStateResponse tripState;
     private VehicleInfo vehicle;
+    private DriverInfo driver;
 
     @Getter
     @Builder
     public static class VehicleInfo {
         private String plateNumber;
         private String model;
+    }
+
+    @Getter
+    @Builder
+    public static class DriverInfo {
+        private String name;
+        private String phoneNumber;
     }
 }

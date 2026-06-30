@@ -81,6 +81,68 @@ public class TripServiceImpl implements TripService {
     }
 
     @Override
+    public TripResponse updateTrip(UUID tripId, com.udjattrack.dto.request.UpdateTripRequest request) {
+        Trip trip = findTripOrThrow(tripId);
+        
+        if (trip.getStatus() != TripStatus.PLANNED) {
+            throw new BusinessException("Only PLANNED trips can be updated. Active, cancelled, or completed trips cannot be modified.");
+        }
+
+        boolean scheduleChanged = false;
+        LocalDateTime newStart = trip.getScheduledStartTime();
+        LocalDateTime newEnd = trip.getScheduledEndTime();
+
+        if (request.scheduledStartTime() != null) {
+            newStart = request.scheduledStartTime();
+            scheduleChanged = true;
+        }
+        if (request.scheduledEndTime() != null) {
+            newEnd = request.scheduledEndTime();
+            scheduleChanged = true;
+        }
+
+        UUID driverToValidate = request.driverId() != null ? request.driverId() : trip.getDriver().getUserId();
+        UUID vehicleToValidate = request.vehicleId() != null ? request.vehicleId() : trip.getVehicle().getVehicleId();
+
+        if (scheduleChanged || request.driverId() != null || request.vehicleId() != null) {
+            validateSchedule(driverToValidate, vehicleToValidate, newStart, newEnd, tripId);
+        }
+
+        if (request.driverId() != null) {
+            Driver newDriver = driverRepository.findById(request.driverId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", request.driverId()));
+            trip.setDriver(newDriver);
+        }
+
+        if (request.vehicleId() != null) {
+            Vehicle newVehicle = vehicleRepository.findById(request.vehicleId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Vehicle", "id", request.vehicleId()));
+            trip.setVehicle(newVehicle);
+        }
+
+        if (request.source() != null && !request.source().isBlank()) {
+            trip.setSource(request.source());
+        }
+
+        if (request.destination() != null && !request.destination().isBlank()) {
+            trip.setDestination(request.destination());
+        }
+        
+        trip.setScheduledStartTime(newStart);
+        trip.setScheduledEndTime(newEnd);
+
+        Trip saved = tripRepository.save(trip);
+        
+        // Notify driver if driver changed
+        if (request.driverId() != null) {
+            notificationService.sendTripAssignedNotification(saved.getDriver(), saved);
+        }
+        
+        triggerMonitoringUpdate(saved);
+        return toResponse(saved);
+    }
+
+    @Override
     public TripResponse assignDriver(UUID tripId, UUID driverId) {
         Trip trip = findTripOrThrow(tripId);
         Driver driver = driverRepository.findById(driverId)
@@ -639,6 +701,10 @@ public class TripServiceImpl implements TripService {
                 .vehicle(TripResponse.VehicleInfo.builder()
                         .plateNumber(trip.getVehicle().getPlateNumber())
                         .model(trip.getVehicle().getModel())
+                        .build())
+                .driver(TripResponse.DriverInfo.builder()
+                        .name(trip.getDriver().getName())
+                        .phoneNumber(trip.getDriver().getPhoneNumber()) // Assuming getPhoneNumber exists
                         .build())
                 .build();
     }
