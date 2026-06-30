@@ -195,7 +195,8 @@ public class AlertServiceImpl implements AlertService {
             case SOS_REQ -> "SOSReq";
             case MAINTENANCE -> "Maintenance";
             case INCIDENT -> "Incident";
-            case FATIGUE, TRIP_STATE -> "Fatigue";
+            case FATIGUE -> "Fatigue";
+            case TRIP_STATE -> "TripState";
             default -> a.getAlertType().name();
         };
 
@@ -249,6 +250,10 @@ public class AlertServiceImpl implements AlertService {
                 alertableDetails.put("longitude", s.getLongitude());
                 alertableDetails.put("lastUpdatedAt", s.getLastUpdatedAt());
             });
+        } else if ("Unknown".equalsIgnoreCase(a.getAlertableType())) {
+            alertableDetails.put("type", "Unknown");
+            alertableDetails.put("driverState", "Unknown");
+            alertableDetails.put("eventId", a.getAlertableId());
         }
 
         return AlertEventMessage.builder()

@@ -97,6 +97,20 @@ public class EventServiceImpl implements EventService {
                     request.payload()
             ));
             alertCreated = true; // Alert is handled by createIncident
+        } else if ("UNKNOWN".equalsIgnoreCase(request.eventType())) {
+            // Update trip driver state to UNKNOWN via telemetryService
+            telemetryService.updateTripState(tripId, "UNKNOWN", null);
+
+            CreateAlertRequest alertReq = new CreateAlertRequest(
+                    tripId,
+                    AlertType.TRIP_STATE,
+                    severity,
+                    "Unknown",
+                    savedRecord.getId(),
+                    "Safety Event Detected: Driver state is UNKNOWN"
+            );
+            alertService.createAlert(alertReq);
+            alertCreated = true;
         } 
         // 3. Scenario B: All other Safety Events -> Create Alert linked directly to EventRecord
         else {

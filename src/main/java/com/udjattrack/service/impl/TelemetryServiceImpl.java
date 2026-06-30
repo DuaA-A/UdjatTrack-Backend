@@ -60,23 +60,26 @@ public class TelemetryServiceImpl implements TelemetryService {
             throw new BusinessException("Cannot ingest telemetry for a trip that has not started yet.");
         }
 
-
-        LocalDateTime telemetryTime = request.timeStamp() != null ? request.timeStamp().toLocalDateTime() : LocalDateTime.now();
+        LocalDateTime telemetryTime = request.timeStamp() != null ? request.timeStamp().toLocalDateTime()
+                : LocalDateTime.now();
 
         if (trip.getTripLog() != null) {
             LocalDateTime start = trip.getTripLog().getActualStartTime();
             LocalDateTime end = trip.getTripLog().getActualEndTime();
 
             if (start != null && telemetryTime.isBefore(start)) {
-                throw new com.udjattrack.exception.BusinessException("Telemetry timestamp cannot be before the trip's actual start time.");
+                throw new com.udjattrack.exception.BusinessException(
+                        "Telemetry timestamp cannot be before the trip's actual start time.");
             }
             if (end != null && telemetryTime.isAfter(end)) {
-                throw new com.udjattrack.exception.BusinessException("Telemetry timestamp cannot be after the trip's actual end time.");
+                throw new com.udjattrack.exception.BusinessException(
+                        "Telemetry timestamp cannot be after the trip's actual end time.");
             }
         }
 
         // We now save telemetry regardless of trip status to maintain history.
-        // If the trip is ON_BREAK, we still record the telemetry and notify the dashboard.
+        // If the trip is ON_BREAK, we still record the telemetry and notify the
+        // dashboard.
         if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.ON_BREAK) {
             log.info("Trip {} is ON_BREAK. Telemetry is being recorded for history.", trip.getTripId());
         }
@@ -103,13 +106,13 @@ public class TelemetryServiceImpl implements TelemetryService {
             if (request.driverState() != null && state.getDriverState() != request.driverState()) {
                 DriverState oldState = state.getDriverState();
                 state.setDriverState(request.driverState());
-                
+
                 SeverityLevel severity = SeverityLevel.MEDIUM;
                 String msg = "Driver State Changed: " + oldState + " -> " + request.driverState();
                 if (request.driverState() == DriverState.UNKNOWN) {
                     msg = "Driver is not visible/detected (UNKNOWN state)";
                 }
-                
+
                 // Trigger Alert for Driver State Change
                 alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
                         trip.getTripId(),
@@ -117,8 +120,7 @@ public class TelemetryServiceImpl implements TelemetryService {
                         severity,
                         "TripState",
                         state.getStateId(),
-                        msg
-                ));
+                        msg));
             }
             if (request.location() != null) {
                 state.setLatitude(String.valueOf(request.location().lat()));
@@ -126,7 +128,8 @@ public class TelemetryServiceImpl implements TelemetryService {
             }
             state.setCurrentSpeed(request.speed());
 
-            // Task 1: If trip was just resumed, set it back to STARTED state upon first telemetry
+            // Task 1: If trip was just resumed, set it back to STARTED state upon first
+            // telemetry
             if (state.getTripProgressState() == TripProgressState.RESUMED) {
                 log.info("Transitioning trip {} from RESUMED back to STARTED state via telemetry", tripId);
                 state.setTripProgressState(TripProgressState.STARTED);
@@ -138,11 +141,12 @@ public class TelemetryServiceImpl implements TelemetryService {
                 try {
                     TripStatus newStatus = TripStatus.valueOf(newStateStr.toUpperCase());
                     if (trip.getStatus() != newStatus) {
-                        log.info("Trip {} status changing from {} to {} via telemetry", trip.getTripId(), trip.getStatus(), newStatus);
-                        
+                        log.info("Trip {} status changing from {} to {} via telemetry", trip.getTripId(),
+                                trip.getStatus(), newStatus);
+
                         TripStatus oldStatus = trip.getStatus();
                         trip.setStatus(newStatus);
-                        
+
                         // Map TripStatus to TripProgressState
                         TripProgressState progressState = switch (newStatus) {
                             case ONGOING -> TripProgressState.STARTED;
@@ -168,7 +172,8 @@ public class TelemetryServiceImpl implements TelemetryService {
                             tripLogRepository.findByTripTripId(trip.getTripId()).ifPresent(tl -> {
                                 tl.setActualEndTime(telemetryTime);
                                 if (tl.getActualStartTime() != null) {
-                                    tl.setTotalDuration((double) java.time.Duration.between(tl.getActualStartTime(), tl.getActualEndTime()).toMinutes());
+                                    tl.setTotalDuration((double) java.time.Duration
+                                            .between(tl.getActualStartTime(), tl.getActualEndTime()).toMinutes());
                                 }
                                 tripLogRepository.save(tl);
                             });
@@ -198,8 +203,7 @@ public class TelemetryServiceImpl implements TelemetryService {
                                 SeverityLevel.LOW,
                                 "EventRecord",
                                 statusEvent.getId(),
-                                "Trip Status Changed: " + oldStatus + " -> " + newStatus
-                        ));
+                                "Trip Status Changed: " + oldStatus + " -> " + newStatus));
                     }
                 } catch (IllegalArgumentException e) {
                     log.warn("Invalid tripState received in telemetry for trip {}: {}", trip.getTripId(), newStateStr);
@@ -207,7 +211,7 @@ public class TelemetryServiceImpl implements TelemetryService {
             }
 
             tripStateRepository.save(state);
-            
+
             // Push update to fleet manager over WebSocket AFTER transaction commit
             UUID fleetId = trip.getDriver().getFleetManager().getUserId();
             TripStateUpdateMessage updateMsg = TripStateUpdateMessage.builder()
@@ -217,22 +221,20 @@ public class TelemetryServiceImpl implements TelemetryService {
                     .tripProgressState(state.getTripProgressState())
                     .progressPct(calculateProgressPct(trip))
                     .location(java.util.Map.of(
-                            "lat",  state.getLatitude()  != null ? state.getLatitude()  : "0.0",
-                            "long", state.getLongitude() != null ? state.getLongitude() : "0.0"
-                    ))
+                            "lat", state.getLatitude() != null ? state.getLatitude() : "0.0",
+                            "long", state.getLongitude() != null ? state.getLongitude() : "0.0"))
                     .lastUpdatedAt(telemetryTime)
                     .build();
 
             if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
                 org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-                    new org.springframework.transaction.support.TransactionSynchronization() {
-                        @Override
-                        public void afterCommit() {
-                            webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
-                            tripService.publishTripMonitoringUpdate(fleetId);
-                        }
-                    }
-                );
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
+                                tripService.publishTripMonitoringUpdate(fleetId);
+                            }
+                        });
             } else {
                 webSocketPublisher.publishLiveTracking(fleetId, updateMsg);
                 tripService.publishTripMonitoringUpdate(fleetId);
@@ -273,9 +275,10 @@ public class TelemetryServiceImpl implements TelemetryService {
         driverRepository.findById(driverId)
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", driverId));
         log.info("Driver {} status updated to: {}", driverId, newState);
-        
+
         // Push update to specific driver's private channel
-        webSocketPublisher.publishDriverStatus(driverId, java.util.Map.of("status", newState, "timestamp", LocalDateTime.now()));
+        webSocketPublisher.publishDriverStatus(driverId,
+                java.util.Map.of("status", newState, "timestamp", LocalDateTime.now()));
     }
 
     @Override
@@ -325,13 +328,17 @@ public class TelemetryServiceImpl implements TelemetryService {
     }
 
     private Integer calculateProgressPct(Trip trip) {
-        if (trip.getStatus() == TripStatus.FINISHED) return 100;
-        if (trip.getTripLog() == null || trip.getTripLog().getActualStartTime() == null) return 0;
-        
+        if (trip.getStatus() == TripStatus.FINISHED)
+            return 100;
+        if (trip.getTripLog() == null || trip.getTripLog().getActualStartTime() == null)
+            return 0;
+
         LocalDateTime start = trip.getTripLog().getActualStartTime();
         if (trip.getScheduledStartTime() != null && trip.getScheduledEndTime() != null) {
-            long totalMinutes = java.time.Duration.between(trip.getScheduledStartTime(), trip.getScheduledEndTime()).toMinutes();
-            if (totalMinutes <= 0) return 0;
+            long totalMinutes = java.time.Duration.between(trip.getScheduledStartTime(), trip.getScheduledEndTime())
+                    .toMinutes();
+            if (totalMinutes <= 0)
+                return 0;
             long elapsedMinutes = java.time.Duration.between(start, LocalDateTime.now()).toMinutes();
             return (int) Math.min(100, Math.max(0, (elapsedMinutes * 100) / totalMinutes));
         }
