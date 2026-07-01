@@ -108,8 +108,8 @@ public class TelemetryServiceImpl implements TelemetryService {
                 state.setDriverState(request.driverState());
 
                 SeverityLevel severity = switch (request.driverState()) {
-                    case FATIGUE, DISTRACTED -> SeverityLevel.HIGH;
-                    case UNKNOWN -> SeverityLevel.HIGH;
+                    case UNCONSCIOUS -> SeverityLevel.CRITICAL;
+                    case DROWSY, HIGH_RISK, UNKNOWN -> SeverityLevel.HIGH;
                     default -> SeverityLevel.MEDIUM;
                 };
                 String msg = "Driver State Changed: " + oldState + " -> " + request.driverState();
