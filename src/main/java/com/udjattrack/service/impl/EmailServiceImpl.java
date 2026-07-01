@@ -3,44 +3,43 @@ package com.udjattrack.service.impl;
 import com.udjattrack.entity.Alert;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import jakarta.annotation.PostConstruct;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.io.UnsupportedEncodingException;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender javaMailSender;
+    @Value("${application.mail.resend.api-key:re_ZvKJgNMD_J6JtGfLo3oXtreX1Yww67Gy6}")
+    private String resendApiKey;
 
-    @Value("${application.mail.from:udjattrack@gmail.com}")
-    private String fromEmail;
+    // Using the newly purchased domain!
+    private final String fromEmail = "no-reply@udjattrack.online";
 
     @Value("${application.mail.from-name:UdjatTrack}")
     private String fromName;
 
+    private Resend resend;
+
     @PostConstruct
-    public void testSmtpConnection() {
-        log.info("Testing SMTP connection to Gmail on Port 465 (SSL)...");
-        if (javaMailSender instanceof JavaMailSenderImpl impl) {
-            try {
-                impl.testConnection();
-                log.info("✅ SUCCESS: Successfully connected to Gmail SMTP server! The mail service is fully operational.");
-            } catch (MessagingException e) {
-                log.error("❌ ERROR: Could not connect to Gmail SMTP server. Reason: {}", e.getMessage());
-            }
+    public void setupResend() {
+        log.info("Setting up Resend API using custom domain. from={}, fromName={}", fromEmail, fromName);
+
+        if (!StringUtils.hasText(resendApiKey) || !StringUtils.hasText(fromName)) {
+            log.error("Mail configuration incomplete. Check resend-api-key and from-name.");
         }
+        
+        this.resend = new Resend(resendApiKey);
     }
 
     @Override
@@ -152,21 +151,21 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        log.info("[EMAIL TRACE] Sending email to={} via JavaMailSender", to);
+        String fromString = fromName + " <" + fromEmail + ">";
+        log.info("[EMAIL TRACE] Sending email to={} via Resend from={}", to, fromString);
 
         try {
-            MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            CreateEmailOptions sendEmailRequest = CreateEmailOptions.builder()
+                    .from(fromString)
+                    .to(to)
+                    .subject(subject)
+                    .html(htmlContent)
+                    .build();
 
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            javaMailSender.send(message);
-            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {}", to, subject);
-        } catch (MessagingException | UnsupportedEncodingException e) {
-            log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via JavaMailSender. Reason: {}", to, e.getMessage(), e);
+            CreateEmailResponse data = resend.emails().send(sendEmailRequest);
+            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject, data.getId());
+        } catch (ResendException e) {
+            log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via Resend. Reason: {}", to, e.getMessage(), e);
         } catch (Exception e) {
             log.error("[EMAIL TRACE] ERROR: Unexpected error while sending email to {}. Reason: {}", to, e.getMessage(), e);
         }
