@@ -84,6 +84,7 @@ com\udjattrack\dto\response\TripTimelineResponse$TimelineItem$TimelineItemBuilde
 com\udjattrack\entity\enums\IncidentType.class
 com\udjattrack\dto\response\TripStateResponse.class
 com\udjattrack\controller\AlertController.class
+com\udjattrack\dto\response\TripResponse$DriverInfo$DriverInfoBuilder.class
 com\udjattrack\controller\DashboardController.class
 com\udjattrack\entity\SOSRequest.class
 com\udjattrack\dto\request\ResetPasswordRequest.class
@@ -153,6 +154,7 @@ com\udjattrack\controller\LocationController$NearestHelpResponse.class
 com\udjattrack\entity\IssueRequest.class
 com\udjattrack\dto\response\ApiResponse$ApiResponseBuilder.class
 com\udjattrack\entity\AlertTriggeredNotification$AlertTriggeredNotificationBuilderImpl.class
+com\udjattrack\dto\response\AlertDailyCountResponse.class
 com\udjattrack\exception\BusinessException.class
 com\udjattrack\controller\DriverController.class
 com\udjattrack\config\AsyncConfig.class
@@ -187,6 +189,7 @@ com\udjattrack\entity\Driver$DriverBuilderImpl.class
 com\udjattrack\entity\SuperManager.class
 com\udjattrack\repository\DriverRepository.class
 com\udjattrack\dto\request\AddVehicleRequest.class
+com\udjattrack\dto\response\TripResponse$DriverInfo.class
 com\udjattrack\dto\response\FleetManagerResponse$FleetManagerResponseBuilder.class
 com\udjattrack\config\AuditConfig.class
 com\udjattrack\service\impl\NotificationServiceImpl.class
@@ -241,6 +244,8 @@ com\udjattrack\service\TripService.class
 com\udjattrack\dto\request\RejectFleetManagerRequest.class
 com\udjattrack\dto\response\FleetManagerResponse.class
 com\udjattrack\repository\TripLogRepository.class
+com\udjattrack\dto\request\UpdateTripRequest.class
+com\udjattrack\dto\response\AlertDailyCountResponse$AlertDailyCountResponseBuilder.class
 com\udjattrack\repository\OtpTokenRepository.class
 com\udjattrack\entity\Vehicle$VehicleBuilder.class
 com\udjattrack\dto\response\SuperManagerSignupResponse.class

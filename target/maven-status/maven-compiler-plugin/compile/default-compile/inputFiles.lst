@@ -14,6 +14,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\repository\TripRepository.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\exception\GlobalExceptionHandler.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\entity\enums\TripProgressState.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\request\UpdateTripRequest.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\AuthResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\entity\Incident.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\request\TelemetryBatchRequest.java
@@ -69,6 +70,7 @@ C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\entity\enums\DriverState.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\controller\AuthController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\service\impl\AuthServiceImpl.java
+C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\AlertDailyCountResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\controller\IncidentController.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\DriverResponse.java
 C:\Users\dodoa\OneDrive\Desktop\UdjatTrack-Backend\src\main\java\com\udjattrack\dto\response\TripLogResponse.java
