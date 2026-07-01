@@ -3,45 +3,46 @@ package com.udjattrack.service.impl;
 import com.udjattrack.entity.Alert;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
-import com.resend.Resend;
-import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.CreateEmailOptions;
-import com.resend.services.emails.model.CreateEmailResponse;
 import jakarta.annotation.PostConstruct;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+
+import java.io.UnsupportedEncodingException;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    @Value("${application.mail.resend.api-key:re_ZvKJgNMD_J6JtGfLo3oXtreX1Yww67Gy6}")
-    private String resendApiKey;
+    private final JavaMailSender javaMailSender;
 
-    @Value("${application.mail.from:onboarding@resend.dev}")
+    @Value("${application.mail.from:udjattrack@gmail.com}")
     private String fromEmail;
 
     @Value("${application.mail.from-name:UdjatTrack}")
     private String fromName;
 
-    private Resend resend;
-
     @PostConstruct
-    private void validateMailConfiguration() {
-        log.info("Resend Mail configuration loaded: from={}, fromName={}", fromEmail, fromName);
-
-        if (!StringUtils.hasText(resendApiKey)
-                || !StringUtils.hasText(fromEmail)
-                || !StringUtils.hasText(fromName)) {
-            log.error("Mail configuration incomplete. Check resend-api-key, from-email, from-name.");
+    public void testSmtpConnection() {
+        log.info("Testing SMTP connection to Gmail...");
+        if (javaMailSender instanceof JavaMailSenderImpl impl) {
+            try {
+                impl.testConnection();
+                log.info("✅ SUCCESS: Successfully connected to Gmail SMTP server! The mail service is fully operational.");
+            } catch (MessagingException e) {
+                log.error("❌ ERROR: Could not connect to Gmail SMTP server. Mails will fail to send. Please check your MAIL_PASSWORD and Railway network settings. Reason: {}", e.getMessage());
+            }
+        } else {
+            log.warn("JavaMailSender is not of type JavaMailSenderImpl, skipping connection test.");
         }
-        
-        this.resend = new Resend(resendApiKey);
     }
 
     @Override
@@ -153,21 +154,21 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        String fromString = fromName + " <" + fromEmail + ">";
-        log.info("[EMAIL TRACE] Sending email to={} via Resend from={}", to, fromString);
+        log.info("[EMAIL TRACE] Sending email to={} via JavaMailSender", to);
 
         try {
-            CreateEmailOptions sendEmailRequest = CreateEmailOptions.builder()
-                    .from(fromString)
-                    .to(to)
-                    .subject(subject)
-                    .html(htmlContent)
-                    .build();
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            CreateEmailResponse data = resend.emails().send(sendEmailRequest);
-            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject, data.getId());
-        } catch (ResendException e) {
-            log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via Resend. Reason: {}", to, e.getMessage(), e);
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+
+            javaMailSender.send(message);
+            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {}", to, subject);
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via JavaMailSender. Reason: {}", to, e.getMessage(), e);
         } catch (Exception e) {
             log.error("[EMAIL TRACE] ERROR: Unexpected error while sending email to {}. Reason: {}", to, e.getMessage(), e);
         }
