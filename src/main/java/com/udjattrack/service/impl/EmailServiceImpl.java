@@ -5,8 +5,8 @@ import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
 import com.resend.Resend;
 import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.SendEmailRequest;
-import com.resend.services.emails.model.SendEmailResponse;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -157,14 +157,14 @@ public class EmailServiceImpl implements EmailService {
         log.info("[EMAIL TRACE] Sending email to={} via Resend from={}", to, fromString);
 
         try {
-            SendEmailRequest sendEmailRequest = SendEmailRequest.builder()
+            CreateEmailOptions sendEmailRequest = CreateEmailOptions.builder()
                     .from(fromString)
                     .to(to)
                     .subject(subject)
                     .html(htmlContent)
                     .build();
 
-            SendEmailResponse data = resend.emails().send(sendEmailRequest);
+            CreateEmailResponse data = resend.emails().send(sendEmailRequest);
             log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject, data.getId());
         } catch (ResendException e) {
             log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via Resend. Reason: {}", to, e.getMessage(), e);
