@@ -71,7 +71,7 @@ public class EventServiceImpl implements EventService {
             }
         }
 
-        SeverityLevel severity = determineSeverity(request.eventType());
+        SeverityLevel severity = determineSeverity(request.eventType(), request.payload());
 
         // 1. Save to Relational DB (long-term management & history)
         EventRecord relationalRecord = EventRecord.builder()
@@ -209,11 +209,19 @@ public class EventServiceImpl implements EventService {
                 .alertCreated(alertCreated)
                 .build();
     }
-    private SeverityLevel determineSeverity(String eventType) {
+    private SeverityLevel determineSeverity(String eventType, java.util.Map<String, Object> payload) {
+        if (payload != null && payload.containsKey("severity")) {
+            try {
+                return SeverityLevel.valueOf(String.valueOf(payload.get("severity")).toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid severity in payload: {}", payload.get("severity"));
+            }
+        }
+        
         if (eventType == null) return SeverityLevel.MEDIUM;
         String type = eventType.toUpperCase();
-        if (type.contains("CRASH") || type.contains("ROLLOVER")) return SeverityLevel.CRITICAL;
-        if (type.contains("FATIGUE") || type.contains("SOS")) return SeverityLevel.HIGH;
+        if (type.contains("CRASH") || type.contains("ROLLOVER") || type.contains("SOS")) return SeverityLevel.CRITICAL;
+        if (type.contains("FATIGUE") || type.contains("OVERSPEED") || type.contains("HARSH")) return SeverityLevel.HIGH;
         return SeverityLevel.MEDIUM;
     }
 }

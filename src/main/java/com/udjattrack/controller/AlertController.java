@@ -64,6 +64,16 @@ public class AlertController {
                 alertService.getAlertSummary(managerId)));
     }
 
+    @GetMapping("/analytics/daily-counts")
+    @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
+    @Operation(summary = "Get daily alert counts for time-series analysis")
+    public ResponseEntity<ApiResponse<List<com.udjattrack.dto.response.AlertDailyCountResponse>>> getAlertDailyCounts(
+            @RequestParam(defaultValue = "30") int days) {
+        UUID managerId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok("Daily alert counts retrieved", 
+                alertService.getAlertDailyCounts(managerId, days)));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get alert details")

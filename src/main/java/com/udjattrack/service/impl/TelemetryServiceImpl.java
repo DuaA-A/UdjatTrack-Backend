@@ -107,7 +107,11 @@ public class TelemetryServiceImpl implements TelemetryService {
                 DriverState oldState = state.getDriverState();
                 state.setDriverState(request.driverState());
 
-                SeverityLevel severity = SeverityLevel.MEDIUM;
+                SeverityLevel severity = switch (request.driverState()) {
+                    case FATIGUE, DISTRACTED -> SeverityLevel.HIGH;
+                    case UNKNOWN -> SeverityLevel.HIGH;
+                    default -> SeverityLevel.MEDIUM;
+                };
                 String msg = "Driver State Changed: " + oldState + " -> " + request.driverState();
                 if (request.driverState() == DriverState.UNKNOWN) {
                     msg = "Driver is not visible/detected (UNKNOWN state)";

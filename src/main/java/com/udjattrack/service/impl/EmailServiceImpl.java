@@ -3,13 +3,14 @@ package com.udjattrack.service.impl;
 import com.udjattrack.entity.Alert;
 import com.udjattrack.entity.enums.SeverityLevel;
 import com.udjattrack.service.EmailService;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.SendEmailRequest;
+import com.resend.services.emails.model.SendEmailResponse;
 import jakarta.annotation.PostConstruct;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,39 +20,28 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${application.mail.resend.api-key:re_ZvKJgNMD_J6JtGfLo3oXtreX1Yww67Gy6}")
+    private String resendApiKey;
 
-    @Value("${application.mail.from}")
+    @Value("${application.mail.from:onboarding@resend.dev}")
     private String fromEmail;
 
-    @Value("${application.mail.from-name}")
+    @Value("${application.mail.from-name:UdjatTrack}")
     private String fromName;
 
-    @Value("${spring.mail.host:Not Configured}")
-    private String smtpHost;
-
-    @Value("${spring.mail.port:Not Configured}")
-    private String smtpPort;
-
-    @Value("${spring.mail.username:Not Configured}")
-    private String smtpUsername;
-
-    @Value("${spring.mail.password:Not Configured}")
-    private String smtpPassword;
+    private Resend resend;
 
     @PostConstruct
     private void validateMailConfiguration() {
-        log.info("Mail configuration loaded: host={}, port={}, username={}, from={}, fromName={}",
-                smtpHost, smtpPort, smtpUsername, fromEmail, fromName);
+        log.info("Resend Mail configuration loaded: from={}, fromName={}", fromEmail, fromName);
 
-        if (!StringUtils.hasText(smtpHost)
-                || !StringUtils.hasText(smtpPort)
-                || !StringUtils.hasText(smtpUsername)
-                || !StringUtils.hasText(smtpPassword)
+        if (!StringUtils.hasText(resendApiKey)
                 || !StringUtils.hasText(fromEmail)
                 || !StringUtils.hasText(fromName)) {
-            log.error("Mail configuration incomplete. Set MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, MAIL_FROM_NAME in Railway environment variables.");
+            log.error("Mail configuration incomplete. Check resend-api-key, from-email, from-name.");
         }
+        
+        this.resend = new Resend(resendApiKey);
     }
 
     @Override
@@ -163,19 +153,23 @@ public class EmailServiceImpl implements EmailService {
     }
 
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        log.info("[EMAIL TRACE] Sending email to={} via {}:{} from={}", to, smtpHost, smtpPort, fromEmail);
+        String fromString = fromName + " <" + fromEmail + ">";
+        log.info("[EMAIL TRACE] Sending email to={} via Resend from={}", to, fromString);
 
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            mailSender.send(message);
-            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {}", to, subject);
+            SendEmailRequest sendEmailRequest = SendEmailRequest.builder()
+                    .from(fromString)
+                    .to(to)
+                    .subject(subject)
+                    .html(htmlContent)
+                    .build();
+
+            SendEmailResponse data = resend.emails().send(sendEmailRequest);
+            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject, data.getId());
+        } catch (ResendException e) {
+            log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via Resend. Reason: {}", to, e.getMessage(), e);
         } catch (Exception e) {
-            log.error("[EMAIL TRACE] ERROR: Failed to send email to {}. Reason: {}", to, e.getMessage(), e);
+            log.error("[EMAIL TRACE] ERROR: Unexpected error while sending email to {}. Reason: {}", to, e.getMessage(), e);
         }
     }
 }

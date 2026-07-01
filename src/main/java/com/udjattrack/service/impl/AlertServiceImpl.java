@@ -4,6 +4,7 @@ import com.udjattrack.dto.request.CreateAlertRequest;
 import com.udjattrack.dto.request.TelemetryRequest;
 import com.udjattrack.dto.response.AlertResponse;
 import com.udjattrack.dto.response.AlertSummaryResponse;
+import com.udjattrack.dto.response.AlertDailyCountResponse;
 import com.udjattrack.entity.*;
 import com.udjattrack.exception.ResourceNotFoundException;
 import com.udjattrack.repository.*;
@@ -292,7 +293,10 @@ public class AlertServiceImpl implements AlertService {
     @Override
     @Transactional(readOnly = true)
     public AlertSummaryResponse getAlertSummary(UUID fleetManagerId) {
-        List<Alert> allAlerts = alertRepository.findAllByFleetManager(fleetManagerId);
+        java.time.LocalDateTime startOfDay = java.time.LocalDate.now().atStartOfDay();
+        java.time.LocalDateTime endOfDay = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+        
+        List<Alert> allAlerts = alertRepository.findAllByFleetManagerForToday(fleetManagerId, startOfDay, endOfDay);
         long total = allAlerts.size();
         long acknowledged = allAlerts.stream().filter(a -> Boolean.TRUE.equals(a.getAcknowledged())).count();
         long unacknowledged = total - acknowledged;
@@ -300,6 +304,9 @@ public class AlertServiceImpl implements AlertService {
         long high = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.HIGH).count();
         long medium = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.MEDIUM).count();
         long low = allAlerts.stream().filter(a -> a.getSeverity() == com.udjattrack.entity.enums.SeverityLevel.LOW).count();
+
+        java.util.Map<String, Long> typesCount = allAlerts.stream()
+                .collect(Collectors.groupingBy(a -> a.getAlertType().name(), Collectors.counting()));
 
         return AlertSummaryResponse.builder()
                 .totalAlerts(total)
@@ -309,6 +316,30 @@ public class AlertServiceImpl implements AlertService {
                 .highCount(high)
                 .mediumCount(medium)
                 .lowCount(low)
+                .alertsByType(typesCount)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AlertDailyCountResponse> getAlertDailyCounts(UUID fleetManagerId, int days) {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        java.time.LocalDate startDate = today.minusDays(days - 1);
+        
+        List<Alert> alerts = alertRepository.findAllByFleetManagerAndTimestampAfter(fleetManagerId, startDate.atStartOfDay());
+        
+        java.util.Map<java.time.LocalDate, Long> countsByDate = alerts.stream()
+                .collect(Collectors.groupingBy(a -> a.getTimestamp().toLocalDate(), Collectors.counting()));
+                
+        List<AlertDailyCountResponse> response = new java.util.ArrayList<>();
+        for (int i = 0; i < days; i++) {
+            java.time.LocalDate date = startDate.plusDays(i);
+            response.add(AlertDailyCountResponse.builder()
+                    .date(date)
+                    .count(countsByDate.getOrDefault(date, 0L))
+                    .build());
+        }
+        
+        return response;
     }
 }

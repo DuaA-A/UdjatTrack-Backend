@@ -146,6 +146,13 @@
             <version>1.3.30</version>
         </dependency>
 
+        <!-- ===== Resend Email ===== -->
+        <dependency>
+            <groupId>com.resend</groupId>
+            <artifactId>resend-java</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

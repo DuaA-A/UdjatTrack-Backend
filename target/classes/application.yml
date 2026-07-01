@@ -23,7 +23,7 @@ spring:
   # ===== JPA shared defaults (each datasource config overrides dialect) =====
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

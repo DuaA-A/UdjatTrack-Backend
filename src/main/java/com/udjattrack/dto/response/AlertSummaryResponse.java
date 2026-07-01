@@ -13,4 +13,5 @@ public class AlertSummaryResponse {
     private long highCount;
     private long mediumCount;
     private long lowCount;
+    private java.util.Map<String, Long> alertsByType;
 }

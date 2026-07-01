@@ -46,4 +46,10 @@ public interface AlertRepository extends JpaRepository<Alert, UUID> {
             ORDER BY a.timestamp DESC
             """)
     List<Alert> findAcknowledgedAlertsForFleetManager(@Param("managerId") UUID managerId);
+
+    @Query("SELECT a FROM Alert a WHERE a.trip.driver.fleetManager.userId = :fleetManagerId AND a.timestamp >= :startDate ORDER BY a.timestamp ASC")
+    List<Alert> findAllByFleetManagerAndTimestampAfter(@Param("fleetManagerId") UUID fleetManagerId, @Param("startDate") java.time.LocalDateTime startDate);
+
+    @Query("SELECT a FROM Alert a WHERE a.trip.driver.fleetManager.userId = :fleetManagerId AND a.timestamp >= :startOfDay AND a.timestamp <= :endOfDay")
+    List<Alert> findAllByFleetManagerForToday(@Param("fleetManagerId") UUID fleetManagerId, @Param("startOfDay") java.time.LocalDateTime startOfDay, @Param("endOfDay") java.time.LocalDateTime endOfDay);
 }
