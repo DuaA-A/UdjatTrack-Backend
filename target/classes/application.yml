@@ -86,8 +86,10 @@ application:
     expiration-minutes: 10
     length: 6
   mail:
-    from: ${MAIL_FROM:udjattrack@gmail.com}
+    from: ${MAIL_FROM:no-reply@udjattrack.online}
     from-name: ${MAIL_FROM_NAME:UdjatTrack}
+    resend:
+      api-key: ${RESEND_API_KEY:}
 
   # ===== File Storage =====
   storage:

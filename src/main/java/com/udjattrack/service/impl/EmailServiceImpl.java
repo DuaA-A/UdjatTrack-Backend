@@ -20,11 +20,11 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    @Value("${application.mail.resend.api-key:re_ZvKJgNMD_J6JtGfLo3oXtreX1Yww67Gy6}")
+    @Value("${application.mail.resend.api-key:}")
     private String resendApiKey;
 
-    // Using the newly purchased domain!
-    private final String fromEmail = "no-reply@udjattrack.online";
+    @Value("${application.mail.from:no-reply@udjattrack.online}")
+    private String fromEmail;
 
     @Value("${application.mail.from-name:UdjatTrack}")
     private String fromName;
