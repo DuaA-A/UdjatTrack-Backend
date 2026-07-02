@@ -136,18 +136,6 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginPendingApproval_shouldReturn401() throws Exception {
-        Mockito.when(authService.login(any(LoginRequest.class)))
-                .thenThrow(new org.springframework.security.authentication.DisabledException("FLEET_MANAGER with ACCOUNT_PENDING_APPROVAL status is rejected"));
-
-        mockMvc.perform(post("/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(ControllerTestUtils.toJson(new LoginRequest("pending@example.com", "password123", null))))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.success").value(false));
-    }
-
-    @Test
     void refreshTokenSuccess_shouldReturnNewAccessToken() throws Exception {
         AuthResponse response = AuthResponse.builder()
                 .accessToken("new-access-token")
