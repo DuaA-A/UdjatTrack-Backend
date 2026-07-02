@@ -89,7 +89,7 @@ application:
     from: ${MAIL_FROM:no-reply@udjattrack.online}
     from-name: ${MAIL_FROM_NAME:UdjatTrack}
     resend:
-      api-key: ${RESEND_API_KEY:}
+      api-key: ${RESEND_API_KEY:re_G2ZynKMw_LZuNr8LP87dez46sXFoMi14L}
 
   # ===== File Storage =====
   storage:
