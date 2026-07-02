@@ -20,11 +20,11 @@ import org.springframework.util.StringUtils;
 @Slf4j
 public class EmailServiceImpl implements EmailService {
 
-    @Value("${application.mail.resend.api-key:}")
+    @Value("${application.mail.resend.api-key:re_G2ZynKMw_LZuNr8LP87dez46sXFoMi14L}")
     private String resendApiKey;
 
-    @Value("${application.mail.from:no-reply@udjattrack.online}")
-    private String fromEmail;
+    // Using the newly purchased domain!
+    private final String fromEmail = "no-reply@udjattrack.online";
 
     @Value("${application.mail.from-name:UdjatTrack}")
     private String fromName;
@@ -38,7 +38,7 @@ public class EmailServiceImpl implements EmailService {
         if (!StringUtils.hasText(resendApiKey) || !StringUtils.hasText(fromName)) {
             log.error("Mail configuration incomplete. Check resend-api-key and from-name.");
         }
-        
+
         this.resend = new Resend(resendApiKey);
     }
 
@@ -56,7 +56,8 @@ public class EmailServiceImpl implements EmailService {
                     </div>
                     <p>This code expires in 10 minutes.</p>
                 </div>
-                """.formatted(name, otp);
+                """
+                .formatted(name, otp);
         sendHtmlEmail(to, subject, html);
     }
 
@@ -69,7 +70,8 @@ public class EmailServiceImpl implements EmailService {
                     <h2>Welcome, %s!</h2>
                     <p>Your account has been successfully created. You can now start managing your fleet.</p>
                 </div>
-                """.formatted(name);
+                """
+                .formatted(name);
         sendHtmlEmail(to, subject, html);
     }
 
@@ -82,7 +84,8 @@ public class EmailServiceImpl implements EmailService {
                     <h2>Password Changed</h2>
                     <p>Hi %s, your password was recently changed. If this wasn't you, please contact support.</p>
                 </div>
-                """.formatted(name);
+                """
+                .formatted(name);
         sendHtmlEmail(to, subject, html);
     }
 
@@ -96,7 +99,8 @@ public class EmailServiceImpl implements EmailService {
                     <p>Driver <strong>%s</strong> has triggered an SOS alert.</p>
                     <p><strong>Location:</strong> %s</p>
                 </div>
-                """.formatted(driverName, location);
+                """
+                .formatted(driverName, location);
         sendHtmlEmail(to, subject, html);
     }
 
@@ -110,7 +114,8 @@ public class EmailServiceImpl implements EmailService {
                     <p>You have successfully logged into your account.</p>
                     <p style="color: #666; font-size: 12px;">Logged in via: %s</p>
                 </div>
-                """.formatted(name, deviceInfo != null ? deviceInfo : "your device");
+                """
+                .formatted(name, deviceInfo != null ? deviceInfo : "your device");
         sendHtmlEmail(to, subject, html);
     }
 
@@ -119,7 +124,7 @@ public class EmailServiceImpl implements EmailService {
     public void sendAlertNotification(String to, String managerName, Alert alert) {
         String severityEmoji = alert.getSeverity() == SeverityLevel.CRITICAL ? "🚨 CRITICAL" : "⚠️ ALERT";
         String subject = severityEmoji + ": " + alert.getAlertType() + " Detected";
-        
+
         String html = """
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd;">
                     <h2>Fleet Alert Notification</h2>
@@ -131,7 +136,9 @@ public class EmailServiceImpl implements EmailService {
                         <li><strong>Driver:</strong> %s</li>
                     </ul>
                 </div>
-                """.formatted(managerName, alert.getAlertType(), alert.getSeverity(), alert.getMessage(), alert.getTrip().getDriver().getName());
+                """
+                .formatted(managerName, alert.getAlertType(), alert.getSeverity(), alert.getMessage(),
+                        alert.getTrip().getDriver().getName());
         sendHtmlEmail(to, subject, html);
     }
 
@@ -146,7 +153,8 @@ public class EmailServiceImpl implements EmailService {
                     <p>Thank you for registering with UdjatTrack. Your account is currently <strong>awaiting approval</strong> from our administrators.</p>
                     <p>You will receive another email once your account has been verified.</p>
                 </div>
-                """.formatted(name);
+                """
+                .formatted(name);
         sendHtmlEmail(to, subject, html);
     }
 
@@ -163,11 +171,13 @@ public class EmailServiceImpl implements EmailService {
                     .build();
 
             CreateEmailResponse data = resend.emails().send(sendEmailRequest);
-            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject, data.getId());
+            log.info("[EMAIL TRACE] SUCCESS: Email sent successfully to {} | Subject: {} | Resend ID: {}", to, subject,
+                    data.getId());
         } catch (ResendException e) {
             log.error("[EMAIL TRACE] ERROR: Failed to send email to {} via Resend. Reason: {}", to, e.getMessage(), e);
         } catch (Exception e) {
-            log.error("[EMAIL TRACE] ERROR: Unexpected error while sending email to {}. Reason: {}", to, e.getMessage(), e);
+            log.error("[EMAIL TRACE] ERROR: Unexpected error while sending email to {}. Reason: {}", to, e.getMessage(),
+                    e);
         }
     }
 }
