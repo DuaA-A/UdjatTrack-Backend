@@ -11,10 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * JWT utility — handles token creation, parsing, and validation.
- * Uses HMAC-SHA256 with a configured secret key.
- */
+
 @Component
 public class JwtUtil {
 
@@ -23,8 +20,6 @@ public class JwtUtil {
 
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
-
-    // ---- Token Generation ----
 
     public String generateToken(String email, String role, String userId, String name) {
         Map<String, Object> claims = new HashMap<>();
@@ -44,7 +39,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    // ---- Token Extraction ----
 
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -63,7 +57,6 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    // ---- Token Validation ----
 
     public boolean isTokenValid(String token, String email) {
         final String tokenEmail = extractEmail(token);
