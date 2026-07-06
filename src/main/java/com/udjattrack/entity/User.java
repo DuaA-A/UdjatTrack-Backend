@@ -10,11 +10,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Abstract base entity for all user types in the system.
- * Uses JPA JOINED inheritance so each subtype has its own table
- * linked via FK to the users table — normalized and clean.
- */
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
