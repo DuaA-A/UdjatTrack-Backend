@@ -15,12 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-/**
- * STOMP channel interceptor for JWT authentication.
- * Extracts JWT from the "Authorization" header in STOMP CONNECT frames
- * and sets the Spring Security context so that subscriptions to
- * authenticated topics are permitted.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j
