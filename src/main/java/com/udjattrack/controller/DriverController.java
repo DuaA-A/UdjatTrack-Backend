@@ -59,7 +59,6 @@ public class DriverController {
     @Operation(summary = "List all drivers in the fleet")
     public ResponseEntity<ApiResponse<List<DriverResponse>>> getAllDrivers() {
         UUID managerId = com.udjattrack.util.SecurityUtils.getCurrentUserId();
-        // SuperManager might want to see all drivers, but for now we follow fleet manager context
         return ResponseEntity.ok(ApiResponse.ok(fleetManagementService.getDriversByManager(managerId)));
     }
 
@@ -71,8 +70,6 @@ public class DriverController {
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true).message("Driver deleted").build());
     }
-
-    // Emergency Contacts (Section 4 in design, mapped to /drivers/{id}/emergency-contacts)
     
     @PostMapping("/{driverId}/emergency-contacts")
     @PreAuthorize("hasAnyAuthority('ROLE_DRIVER', 'ROLE_FLEET_MANAGER')")
@@ -80,7 +77,6 @@ public class DriverController {
     public ResponseEntity<ApiResponse<DependentResponse>> addEmergencyContact(
             @PathVariable UUID driverId,
             @Valid @RequestBody CreateDependentRequest request) {
-        // Logic to ensure driverId matches request or caller has authority
         DependentResponse response = fleetManagementService.addDependent(driverId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Emergency contact added", response));
@@ -95,21 +91,6 @@ public class DriverController {
                 fleetManagementService.getDependentsByDriver(driverId)));
     }
 
-    /**
-     * POST /drivers/{id}/photo
-     *
-     * <p>Uploads a profile photo for the given driver.
-     * Consumes multipart/form-data; the file must be sent as a form field named "file".
-     *
-     * <p>Allowed types: JPEG, PNG, WebP — max 5 MB.
-     *
-     * <p>Example curl:
-     * <pre>
-     *   curl -X POST http://localhost:8080/api/v1/drivers/{id}/photo \
-     *        -H "Authorization: Bearer <token>" \
-     *        -F "file=@/path/to/photo.jpg"
-     * </pre>
-     */
     @PostMapping(
             value = "/{id}/photo",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
