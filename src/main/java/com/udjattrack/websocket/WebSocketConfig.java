@@ -30,15 +30,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // /topic for broadcasts (server -> client)
         config.enableSimpleBroker(topicPrefix);
-        // /app for incoming messages (client -> server)
         config.setApplicationDestinationPrefixes(appPrefix);
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Registration of the endpoint /api/v1/ws (prefixed by context-path)
         registry.addEndpoint(endpoint)
                 .setAllowedOrigins(allowedOrigins)
                 .withSockJS();
@@ -49,7 +46,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        // Register the JWT authentication interceptor for STOMP connections
         registration.interceptors(stompAuthInterceptor);
     }
 }
