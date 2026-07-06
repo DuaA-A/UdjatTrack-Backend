@@ -209,7 +209,7 @@ public class AlertServiceImpl implements AlertService {
                 alertableDetails.put("id", m.getIssueId());
                 alertableDetails.put("triggeredAt", m.getTriggeredAt());
                 alertableDetails.put("status", m.getStatus());
-                alertableDetails.put("category", "ENGINE"); // Placeholder or mapped
+                alertableDetails.put("category", "ENGINE");
                 alertableDetails.put("triggeredAt", m.getTriggeredAt());
                 alertableDetails.put("maintenanceType", m.getMaintenanceType());
                 alertableDetails.put("payload", m.getPayload());
@@ -220,7 +220,6 @@ public class AlertServiceImpl implements AlertService {
                 alertableDetails.put("incidentId", i.getIssueId());
                 alertableDetails.put("incidentType", i.getType());
                 alertableDetails.put("severity", i.getSeverity().name().charAt(0) + i.getSeverity().name().substring(1).toLowerCase());
-                // Extract description from payload if present
                 String desc = "Manual Incident Report";
                 if (i.getPayload() != null && i.getPayload().containsKey("description")) {
                     desc = String.valueOf(i.getPayload().get("description"));
