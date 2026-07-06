@@ -20,11 +20,6 @@ import java.util.UUID;
 public class TelemetryWebSocketController {
 
     private final TelemetryService telemetryService;
-
-    /**
-     * WebSocket endpoint for high-frequency telemetry ingestion from IoT devices or mobile apps.
-     * The mobile app connects via WebSocket and sends messages to "/app/telemetry.ingest".
-     */
     @MessageMapping("/telemetry.ingest.{tripId}")
     public void ingestTelemetryViaWebSocket(@DestinationVariable UUID tripId,
                                             @Payload TelemetryRequest request, 
@@ -33,7 +28,6 @@ public class TelemetryWebSocketController {
         log.debug("Received telemetry via WebSocket for trip {}: {}", tripId, request.location());
         
         try {
-            // Process the telemetry (this will save to TSDB and push update to fleet manager dashboard)
             TelemetryRecordResponse response = telemetryService.ingestTelemetry(tripId, request);
             log.debug("Successfully processed WebSocket telemetry: {}", response.getId());
         } catch (Exception e) {
