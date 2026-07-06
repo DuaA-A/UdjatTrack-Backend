@@ -25,12 +25,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Spring Security configuration.
- * - Stateless JWT-based authentication
- * - Role-based endpoint protection via @PreAuthorize
- * - Public endpoints for auth routes and Swagger
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
