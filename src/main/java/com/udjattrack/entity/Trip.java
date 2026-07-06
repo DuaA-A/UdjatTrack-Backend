@@ -11,10 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Trip — the core domain object representing a driver's route/mission.
- * A trip is assigned a driver and a vehicle, tracks its lifecycle via TripStatus.
- */
+
 @Entity
 @Table(name = "trips")
 @EntityListeners(AuditingEntityListener.class)
