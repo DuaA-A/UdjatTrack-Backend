@@ -4,9 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Login request — credentials supplied by any user type.
- */
 public record LoginRequest(
 
         @NotBlank(message = "Email is required")
@@ -17,5 +14,5 @@ public record LoginRequest(
         @Size(min = 6, message = "Password must be at least 6 characters")
         String password,
 
-        String deviceInfo    // optional — for refresh-token tracking
+        String deviceInfo
 ) {}
