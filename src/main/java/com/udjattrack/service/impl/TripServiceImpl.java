@@ -65,14 +65,10 @@ public class TripServiceImpl implements TripService {
                 .status(TripStatus.PLANNED)
                 .build();
         Trip saved = tripRepository.save(trip);
-
-        // Create initial TripState snapshot
         TripState state = TripState.builder()
                 .trip(saved)
                 .build();
         tripStateRepository.save(state);
-
-        // Notify driver
         notificationService.sendTripAssignedNotification(driver, saved);
 
         log.info("Trip created: {} for driver: {}", saved.getTripId(), driver.getUserId());
@@ -132,8 +128,6 @@ public class TripServiceImpl implements TripService {
         trip.setScheduledEndTime(newEnd);
 
         Trip saved = tripRepository.save(trip);
-        
-        // Notify driver if driver changed
         if (request.driverId() != null) {
             notificationService.sendTripAssignedNotification(saved.getDriver(), saved);
         }
@@ -181,12 +175,8 @@ public class TripServiceImpl implements TripService {
 
         trip.setStatus(TripStatus.ONGOING);
         updateTripProgressState(trip, TripProgressState.STARTED, null);
-
-        // Create trip log
         TripLog log = TripLog.builder().trip(trip).actualStartTime(LocalDateTime.now()).build();
         tripLogRepository.save(log);
-
-        // Mark driver and vehicle as not idle
         trip.getDriver().setIdle(false);
         trip.getVehicle().setIdle(false);
         driverRepository.save(trip.getDriver());
@@ -211,16 +201,13 @@ public class TripServiceImpl implements TripService {
                 "TripState", trip.getTripId(), "Trip paused for break"
         );
         alertService.createAlert(alertReq);
-
-        // Task 1: Automatic Resume after 1 minute (for testing, will be 20 min later)
         taskScheduler.schedule(() -> {
             try {
-                // We need a new transaction for the scheduled task
                 selfResumeTrip(tripId);
             } catch (Exception e) {
                 log.error("Automatic resume failed for trip {}: {}", tripId, e.getMessage());
             }
-        }, java.time.Instant.now().plusSeconds(60)); // 60 seconds = 1 minute
+        }, java.time.Instant.now().plusSeconds(60));
 
         Trip saved = tripRepository.save(trip);
         triggerMonitoringUpdate(saved);
@@ -261,8 +248,6 @@ public class TripServiceImpl implements TripService {
         Trip trip = findTripOrThrow(tripId);
         trip.setStatus(TripStatus.FINISHED);
         updateTripProgressState(trip, TripProgressState.COMPLETED, null);
-
-        // Finalize trip log
         tripLogRepository.findByTripTripId(tripId).ifPresent(tl -> {
             tl.setActualEndTime(LocalDateTime.now());
             if (tl.getActualStartTime() != null) {
@@ -272,7 +257,6 @@ public class TripServiceImpl implements TripService {
             tripLogRepository.save(tl);
         });
 
-        // Free driver and vehicle
         if (trip.getDriver() != null) {
             trip.getDriver().setIdle(true);
             driverRepository.save(trip.getDriver());
@@ -282,7 +266,6 @@ public class TripServiceImpl implements TripService {
             vehicleRepository.save(trip.getVehicle());
         }
 
-        // Notify manager
         if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
             notificationService.sendTripFinishedNotification(trip.getDriver().getFleetManager(), trip);
         }
@@ -353,8 +336,6 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public List<TripResponse> getTripsByFleetManagerWithFilters(UUID managerId, String status, UUID vehicleId, String dateFrom, String dateTo) {
         List<TripStatus> targetStatuses = mapTimeframeToStatuses(status);
-
-        // Start with all trips by fleet manager, then filter
         List<Trip> trips = tripRepository.findAllByFleetManager(managerId);
 
         return trips.stream()
@@ -405,8 +386,6 @@ public class TripServiceImpl implements TripService {
     @Transactional(readOnly = true)
     public TripTimelineResponse getTripTimeline(UUID tripId, String from, String to) {
         Trip trip = findTripOrThrow(tripId);
-
-        // Parse optional filters
         LocalDateTime fromTime = null;
         LocalDateTime toTime = null;
         try {
@@ -422,8 +401,6 @@ public class TripServiceImpl implements TripService {
 
         final LocalDateTime filterFrom = fromTime;
         final LocalDateTime filterTo = toTime;
-
-        // Get trip log for start/end times
         TripLog tripLog = tripLogRepository.findByTripTripId(tripId).orElse(null);
         UUID tripLogId = tripLog != null ? tripLog.getLogId() : null;
         LocalDateTime actualStartTime = tripLog != null ? tripLog.getActualStartTime() : null;
@@ -434,11 +411,8 @@ public class TripServiceImpl implements TripService {
         }
 
         List<TripTimelineResponse.TimelineItem> timeline = new ArrayList<>();
-
-        // Add event records to timeline
         List<EventRecord> events = eventRecordRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
         for (EventRecord event : events) {
-            // Check if this event has an associated alert
             TripTimelineResponse.AlertDetails alertDetails = null;
             boolean isAlert = false;
             List<Alert> alerts = alertRepository.findAllByTripTripIdOrderByTimestampDesc(tripId);
@@ -469,8 +443,6 @@ public class TripServiceImpl implements TripService {
                     .details(details)
                     .build());
         }
-
-        // Add incidents to timeline
         List<Incident> incidents = incidentRepository.findAllByTripTripIdOrderByTriggeredAtDesc(tripId);
         for (Incident incident : incidents) {
             TripTimelineResponse.AlertDetails alertDetails = null;
@@ -503,8 +475,6 @@ public class TripServiceImpl implements TripService {
                     .details(details)
                     .build());
         }
-
-        // Filter timeline items by date range if specified
         if (filterFrom != null || filterTo != null) {
             timeline = timeline.stream()
                     .filter(item -> {
@@ -519,8 +489,6 @@ public class TripServiceImpl implements TripService {
                     })
                     .collect(Collectors.toList());
         }
-
-        // Sort all timeline items by timestamp ascending
         timeline.sort(Comparator.comparing(TripTimelineResponse.TimelineItem::getTimestamp,
                 Comparator.nullsLast(Comparator.naturalOrder())));
 
@@ -580,8 +548,6 @@ public class TripServiceImpl implements TripService {
                 .upcomingTrips(upcomingTrips)
                 .build();
     }
-
-    // ===== Private helpers =====
 
     private void validateSchedule(UUID driverId, UUID vehicleId, LocalDateTime start, LocalDateTime end, UUID excludeTripId) {
         if (start == null || end == null) return;
@@ -645,7 +611,6 @@ public class TripServiceImpl implements TripService {
                     .build();
         }
 
-        // Calculate transient properties
         String title = trip.getSource() + " \u2192 " + trip.getDestination();
         
         Double expectedDurationHours = null;
@@ -665,8 +630,6 @@ public class TripServiceImpl implements TripService {
             long elapsedMinutes = Duration.between(actualStartTime, LocalDateTime.now()).toMinutes();
             progressPct = (int) Math.min(100, Math.max(0, (elapsedMinutes / (expectedDurationHours * 60.0)) * 100));
         }
-
-        // Build TripState response if available
         TripStateResponse tripStateResponse = null;
         try {
             tripStateRepository.findByTripTripId(trip.getTripId()).ifPresent(ts -> {});
