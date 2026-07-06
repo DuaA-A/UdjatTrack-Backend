@@ -17,17 +17,9 @@ import java.util.UUID;
 public class AlertWebSocketController {
 
     private final AlertService alertService;
-
-    /**
-     * Section 13.2: Live Alerts
-     * When a fleet manager subscribes to "/topic/fleet/{fleetId}/alerts",
-     * this mapping can optionally provide the initial state (unacknowledged alerts).
-     * Note: Standard STOMP brokers handle the subscription; this is for the initial push.
-     */
     @SubscribeMapping("/fleet.{fleetId}.alerts")
     public List<AlertResponse> subscribeToAlerts(@DestinationVariable UUID fleetId) {
         log.info("Fleet Manager {} subscribed to real-time alerts", fleetId);
-        // Returning the list here sends it ONLY to the subscriber who just joined.
         return alertService.getUnacknowledgedAlerts(fleetId);
     }
 }
