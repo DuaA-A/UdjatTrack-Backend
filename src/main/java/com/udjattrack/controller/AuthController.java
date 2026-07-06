@@ -96,7 +96,7 @@ public class AuthController {
 
 
     @GetMapping("/dev/hash")
-    @org.springframework.context.annotation.Profile("dev") // Only works if active profile is 'dev'
+    @org.springframework.context.annotation.Profile("dev")
     public ResponseEntity<String> generateHash(@RequestParam String raw) {
         return ResponseEntity.ok(passwordEncoder.encode(raw));
     }
