@@ -25,7 +25,7 @@ public class TripTimelineResponse {
         private String itemType;
         private Boolean isAlert;
         private AlertDetails alertDetails;
-        private Object details; // This will hold the specific details map
+        private Object details;
     }
 
     @Getter
