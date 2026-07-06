@@ -14,41 +14,23 @@ import java.util.UUID;
 public class WebSocketPublisher {
 
     private final SimpMessagingTemplate messagingTemplate;
-
-    /**
-     * Section 13.1: Live Map Tracking
-     * Pushes to fleet managers for real-time dashboard updates.
-     */
     public void publishLiveTracking(UUID fleetId, TripStateUpdateMessage message) {
         String destination = "/topic/fleet/" + fleetId + "/telemetry";
         messagingTemplate.convertAndSend(destination, message);
         log.debug("Published live-tracking update to {}", destination);
     }
 
-    /**
-     * Section 13.2: Alert Notifications
-     * Pushes to fleet managers for critical alert popups (Accidents, SOS, etc.)
-     */
     public void publishAlert(UUID fleetId, AlertEventMessage message) {
         String destination = "/topic/fleet/" + fleetId + "/alerts";
         messagingTemplate.convertAndSend(destination, message);
         log.info("Published alert event to {}", destination);
     }
 
-    /**
-     * Section 13.3: Driver Personal Channel
-     * Pushed to the mobile app for status confirmations and private messages.
-     */
     public void publishDriverStatus(UUID driverId, Object statusUpdate) {
         String destination = "/topic/driver/" + driverId + "/status";
         messagingTemplate.convertAndSend(destination, statusUpdate);
         log.debug("Published status update to driver {}", driverId);
     }
-
-    /**
-     * Section 13.4: Trip Monitoring Page updates
-     * Pushes active trips count and latest trips list for a fleet.
-     */
     public void publishTripMonitoring(UUID fleetId, com.udjattrack.dto.websocket.TripMonitoringMessage message) {
         String destination = "/topic/fleet/" + fleetId + "/trip-monitoring";
         messagingTemplate.convertAndSend(destination, message);
