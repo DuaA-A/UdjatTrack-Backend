@@ -6,10 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-/**
- * Incident — reported during or after a trip by the driver or auto-detected.
- * Inherits common fields (trip, payload, triggeredAt) from IssueRequest.
- */
 @Entity
 @Table(name = "incidents")
 @DiscriminatorValue("INCIDENT")
