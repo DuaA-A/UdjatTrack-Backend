@@ -6,10 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * RefreshToken — persisted session token for JWT refresh flow.
- * Supports multi-device logins and true server-side logout.
- */
 @Entity
 @Table(name = "refresh_tokens")
 @Getter
