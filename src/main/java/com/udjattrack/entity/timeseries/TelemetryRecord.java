@@ -11,10 +11,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * TelemetryRecord — a timestamped telemetry data point from the vehicle/driver.
- * Lives in the 'udjattrack_ts' database (time-series optimized schema).
- */
 @Entity
 @Table(name = "telemetry_records")
 @EntityListeners(AuditingEntityListener.class)
