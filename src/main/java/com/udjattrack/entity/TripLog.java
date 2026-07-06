@@ -6,10 +6,6 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * TripLog — immutable record created when a trip ends.
- * Stores actual timing and computed duration/break time analytics.
- */
 @Entity
 @Table(name = "trip_logs")
 @Getter
@@ -35,9 +31,9 @@ public class TripLog {
     private LocalDateTime actualEndTime;
 
     @Column(name = "total_duration")
-    private Double totalDuration;   // in minutes
+    private Double totalDuration;
 
     @Column(name = "total_break_time")
-    private Double totalBreakTime;  // in minutes
+    private Double totalBreakTime;  
 
 }
