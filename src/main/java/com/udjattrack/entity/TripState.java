@@ -10,11 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * TripState — a real-time snapshot of a trip's current status.
- * Updated continuously by the telemetry/mobile layer.
- * Tracks driver alertness, GPS position, and trip progress state.
- */
+
 @Entity
 @Table(name = "trip_states")
 @EntityListeners(AuditingEntityListener.class)
