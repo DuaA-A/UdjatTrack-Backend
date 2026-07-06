@@ -17,8 +17,6 @@ public class TripBreakScheduler {
 
     private final TripStateRepository tripStateRepository;
     private final TripService tripService;
-
-    // Run every minute
     @Scheduled(fixedRate = 60000)
     public void checkAndResumePausedTrips() {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(15);
