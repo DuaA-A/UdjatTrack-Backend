@@ -15,10 +15,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global exception handler — translates all exceptions to consistent ApiResponse envelopes.
- * Covers: validation errors, business rules, auth failures, not-found, conflict, and generic errors.
- */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
