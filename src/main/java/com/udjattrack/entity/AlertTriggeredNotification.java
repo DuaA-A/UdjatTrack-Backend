@@ -6,9 +6,6 @@ import lombok.experimental.SuperBuilder;
 
 import java.util.UUID;
 
-/**
- * AlertTriggeredNotification — dispatched to FleetManager when an alert fires.
- */
 @Entity
 @Table(name = "alert_triggered_notifications")
 @DiscriminatorValue("ALERT_TRIGGERED")
