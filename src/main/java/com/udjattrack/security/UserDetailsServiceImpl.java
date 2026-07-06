@@ -12,10 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * UserDetailsService implementation that loads users from the database
- * for Spring Security authentication.
- */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
