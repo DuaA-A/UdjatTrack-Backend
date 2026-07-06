@@ -16,17 +16,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * LocalFileStorageServiceImpl — saves uploaded files to the local filesystem
- * under the configured upload directory.
- *
- * <p>The file is renamed to a UUID to prevent collisions and path traversal attacks.
- * The returned URL is built from the configured server base URL, allowing the
- * Spring static resource handler to serve it directly.
- *
- * <p>To switch to cloud storage (S3, GCS), implement FileStorageService and
- * annotate the new class with @Primary. No controller changes are needed.
- */
 @Service
 @Slf4j
 public class LocalFileStorageServiceImpl implements FileStorageService {
@@ -42,9 +31,6 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
     @Value("${application.storage.base-url:http://localhost:8080/api/v1}")
     private String baseUrl;
 
-    /**
-     * Ensures the root upload directory exists on application startup.
-     */
     @PostConstruct
     public void init() {
         try {
@@ -60,19 +46,15 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
         validateFile(file);
 
         try {
-            // Build the target directory: uploads/{subfolder}/
             Path targetDir = Paths.get(uploadDir, subfolder);
             Files.createDirectories(targetDir);
 
-            // Sanitize the filename: UUID + original extension only
             String originalFilename = file.getOriginalFilename();
             String extension = getExtension(originalFilename);
             String storedFilename = UUID.randomUUID() + "." + extension;
 
             Path targetPath = targetDir.resolve(storedFilename);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-            // Return the publicly accessible URL
             String fileUrl = baseUrl + "/files/" + subfolder + "/" + storedFilename;
             log.info("FileStorageService: File stored at '{}', accessible via '{}'", targetPath, fileUrl);
             return fileUrl;
@@ -87,19 +69,14 @@ public class LocalFileStorageServiceImpl implements FileStorageService {
         if (fileUrl == null || fileUrl.isBlank()) return;
 
         try {
-            // Strip the base URL to get the relative path
             String relativePath = fileUrl.replace(baseUrl + "/files/", "");
             Path filePath = Paths.get(uploadDir, relativePath);
             Files.deleteIfExists(filePath);
             log.info("FileStorageService: Deleted file at '{}'", filePath);
         } catch (IOException e) {
-            // Log but don't fail the main operation if cleanup fails
             log.warn("FileStorageService: Could not delete old file '{}': {}", fileUrl, e.getMessage());
         }
     }
-
-    // ===== Private Helpers =====
-
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("File cannot be empty.");
