@@ -109,7 +109,6 @@ public class TripController {
             @PathVariable UUID tripId, 
             @RequestBody @Valid com.udjattrack.dto.request.CreateMaintenanceRequest payload) {
         
-        // Inject tripId from path
         com.udjattrack.dto.request.CreateMaintenanceRequest finalRequest = new com.udjattrack.dto.request.CreateMaintenanceRequest(
                 tripId, 
                 payload.maintenanceType(), 
@@ -126,8 +125,7 @@ public class TripController {
     public ResponseEntity<ApiResponse<com.udjattrack.dto.response.SOSRequestResponse>> reportSOS(
             @PathVariable UUID tripId, 
             @RequestBody @Valid com.udjattrack.dto.request.CreateSOSRequest payload) {
-        
-        // Inject tripId from path
+    
         com.udjattrack.dto.request.CreateSOSRequest finalRequest = new com.udjattrack.dto.request.CreateSOSRequest(
                 tripId, 
                 payload.location(), 
@@ -183,20 +181,17 @@ public class TripController {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
         boolean isDriver = SecurityUtils.hasRole("ROLE_DRIVER");
 
-        // If it's a driver and they didn't specify a driverId, use their own
         UUID targetDriverId = (isDriver && driverIdParam == null) ? currentUserId : driverIdParam;
         
         if (targetDriverId != null) {
             return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", tripService.getTripsByDriver(targetDriverId, status)));
         }
         
-        // If status filter provided (likely for Fleet Managers), use timeframe-aware filtering
         if (status != null && !status.isBlank()) {
             return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", 
                     tripService.getTripsByFleetManagerWithFilters(currentUserId, status, vehicleId, dateFrom, dateTo)));
         }
         
-        // Default for managers: return all trips the current manager is allowed to see
         return ResponseEntity.ok(ApiResponse.ok("Trips retrieved", 
                 tripService.getTripsByFleetManager(currentUserId)));
     }
