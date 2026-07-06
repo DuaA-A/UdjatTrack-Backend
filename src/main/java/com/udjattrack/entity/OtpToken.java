@@ -6,10 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * OtpToken — time-limited one-time password for forgot-password flow.
- * Stored in DB with expiry and usage flag.
- */
+
 @Entity
 @Table(name = "otp_tokens")
 @Getter
