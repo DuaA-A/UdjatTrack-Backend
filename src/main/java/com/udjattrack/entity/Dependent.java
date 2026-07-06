@@ -4,11 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.UUID;
-
-/**
- * Dependent — emergency contact registered under a driver.
- * Notified in case of SOS or critical incidents.
- */
 @Entity
 @Table(name = "dependents")
 @Getter
