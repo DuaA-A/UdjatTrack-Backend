@@ -52,19 +52,13 @@ public class AlertServiceImpl implements AlertService {
                 .build();
         Alert saved = alertRepository.save(alert);
         
-        // Push alert via WebSocket AFTER transaction commit
         if (trip.getDriver() != null) {
-            // Save notification for Driver History
             notificationService.sendAlertTriggeredNotification(trip.getDriver(), saved.getAlertId(), saved.getMessage());
             
             if (trip.getDriver().getFleetManager() != null) {
                 FleetManager manager = trip.getDriver().getFleetManager();
                 UUID fleetId = manager.getUserId();
-
-                // Save notification for Manager History
                 notificationService.sendAlertTriggeredNotification(manager, saved.getAlertId(), saved.getMessage());
-                
-                // SEND REAL-TIME EMAIL TO MANAGER
                 emailService.sendAlertNotification(manager.getEmail(), manager.getName(), saved);
                 
                 AlertEventMessage message = toMessage(saved);
@@ -122,8 +116,6 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     public void evaluateEvent(TelemetryRequest request) {
-        // Telemetry no longer carries event/severity data.
-        // Events are evaluated and trigger Alerts exclusively via EventService.
     }
 
     @Override
@@ -138,7 +130,7 @@ public class AlertServiceImpl implements AlertService {
             driverInfo = AlertResponse.DriverInfo.builder()
                     .driverId(trip.getDriver().getUserId())
                     .name(trip.getDriver().getName())
-                    .phone(trip.getDriver().getPhoneNumber()) // Adjust getter name based on your User entity
+                    .phone(trip.getDriver().getPhoneNumber())
                     .currentState(Boolean.TRUE.equals(trip.getDriver().getIdle()) ? "IDLE" : "ACTIVE") 
                     .build();
         }
@@ -190,8 +182,6 @@ public class AlertServiceImpl implements AlertService {
     }
     private AlertEventMessage toMessage(Alert a) {
         Trip trip = a.getTrip();
-        
-        // Map alert type string
         String typeStr = switch (a.getAlertType()) {
             case SOS_REQ -> "SOSReq";
             case MAINTENANCE -> "Maintenance";
@@ -201,10 +191,7 @@ public class AlertServiceImpl implements AlertService {
             default -> a.getAlertType().name();
         };
 
-        // Capitalize Severity
         String severityStr = a.getSeverity().name().charAt(0) + a.getSeverity().name().substring(1).toLowerCase();
-
-        // Fetch alertable details
         java.util.Map<String, Object> alertableDetails = new java.util.HashMap<>();
         if ("SOSRequest".equalsIgnoreCase(a.getAlertableType())) {
             sosRequestRepository.findById(a.getAlertableId()).ifPresent(sos -> {
