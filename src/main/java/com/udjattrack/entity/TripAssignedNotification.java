@@ -7,9 +7,6 @@ import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * TripAssignedNotification — sent to driver when assigned to a new trip.
- */
 @Entity
 @Table(name = "trip_assigned_notifications")
 @DiscriminatorValue("TRIP_ASSIGNED")
