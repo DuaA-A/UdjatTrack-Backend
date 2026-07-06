@@ -22,8 +22,6 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${application.mail.resend.api-key:re_G2ZynKMw_LZuNr8LP87dez46sXFoMi14L}")
     private String resendApiKey;
-
-    // Using the newly purchased domain!
     private final String fromEmail = "no-reply@udjattrack.online";
 
     @Value("${application.mail.from-name:UdjatTrack}")
