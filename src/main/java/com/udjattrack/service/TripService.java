@@ -8,9 +8,6 @@ import com.udjattrack.dto.response.TripTimelineResponse;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Trip service — manages trip lifecycle: create, assign, start, stop, resume, complete.
- */
 public interface TripService {
 
     TripResponse createTrip(CreateTripRequest request);
