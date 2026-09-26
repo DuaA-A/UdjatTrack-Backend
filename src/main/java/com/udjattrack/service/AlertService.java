@@ -9,10 +9,6 @@ import com.udjattrack.dto.response.AlertDailyCountResponse;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Alert service — handles alert creation, acknowledgment, and querying.
- * Also evaluates telemetry events for alert conditions.
- */
 public interface AlertService {
 
     AlertResponse createAlert(CreateAlertRequest request);

@@ -1,8 +1,5 @@
 package com.udjattrack.service;
 
-/**
- * Email service — sends system emails (OTP, notifications, emergency alerts).
- */
 public interface EmailService {
 
     void sendOtpEmail(String to, String otp, String name);

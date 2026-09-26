@@ -48,11 +48,9 @@ public class TelemetryServiceImpl implements TelemetryService {
     @Override
     @Transactional
     public TelemetryRecordResponse ingestTelemetry(UUID tripId, TelemetryRequest request) {
-        // Verify trip exists in relational DB
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
 
-        // Allow telemetry if its purpose is to start the trip (PLANNED → ONGOING)
         boolean isStartingTrip = request.payload() != null
                 && "ONGOING".equalsIgnoreCase(String.valueOf(request.payload().get("tripState")));
 
@@ -77,9 +75,6 @@ public class TelemetryServiceImpl implements TelemetryService {
             }
         }
 
-        // We now save telemetry regardless of trip status to maintain history.
-        // If the trip is ON_BREAK, we still record the telemetry and notify the
-        // dashboard.
         if (trip.getStatus() == com.udjattrack.entity.enums.TripStatus.ON_BREAK) {
             log.info("Trip {} is ON_BREAK. Telemetry is being recorded for history.", trip.getTripId());
         }
@@ -89,7 +84,6 @@ public class TelemetryServiceImpl implements TelemetryService {
             locationStr = request.location().lat() + "," + request.location().lng();
         }
 
-        // Save to time-series DB
         TelemetryRecord record = TelemetryRecord.builder()
                 .tripId(tripId)
                 .speed(request.speed())
@@ -100,7 +94,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                 .build();
         TelemetryRecord saved = telemetryRecordRepository.save(record);
 
-        // Update live trip state in relational DB
         TripState state = tripStateRepository.findByTripTripId(tripId).orElse(null);
         if (state != null) {
             if (request.driverState() != null && state.getDriverState() != request.driverState()) {
@@ -117,7 +110,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                     msg = "Driver is not visible/detected (UNKNOWN state)";
                 }
 
-                // Trigger Alert for Driver State Change
                 alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
                         trip.getTripId(),
                         com.udjattrack.entity.enums.AlertType.TRIP_STATE,
@@ -132,14 +124,11 @@ public class TelemetryServiceImpl implements TelemetryService {
             }
             state.setCurrentSpeed(request.speed());
 
-            // Task 1: If trip was just resumed, set it back to STARTED state upon first
-            // telemetry
             if (state.getTripProgressState() == TripProgressState.RESUMED) {
                 log.info("Transitioning trip {} from RESUMED back to STARTED state via telemetry", tripId);
                 state.setTripProgressState(TripProgressState.STARTED);
             }
 
-            // Handle Trip State transition from payload if present
             if (request.payload() != null && request.payload().containsKey("tripState")) {
                 String newStateStr = String.valueOf(request.payload().get("tripState"));
                 try {
@@ -151,7 +140,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                         TripStatus oldStatus = trip.getStatus();
                         trip.setStatus(newStatus);
 
-                        // Map TripStatus to TripProgressState
                         TripProgressState progressState = switch (newStatus) {
                             case ONGOING -> TripProgressState.STARTED;
                             case ON_BREAK -> TripProgressState.PAUSED;
@@ -160,7 +148,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                         };
                         state.setTripProgressState(progressState);
 
-                        // Handle TripLog start/end
                         if (newStatus == TripStatus.ONGOING && oldStatus == TripStatus.PLANNED) {
                             if (trip.getTripLog() == null) {
                                 TripLog tripLog = TripLog.builder()
@@ -185,12 +172,9 @@ public class TelemetryServiceImpl implements TelemetryService {
                             trip.getVehicle().setIdle(true);
                         }
 
-                        // Save updated trip
                         tripRepository.save(trip);
                         driverRepository.save(trip.getDriver());
                         vehicleRepository.save(trip.getVehicle());
-
-                        // Record in Timeline (EventRecord)
                         EventRecord statusEvent = EventRecord.builder()
                                 .trip(trip)
                                 .eventType("STATUS_CHANGE")
@@ -199,8 +183,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                                 .timestamp(telemetryTime)
                                 .build();
                         eventRecordRepository.save(statusEvent);
-
-                        // Trigger Alert for Status Change
                         alertService.createAlert(new com.udjattrack.dto.request.CreateAlertRequest(
                                 trip.getTripId(),
                                 com.udjattrack.entity.enums.AlertType.INCIDENT,
@@ -215,8 +197,6 @@ public class TelemetryServiceImpl implements TelemetryService {
             }
 
             tripStateRepository.save(state);
-
-            // Push update to fleet manager over WebSocket AFTER transaction commit
             UUID fleetId = trip.getDriver().getFleetManager().getUserId();
             TripStateUpdateMessage updateMsg = TripStateUpdateMessage.builder()
                     .tripStateId(state.getStateId())
@@ -280,7 +260,6 @@ public class TelemetryServiceImpl implements TelemetryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Driver", "id", driverId));
         log.info("Driver {} status updated to: {}", driverId, newState);
 
-        // Push update to specific driver's private channel
         webSocketPublisher.publishDriverStatus(driverId,
                 java.util.Map.of("status", newState, "timestamp", LocalDateTime.now()));
     }

@@ -6,10 +6,6 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-/**
- * Standard API response envelope for all endpoints.
- * Ensures a consistent response structure across the whole API.
- */
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -26,8 +22,6 @@ public class ApiResponse<T> {
 
     @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
-
-    // ---- Static factory helpers ----
 
     public static <T> ApiResponse<T> ok(String message, T data) {
         return ApiResponse.<T>builder()

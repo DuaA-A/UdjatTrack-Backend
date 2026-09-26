@@ -11,11 +11,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * EventRecord — structured event log for significant events during a trip.
- * Examples: speed spike, harsh brake, drowsiness onset.
- * Payload is flexible JSON for event-specific data.
- */
 @Entity
 @Table(name = "event_records")
 @EntityListeners(AuditingEntityListener.class)

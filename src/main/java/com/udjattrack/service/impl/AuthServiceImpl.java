@@ -62,7 +62,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request) {
-        // Spring Security validates credentials (throws on failure)
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
@@ -77,16 +76,11 @@ public class AuthServiceImpl implements AuthService {
         saveRefreshToken(user, refreshTokenValue, request.deviceInfo());
 
         log.info("User logged in: {} [{}]", user.getEmail(), user.getRole());
-        
-        // Send login notification email
         emailService.sendLoginNotification(user.getEmail(), user.getName(), request.deviceInfo());
 
         return buildAuthResponse(user, accessToken, refreshTokenValue);
     }
 
-    // =====================================================================
-    // Logout
-    // =====================================================================
 
     @Override
     @Transactional
@@ -99,9 +93,6 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
-    // =====================================================================
-    // Forgot Password — Step 1: Request OTP
-    // =====================================================================
 
     @Override
     @Transactional
@@ -110,7 +101,6 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No account found with email: " + request.email()));
 
-        // Invalidate any previous OTPs for this email
         otpTokenRepository.invalidateAllForEmail(request.email());
 
         String code = otpUtil.generateOtp();
@@ -127,10 +117,6 @@ public class AuthServiceImpl implements AuthService {
         log.info("OTP sent to: {}", request.email());
     }
 
-    // =====================================================================
-    // Forgot Password — Step 2: Verify OTP
-    // =====================================================================
-
     @Override
     @Transactional(readOnly = true)
     public void verifyOtp(VerifyOtpRequest request) {
@@ -141,12 +127,8 @@ public class AuthServiceImpl implements AuthService {
         if (otp.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new InvalidOtpException("OTP has expired. Please request a new one.");
         }
-        // Just validation — OTP is consumed in resetPassword
+        
     }
-
-    // =====================================================================
-    // Forgot Password — Step 3: Reset Password
-    // =====================================================================
 
     @Override
     @Transactional
@@ -162,24 +144,18 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", request.email()));
 
-        // Update password
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
 
-        // Mark OTP as used
         otp.setUsed(true);
         otpTokenRepository.save(otp);
 
-        // Revoke all sessions — force re-login with new password
         refreshTokenRepository.revokeAllByUserId(user.getUserId());
 
         emailService.sendPasswordChangedEmail(user.getEmail(), user.getName());
         log.info("Password reset for: {}", user.getEmail());
     }
 
-    // =====================================================================
-    // Token Refresh
-    // =====================================================================
 
     @Override
     @Transactional
@@ -195,8 +171,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = storedToken.getUser();
-
-        // Rotate: revoke old, issue new
         storedToken.setRevoked(true);
         refreshTokenRepository.save(storedToken);
 
@@ -208,9 +182,6 @@ public class AuthServiceImpl implements AuthService {
         return buildAuthResponse(user, newAccessToken, newRefreshToken);
     }
 
-    // =====================================================================
-    // Private Helpers
-    // =====================================================================
 
     private void saveRefreshToken(User user, String tokenValue, String deviceInfo) {
         RefreshToken token = RefreshToken.builder()

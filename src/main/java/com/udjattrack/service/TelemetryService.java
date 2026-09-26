@@ -7,16 +7,11 @@ import com.udjattrack.dto.response.TripStateResponse;
 
 import java.util.List;
 import java.util.UUID;
-
-/**
- * Telemetry service — ingests real-time and batch IoT data from driver devices.
- * Updates trip state and driver status, and triggers alert evaluation.
- */
 public interface TelemetryService {
 
     TelemetryRecordResponse ingestTelemetry(UUID tripId, TelemetryRequest request);
 
-    void processTelemetryBatch(UUID tripId, TelemetryBatchRequest batchRequest);   // @Async
+    void processTelemetryBatch(UUID tripId, TelemetryBatchRequest batchRequest);   
 
     TripStateResponse updateTripState(UUID tripId, String driverState, String progressState);
 

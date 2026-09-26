@@ -36,8 +36,6 @@ public class FleetController {
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Get aggregated fleet reports/trips")
     public ResponseEntity<ApiResponse<List<TripResponse>>> getFleetReports(@PathVariable UUID fleetId) {
-        // fleetId is usually the managerId or a specific group ID.
-        // For now, we assume fleetId = managerId.
         return ResponseEntity.ok(ApiResponse.ok("Fleet reports retrieved", 
                 fleetService.getFleetReports(fleetId)));
     }

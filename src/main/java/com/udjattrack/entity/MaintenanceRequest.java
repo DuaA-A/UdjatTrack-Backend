@@ -5,10 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-/**
- * MaintenanceRequest — raised when a vehicle has a mechanical/technical issue.
- * Extends IssueRequest and adds the specific maintenance type.
- */
 @Entity
 @Table(name = "maintenance_requests")
 @DiscriminatorValue("MAINTENANCE")

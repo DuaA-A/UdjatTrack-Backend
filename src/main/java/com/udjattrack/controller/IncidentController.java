@@ -31,7 +31,7 @@ public class IncidentController {
         if (managerId != null) {
             return ResponseEntity.ok(ApiResponse.ok(emergencyService.getIncidentsByFleetManager(managerId)));
         }
-        return ResponseEntity.ok(ApiResponse.ok(List.of())); // Placeholder
+        return ResponseEntity.ok(ApiResponse.ok(List.of()));
     }
 
     @PostMapping("/trips/{tripId}/incidents")
@@ -40,8 +40,6 @@ public class IncidentController {
     public ResponseEntity<ApiResponse<IncidentResponse>> reportIncident(
             @PathVariable UUID tripId,
             @Valid @RequestBody CreateIncidentRequest request) {
-        
-        // Merge tripId from path into request
         CreateIncidentRequest finalRequest = new CreateIncidentRequest(
                 tripId, 
                 request.type(), 

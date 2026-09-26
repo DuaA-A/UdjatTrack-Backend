@@ -35,7 +35,6 @@ public class DashboardController {
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_SUPER_MANAGER')")
     @Operation(summary = "Aggregated alert statistics for the fleet manager")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAlertsSummary(@PathVariable UUID fleetId) {
-        // Fetch all alerts for the fleet manager and compute today's aggregates
         List<AlertResponse> allAlerts = alertService.getAllAlertsByFleetManager(fleetId);
 
         LocalDateTime startOfToday = LocalDate.now().atStartOfDay();

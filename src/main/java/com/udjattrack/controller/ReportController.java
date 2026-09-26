@@ -114,7 +114,6 @@ public class ReportController {
     public ResponseEntity<org.springframework.core.io.InputStreamResource> downloadDriverReportPdf(
             @PathVariable UUID driverId) {
         UUID managerId = SecurityUtils.getCurrentUserId();
-        // Uses the fleet summary generator but filtered entirely by this driverId
         java.io.ByteArrayInputStream bis = reportService.exportFleetSummaryToPdf(managerId, driverId, null);
 
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();

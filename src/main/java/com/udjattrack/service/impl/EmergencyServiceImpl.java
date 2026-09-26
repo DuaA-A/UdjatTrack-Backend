@@ -44,8 +44,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .triggeredAt(java.time.LocalDateTime.now())
                 .build();
         SOSRequest saved = sosRequestRepository.saveAndFlush(sos);
-        
-        // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
                 request.tripId(), com.udjattrack.entity.enums.AlertType.SOS_REQ, 
                 com.udjattrack.entity.enums.SeverityLevel.CRITICAL, 
@@ -69,8 +67,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .triggeredAt(java.time.LocalDateTime.now())
                 .build();
         SOSRequest saved = sosRequestRepository.saveAndFlush(sos);
-        
-        // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
                 request.tripId(), com.udjattrack.entity.enums.AlertType.SOS_REQ, 
                 com.udjattrack.entity.enums.SeverityLevel.CRITICAL, 
@@ -88,7 +84,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .orElseThrow(() -> new ResourceNotFoundException("SOSRequest", "id", sosRequestId));
         log.warn("Emergency services notified for SOS: {} at location: {}",
                 sosRequestId, sos.getLocation());
-        // Future: integrate with 3rd-party emergency dispatch API
     }
 
     @Override
@@ -102,8 +97,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .triggeredAt(java.time.LocalDateTime.now())
                 .build();
         MaintenanceRequest saved = maintenanceRequestRepository.saveAndFlush(maintenance);
-        
-        // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
                 request.tripId(), com.udjattrack.entity.enums.AlertType.MAINTENANCE, 
                 com.udjattrack.entity.enums.SeverityLevel.MEDIUM, 
@@ -126,8 +119,6 @@ public class EmergencyServiceImpl implements EmergencyService {
                 .triggeredAt(java.time.LocalDateTime.now())
                 .build();
         Incident saved = incidentRepository.saveAndFlush(incident);
-        
-        // Trigger WebSocket Alert
         alertService.createAlert(new CreateAlertRequest(
                 request.tripId(), com.udjattrack.entity.enums.AlertType.INCIDENT, 
                 request.severity(), 
@@ -167,7 +158,6 @@ public class EmergencyServiceImpl implements EmergencyService {
 
     @Override
     public void resolveIssue(UUID issueId, String resolutionNote) {
-        // Try SOS
         sosRequestRepository.findById(issueId).ifPresent(sos -> {
             sos.setStatus(IssueStatus.RESOLVED);
             if (resolutionNote != null) {
@@ -177,7 +167,6 @@ public class EmergencyServiceImpl implements EmergencyService {
             notificationService.sendIssueResolvedNotification(sos.getTrip().getDriver(), "SOS", issueId);
         });
 
-        // Try Maintenance
         maintenanceRequestRepository.findById(issueId).ifPresent(m -> {
             m.setStatus(IssueStatus.RESOLVED);
             if (resolutionNote != null) {
@@ -186,8 +175,7 @@ public class EmergencyServiceImpl implements EmergencyService {
             maintenanceRequestRepository.save(m);
             notificationService.sendIssueResolvedNotification(m.getTrip().getDriver(), "Maintenance", issueId);
         });
-        
-        // Try Incident
+    
         incidentRepository.findById(issueId).ifPresent(i -> {
             i.setStatus(IssueStatus.RESOLVED);
             if (resolutionNote != null) {
@@ -198,8 +186,6 @@ public class EmergencyServiceImpl implements EmergencyService {
         });
     }
 
-    // ===== Private helpers =====
-
     private Trip findTrip(UUID tripId) {
         return tripRepository.findById(tripId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trip", "id", tripId));
@@ -208,14 +194,12 @@ public class EmergencyServiceImpl implements EmergencyService {
     private void notifyDependentsOnSOS(Trip trip, String location) {
         String driverName = trip.getDriver().getName();
         String loc = location != null ? location : "Unknown location";
-        
-        // Notify Fleet Manager via Email
+
         if (trip.getDriver() != null && trip.getDriver().getFleetManager() != null) {
             FleetManager manager = trip.getDriver().getFleetManager();
             emailService.sendEmergencyAlert(manager.getEmail(), driverName, loc);
         }
 
-        // Notify dependents (placeholder logic remains but manager is the primary recipient now)
         dependentRepository.findAllByDriverUserId(trip.getDriver().getUserId()).forEach(dep ->
                 log.info("SOS notification triggered for dependent: {} [Phone: {}]", dep.getName(), dep.getPhoneNumber())
         );

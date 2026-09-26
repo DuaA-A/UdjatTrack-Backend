@@ -24,9 +24,6 @@ public class LocationController {
             @RequestParam double lat,
             @RequestParam double lng,
             @RequestParam(required = false, defaultValue = "20") double radius) {
-        
-        // MOCK DATA for now, since external Maps API is not yet integrated.
-        // In a real implementation, this would query Google Places or OpenStreetMap.
         List<NearestHelpResponse> mockResponse = List.of(
                 NearestHelpResponse.builder()
                         .name("Aswan General Hospital")

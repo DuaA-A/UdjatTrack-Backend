@@ -7,13 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Fleet management service — CRUD for fleet managers, drivers, and vehicles.
- * Used by both SuperManager and FleetManager controllers.
- */
 public interface FleetManagementService {
-
-    // Fleet Manager operations (SuperManager only)
     FleetManagerResponse registerFleetManager(CreateFleetManagerRequest request);
     FleetManagerResponse verifyFleetManager(UUID managerId);
     FleetManagerResponse updateFleetManager(UUID managerId, UpdateFleetManagerRequest request);
@@ -21,31 +15,17 @@ public interface FleetManagementService {
     List<FleetManagerResponse> getAllFleetManagers();
     FleetManagerResponse getFleetManagerById(UUID managerId);
 
-    // Driver operations (FleetManager)
     DriverResponse createDriver(UUID fleetManagerId, CreateDriverRequest request);
     DriverResponse updateDriver(UUID driverId, UpdateDriverRequest request);
     void deleteDriver(UUID driverId);
     List<DriverResponse> getDriversByManager(UUID fleetManagerId);
     DriverResponse getDriverById(UUID driverId);
-
-    /**
-     * Uploads a profile photo for a driver, stores it via FileStorageService,
-     * and persists the returned URL on the Driver entity.
-     *
-     * @param driverId the UUID of the driver
-     * @param file     the multipart image file
-     * @return the updated DriverResponse containing the new photoUrl
-     */
     DriverResponse uploadDriverPhoto(UUID driverId, MultipartFile file);
-
-    // Vehicle
     VehicleResponse addVehicle(UUID fleetManagerId, AddVehicleRequest request);
     void deleteVehicle(UUID vehicleId);
     List<VehicleResponse> getVehiclesByManager(UUID fleetManagerId, String plateNumber);
     VehicleResponse getVehicleById(UUID vehicleId);
     VehicleWithDriverResponse getVehicleWithDriver(UUID vehicleId);
-
-    // Dependent operations
     DependentResponse addDependent(UUID driverId, CreateDependentRequest request);
     List<DependentResponse> getDependentsByDriver(UUID driverId);
 }

@@ -73,7 +73,6 @@ public class VehicleController {
     @PreAuthorize("hasAnyAuthority('ROLE_FLEET_MANAGER', 'ROLE_DRIVER')")
     @Operation(summary = "Populates the Vehicle Maintenance CheckList widget")
     public ResponseEntity<ApiResponse<List<com.udjattrack.dto.response.MaintenanceLogResponse>>> getMaintenanceLogs(@PathVariable UUID vehicleId) {
-        // Returning a mock list as per design doc example for now
         var logs = List.of(
             com.udjattrack.dto.response.MaintenanceLogResponse.builder()
                 .date("2026-04-10")

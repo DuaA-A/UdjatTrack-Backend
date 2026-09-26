@@ -72,8 +72,6 @@ public class EventServiceImpl implements EventService {
         }
 
         SeverityLevel severity = determineSeverity(request.eventType(), request.payload());
-
-        // 1. Save to Relational DB (long-term management & history)
         EventRecord relationalRecord = EventRecord.builder()
                 .trip(trip)
                 .eventType(request.eventType())
@@ -87,7 +85,6 @@ public class EventServiceImpl implements EventService {
 
         boolean alertCreated = false;
 
-        // 2. Scenario A: Auto-detected CRASH or ROLLOVER -> Create Incident (which triggers its own Alert)
         if ("CRASH".equalsIgnoreCase(request.eventType()) || "ROLLOVER".equalsIgnoreCase(request.eventType())) {
             emergencyService.createIncident(new CreateIncidentRequest(
                     tripId,
@@ -96,9 +93,8 @@ public class EventServiceImpl implements EventService {
                     "Auto-detected location",
                     request.payload()
             ));
-            alertCreated = true; // Alert is handled by createIncident
+            alertCreated = true; 
         } else if ("UNKNOWN".equalsIgnoreCase(request.eventType())) {
-            // Update trip driver state to UNKNOWN via telemetryService
             telemetryService.updateTripState(tripId, "UNKNOWN", null);
 
             CreateAlertRequest alertReq = new CreateAlertRequest(
@@ -112,7 +108,6 @@ public class EventServiceImpl implements EventService {
             alertService.createAlert(alertReq);
             alertCreated = true;
         } 
-        // 3. Scenario B: All other Safety Events -> Create Alert linked directly to EventRecord
         else {
             AlertType alertType = request.eventType().toUpperCase().contains("FATIGUE") ? AlertType.FATIGUE : AlertType.INCIDENT;
             

@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-/**
- * SOSRequest — emergency SOS issued by driver (manual or auto-detected).
- * Extends IssueRequest for common issue tracking fields.
- */
 @Entity
 @Table(name = "sos_requests")
 @DiscriminatorValue("SOS")

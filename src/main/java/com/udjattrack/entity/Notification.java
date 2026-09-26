@@ -13,11 +13,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Notification — abstract base for all in-app notifications.
- * Subtypes: TripAssignedNotification, AlertTriggeredNotification.
- * Uses JOINED inheritance for clean DB normalization.
- */
 @Entity
 @Table(name = "notifications")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -57,10 +52,6 @@ public abstract class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Dynamic JSON payload for notification-specific data.
-     * Allows API responses to include context without DB schema changes.
-     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "details", columnDefinition = "jsonb")
     private Map<String, Object> details;

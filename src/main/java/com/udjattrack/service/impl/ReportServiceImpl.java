@@ -34,17 +34,10 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportSummaryResponse getFleetSummary(UUID managerId, UUID driverId, UUID vehicleId) {
-        // 1. Fetch data
         List<TripResponse> trips = tripService.getTripsByFleetManager(managerId).stream()
                 .filter(t -> driverId == null || t.getDriverId().equals(driverId))
                 .filter(t -> vehicleId == null || t.getVehicleId().equals(vehicleId))
                 .collect(Collectors.toList());
-
-        // Assuming alerts, sos, and maintenance requests are somewhat related to manager. 
-        // For accurate filtering by driver/vehicle, we might need to filter them if they contain those fields.
-        // For simplicity, we just filter what we can. 
-        // Note: AlertResponse doesn't have driverId/vehicleId in all cases easily accessible here, 
-        // but if they are bound to trips, we could filter by tripId.
         List<UUID> tripIds = trips.stream().map(TripResponse::getTripId).collect(Collectors.toList());
 
         List<AlertResponse> alerts = alertService.getAllAlertsByFleetManager(managerId).stream()
@@ -63,7 +56,6 @@ public class ReportServiceImpl implements ReportService {
                 .filter(i -> (driverId == null && vehicleId == null) || tripIds.contains(i.getTripId()))
                 .collect(Collectors.toList());
 
-        // 2. Aggregate
         Map<String, Long> alertCounts = alerts.stream()
                 .collect(Collectors.groupingBy(a -> a.getSeverity().name(), Collectors.counting()));
 
@@ -97,13 +89,10 @@ public class ReportServiceImpl implements ReportService {
         try {
             PdfWriter.getInstance(document, out);
             document.open();
-
-            // Font styles
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
             Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.DARK_GRAY);
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK);
 
-            // Header
             Paragraph title = new Paragraph("UdjatTrack Fleet Operational Report", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
@@ -113,8 +102,6 @@ public class ReportServiceImpl implements ReportService {
             if (driverId != null) document.add(new Paragraph("Filtered by Driver: " + driverId.toString(), normalFont));
             if (vehicleId != null) document.add(new Paragraph("Filtered by Vehicle: " + vehicleId.toString(), normalFont));
             document.add(Chunk.NEWLINE);
-
-            // 1. Trip Statistics Section
             document.add(new Paragraph("Trip Statistics", subTitleFont));
             PdfPTable tripTable = new PdfPTable(2);
             tripTable.setWidthPercentage(100);
@@ -132,7 +119,6 @@ public class ReportServiceImpl implements ReportService {
             document.add(tripTable);
             document.add(Chunk.NEWLINE);
 
-            // 2. Security & Alerts Section
             document.add(new Paragraph("Security & Safety Alerts", subTitleFont));
             PdfPTable alertTable = new PdfPTable(2);
             alertTable.setWidthPercentage(100);
@@ -145,7 +131,6 @@ public class ReportServiceImpl implements ReportService {
 
             document.add(alertTable);
             
-            // Sub-table for severity
             if (data.getAlertsBySeverity() != null && !data.getAlertsBySeverity().isEmpty()) {
                 document.add(new Paragraph("Alerts by Severity:", normalFont));
                 PdfPTable sevTable = new PdfPTable(2);
@@ -158,8 +143,6 @@ public class ReportServiceImpl implements ReportService {
                 document.add(sevTable);
             }
             document.add(Chunk.NEWLINE);
-
-            // 3. Operational Issues
             document.add(new Paragraph("Operational Issues (SOS & Maintenance)", subTitleFont));
             PdfPTable issueTable = new PdfPTable(2);
             issueTable.setWidthPercentage(100);
@@ -250,20 +233,16 @@ public class ReportServiceImpl implements ReportService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // Font styles
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
             Font subTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.DARK_GRAY);
             Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12, Color.BLACK);
 
-            // Header
             Paragraph title = new Paragraph("Trip Safety & Performance Report", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
             document.add(new Paragraph("Generated on: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), normalFont));
             document.add(Chunk.NEWLINE);
-
-            // 1. Trip Overview
             document.add(new Paragraph("Trip Overview", subTitleFont));
             PdfPTable overviewTable = new PdfPTable(2);
             overviewTable.setWidthPercentage(100);
@@ -282,8 +261,6 @@ public class ReportServiceImpl implements ReportService {
 
             document.add(overviewTable);
             document.add(Chunk.NEWLINE);
-
-            // 2. Time Details
             document.add(new Paragraph("Trip Timeline", subTitleFont));
             PdfPTable timeTable = new PdfPTable(2);
             timeTable.setWidthPercentage(100);
@@ -308,7 +285,6 @@ public class ReportServiceImpl implements ReportService {
             document.add(timeTable);
             document.add(Chunk.NEWLINE);
 
-            // 3. Safety & State Information
             if (trip.getTripState() != null) {
                 document.add(new Paragraph("Safety & State Information", subTitleFont));
                 PdfPTable stateTable = new PdfPTable(2);

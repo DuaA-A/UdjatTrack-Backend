@@ -41,9 +41,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     private final EmailService emailService;
     private final FileStorageService fileStorageService;
     private final TripRepository tripRepository;
-
-    // ===== Fleet Manager =====
-
     @Override
     public FleetManagerResponse registerFleetManager(CreateFleetManagerRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -99,9 +96,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
     public FleetManagerResponse getFleetManagerById(UUID managerId) {
         return toResponse(findManagerOrThrow(managerId));
     }
-
-    // ===== Drivers =====
-
     @Override
     public DriverResponse createDriver(UUID fleetManagerId, CreateDriverRequest request) {
         FleetManager manager = findManagerOrThrow(fleetManagerId);
@@ -260,9 +254,6 @@ public class FleetManagementServiceImpl implements FleetManagementService {
         return dependentRepository.findAllByDriverUserId(driverId)
                 .stream().map(this::toDependentResponse).collect(Collectors.toList());
     }
-
-    // ===== Private helpers =====
-
     private FleetManager findManagerOrThrow(UUID id) {
         return fleetManagerRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("FleetManager", "id", id));

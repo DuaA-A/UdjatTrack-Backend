@@ -16,10 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * JWT authentication filter — intercepts every request, validates the Bearer token,
- * and sets the Spring Security context. Runs exactly once per request.
- */
 @Component
 @RequiredArgsConstructor
 @Slf4j

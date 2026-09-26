@@ -5,11 +5,6 @@ import com.udjattrack.dto.response.*;
 
 import java.util.List;
 import java.util.UUID;
-
-/**
- * Emergency service — handles SOS requests, auto-triggered SOS,
- * incident reporting, and maintenance requests.
- */
 public interface EmergencyService {
 
     SOSRequestResponse sendManualSOS(CreateSOSRequest request);

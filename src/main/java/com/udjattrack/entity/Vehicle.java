@@ -10,10 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Vehicle — an asset managed under a FleetManager.
- * Tracks operational status (idle/working) and is assigned to trips.
- */
 @Entity
 @Table(name = "vehicles")
 @EntityListeners(AuditingEntityListener.class)
